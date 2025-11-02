@@ -7,9 +7,21 @@ tags: [design, cli]
 relationships:
   - type: parent
     taskID: 1
+  - type: blocks
+    taskID: 15
+  - type: blocks
+    taskID: 16
+  - type: blocks
+    taskID: 22
+  - type: blocks
+    taskID: 23
+  - type: blocks
+    taskID: 24
+  - type: blocks
+    taskID: 25
 
 createdAt: 2025-11-02T08:00:00Z
-updatedAt: 2025-11-02T08:00:00Z
+updatedAt: 2025-11-02T20:45:00Z
 ---
 
 # CLI Architecture with Viper/Cobra
@@ -39,17 +51,27 @@ opentasks
     └── get
 ```
 
-### Future Enhancements
-- task link command (s-15: Add task linking command)
-- config view (b-21: Show resolved config path)
-- config init (b-21: Initialize local config)
-- status transitions (currently not designed in detail)
-- project config/path subcommands (currently not designed in detail)
+### Linked Phase 2 Tasks
 
-### Design Notes on Aliases
-- Design originally specified aliases (new|create, list|ls, show|view, delete|rm)
-- Current implementation uses primary commands only
-- Can add aliases later if needed for convenience
+**Core Features:**
+- s-15: Add task linking command
+- s-16: Add JSON/YAML output
+- s-22: Complete JSON/YAML output support (verify all commands)
+
+**Configuration & Visibility:**
+- b-21: New items created in wrong location (config view/init)
+
+**Enhancements:**
+- s-23: Add command aliases for convenience (new|create, list|ls, show|view, delete|rm)
+- s-24: Add color output for terminal (status/type colors)
+- s-25: Implement status transitions command (list, validate, describe)
+
+**Testing & Polish:**
+- s-12: Write unit tests (include CLI command tests)
+- s-13: Write integration tests (CLI workflows)
+- t-18: Write end-to-end tests (full CLI scenarios)
+- t-19: Write end-to-end tests
+- t-21: Improve error messages (error glossary)
 
 ## Viper Integration
 
