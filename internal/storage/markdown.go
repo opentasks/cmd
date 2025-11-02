@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -90,35 +89,6 @@ func (s *MarkdownFileStorage) taskToPath(ctx context.Context, task *model.Task) 
 		return filepath.Join(s.basePath, epicDir, filename), nil
 	}
 	return filepath.Join(s.basePath, filename), nil
-}
-
-// pathToTaskID extracts task ID from file path
-// Parses filename like "s-42-task-title.md" and extracts ID 42
-func (s *MarkdownFileStorage) pathToTaskID(filename string) (int, error) {
-	// Get just the filename without directory
-	filename = filepath.Base(filename)
-
-	// Remove .md extension
-	if !strings.HasSuffix(filename, ".md") {
-		return 0, ErrInvalidID
-	}
-
-	base := strings.TrimSuffix(filename, ".md")
-	parts := strings.SplitN(base, "-", 3)
-
-	if len(parts) < 2 {
-		return 0, ErrInvalidID
-	}
-
-	// parts[0] is typecode (s, e, p, etc.)
-	// parts[1] is the ID number
-
-	id, err := strconv.Atoi(parts[1])
-	if err != nil {
-		return 0, ErrInvalidID
-	}
-
-	return id, nil
 }
 
 // parseTaskFile parses markdown file into Task
