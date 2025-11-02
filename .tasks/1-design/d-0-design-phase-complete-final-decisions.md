@@ -262,3 +262,18 @@ All design decisions have been successfully implemented in Phase 1 (Core System)
 - **Go Version**: 1.21+
 - **Branch**: design
 - **Dependencies**: cobra v1.7.0, viper v1.16.0, toml v1.5.0, yaml.v3 v3.0.1
+
+## Phase 2: Testing & Polish
+
+All design decisions finalized. Phase 2 (e-12) begins with:
+- **Testing**: Unit, integration, and E2E tests for all packages
+- **Bug Fixes**: Config discovery/visibility (b-21)
+- **Feature Implementation**: 
+  - Task linking (s-15)
+  - Templates (s-16)
+  - Output formats (s-17, s-22)
+  - CLI enhancements (s-23, s-24, s-25)
+- **UX Refinement**: Epic display (s-20)
+- **Error Handling**: Error glossary with codes (t-18)
+
+See Phase 2 epic (e-12) for implementation roadmap.

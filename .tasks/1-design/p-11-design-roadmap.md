@@ -29,33 +29,42 @@ Each story documents the design decision, rationale, and implementation consider
 
 ---
 
-## Phase 2 Roadmap (Implementation Priorities)
+## Phase 2 Roadmap: Testing & Polish
 
-After core system completion, focus on:
+### Implementation Tasks
 
-### High Priority
-1. **Unit Testing** - Test each package independently
-2. **Integration Testing** - End-to-end CLI testing
-3. **Task Linking CLI** - `task link` command for creating relationships interactively
+**Testing (s-13, s-14, t-19):**
+- s-13: Unit tests for all packages (config, model, query, storage, cmd)
+- s-14: Integration tests for multi-component workflows
+- t-19: End-to-end tests for all user workflows
 
-### Medium Priority
-4. **Template System** - Built-in templates for each task type, custom template support
-5. **Output Formats** - JSON, YAML, CSV export options
-6. **Error Handling** - Better error messages and recovery
+**Core Features (s-15, s-16, s-17):**
+- s-15: Task linking CLI (`task link` command)
+- s-16: Template system for consistent task creation
+- s-17: JSON/YAML output formats
 
-### Low Priority
-7. **Advanced Features** - Full-text search, dependency graphs, critical path analysis
-8. **MCP Server** - Multi-Client Proxy integration for tool-based access
-9. **Web UI** - Browser-based interface (future milestone)
+**Bug Fixes (b-21):**
+- b-21: Config discovery transparency (config view/init commands)
+
+**CLI Enhancements (s-22, s-23, s-24, s-25):**
+- s-22: Complete JSON/YAML output support across all commands
+- s-23: Add command aliases (create|ls|view|edit|rm)
+- s-24: Add color output with terminal detection
+- s-25: Status transitions command (list/validate/describe)
+
+**UX Refinement (s-20):**
+- s-20: Refine CLI UX for epic display (grouping, tree view, columns)
+
+**Error Handling (t-18):**
+- t-18: Improve error messages with error glossary (ERR-XXX codes)
 
 ### Completed Phases
-- ✅ **Phase 0**: Research and Design (completed Nov 2, 2025)
-- ✅ **Phase 1**: Core Implementation (completed Nov 2, 2025)
-  - Data models and storage layer
-  - Configuration system
-  - Query engine
-  - CLI with Cobra/Viper
-  - File-based persistence with YAML frontmatter
-  - All CRUD operations working
-
-Current implementation tracked in `.tasks/1-phase-2-testing-polish/` epic.
+- ✅ **Phase 1: Design** (completed Nov 2, 2025)
+  - All core architectural decisions finalized
+  - 12 design tasks completed
+  - Ready for implementation
+  
+- 🚀 **Phase 2: Testing & Polish** (started Nov 2, 2025)
+  - Located in `.tasks/12-testing-polish/` epic
+  - 14 implementation tasks (IDs 12-25)
+  - Focus on correctness, visibility, and UX

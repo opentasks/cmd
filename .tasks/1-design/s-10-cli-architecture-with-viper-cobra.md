@@ -2,7 +2,7 @@
 id: 10
 title: CLI Architecture with Viper/Cobra
 type: story
-status: todo
+status: done
 tags: [design, cli]
 relationships:
   - type: parent
