@@ -9,6 +9,24 @@ license: MIT
 
 This file documents conventions and best practices for managing tasks in the `.tasks/` directory.
 
+## ⚡ Quick Start (TL;DR)
+
+```bash
+# START a task (mark in progress FIRST)
+./opentask --path .tasks task update <id> --status in-progress
+
+# FINISH a task (mark done LAST)
+./opentask --path .tasks task update <id> --status done
+
+# See what's being worked on
+./opentask --path .tasks task list --status in-progress
+
+# See what's available
+./opentask --path .tasks task list --status todo
+```
+
+**Key Rule**: Mark `in-progress` BEFORE work, mark `done` AFTER work. This is your project's work tracking system.
+
 ## Overview
 
 The `.tasks/` directory uses the opentask format itself to track project work. All files in this directory are task files (`.md` format) with YAML frontmatter metadata.
@@ -164,6 +182,85 @@ relationships:
 | **blocks** | This task blocks another |
 | **relates-to** | Related but independent task |
 
+## Task Management Best Practices
+
+### Integration with Session Work
+
+When working on a task within a single session:
+
+1. **Create a todowrite todo for the task**
+   ```bash
+   # At start of work
+   todowrite([{
+     id: "my-task-id",
+     content: "Description of work",
+     status: "in_progress",
+     priority: "high"
+   }])
+   ```
+
+2. **Update todowrite todo status as work progresses**
+   ```bash
+   # Mid-work: break into subtasks
+   todowrite([{
+     id: "my-task-1",
+     content: "Part 1 of task",
+     status: "in_progress",
+     priority: "high"
+   }, {
+     id: "my-task-2", 
+     content: "Part 2 of task",
+     status: "pending",
+     priority: "high"
+   }])
+   
+   # After part 1 done
+   todowrite([{
+     id: "my-task-1",
+     content: "Part 1 of task",
+     status: "completed",
+     priority: "high"
+   }, {
+     id: "my-task-2",
+     content: "Part 2 of task",
+     status: "in_progress",
+     priority: "high"
+   }])
+   ```
+
+3. **When session ends OR task completes** → **Update opentask immediately**
+   ```bash
+   # Task complete: mark done in opentask
+   ./opentask --path .tasks task update <id> --status done
+   
+   # Task incomplete: leave as in-progress in opentask
+   # (future sessions will see it's active)
+   ```
+
+### Session Handoff Pattern
+
+When a task is in-progress but will be resumed in a future session:
+
+1. **Leave task as `in-progress` in opentask** - Don't mark done
+2. **Add session notes to task file** describing next steps
+3. **Create SESSION_SUMMARY.md** in project root noting which task to resume
+4. **Next session**: Read SESSION_SUMMARY.md and resume the in-progress task
+
+Example SESSION_SUMMARY.md:
+```markdown
+# Current Work Status
+
+## In Progress
+- Task 42: Implementing feature X
+  - What's done: Core logic implemented
+  - Next steps: Add tests and error handling
+  - Time estimate: 2-3 hours
+
+## Ready to Start
+- Task 43: Polish error messages
+- Task 44: Add documentation
+```
+
 ## Important Principles
 
 ### Never Delete Files
@@ -203,14 +300,53 @@ IDs are globally sequential integers (1, 2, 3, ...). Use the CLI to get the next
 
 Next ID = current count + 1
 
-## Workflow for Adding New Work
+## Workflow for Task Management
 
-### For Agents/Future Sessions
+### ⚡ CRITICAL: Task Status Tracking Pattern
 
-1. **List current tasks**
+**This is the most important workflow - follow it strictly for every task:**
+
+1. **When you START working on a task** → **IMMEDIATELY mark it `in-progress`**
+   ```bash
+   ./opentask --path .tasks task update <id> --status in-progress
+   ```
+   - Do this BEFORE writing any code or making changes
+   - Update `updatedAt` timestamp (CLI does this automatically)
+   - Prevents duplicate work and shows current effort
+
+2. **While working** → **Track progress via todo list or session notes**
+   - Use `todowrite` tool to manage subtasks
+   - Update the task file with progress notes if it's a multi-day task
+   - Mark the todo as `in_progress` ONLY while actively working
+
+3. **When you FINISH the task** → **IMMEDIATELY mark it `done`**
+   ```bash
+   ./opentask --path .tasks task update <id> --status done
+   ```
+   - Do this BEFORE moving to next task
+   - Verify all acceptance criteria met
+   - CLI automatically updates `updatedAt` timestamp
+
+4. **Moving between tasks**
+   ```bash
+   # ALWAYS do this sequence:
+   # 1. Mark current task done (if finished)
+   ./opentask --path .tasks task update <current_id> --status done
+   
+   # 2. Mark next task in progress (if starting)
+   ./opentask --path .tasks task update <next_id> --status in-progress
+   ```
+   - Never skip this - it's the project audit trail
+   - Helps future sessions understand where work stopped/started
+
+### For Agents/Future Sessions - Complete Workflow
+
+1. **List current tasks and status**
    ```bash
    ./opentask --path .tasks task list
-   ./opentask --path .tasks task list --status todo
+   ./opentask --path .tasks task list --status in-progress  # Shows active work
+   ./opentask --path .tasks task list --status todo          # Shows available work
+   ./opentask --path .tasks task list --status done          # Shows completed work
    ```
 
 2. **Create new epic** (for major features)
@@ -223,20 +359,23 @@ Next ID = current count + 1
    ./opentask --path .tasks task new "Task name" --type story --parent <epic_id>
    ```
 
-4. **Mark in progress** (when starting work)
+4. **START TASK** - Mark in progress BEFORE doing work
    ```bash
    ./opentask --path .tasks task update <id> --status in-progress
+   # ← DO THIS FIRST, before writing any code
    ```
 
-5. **Update content** (add details, notes)
+5. **Do the work**
    ```bash
-   # Edit the .md file directly to add content
-   vim ".tasks/<path-to-file>.md"
+   # Edit files, write code, implement feature
+   # Track progress with todowrite tool
+   # Update task file if documenting progress
    ```
 
-6. **Mark complete** (when done)
+6. **FINISH TASK** - Mark done AFTER completing work
    ```bash
    ./opentask --path .tasks task update <id> --status done
+   # ← DO THIS IMMEDIATELY after finishing
    ```
 
 7. **Archive old tasks** (after long period)
@@ -316,12 +455,16 @@ Use tags consistently across tasks.
 ## Conventions
 
 ✅ **DO**:
+- **Mark `in-progress` BEFORE starting work on a task** ← CRITICAL
+- **Mark `done` IMMEDIATELY after finishing a task** ← CRITICAL
 - Use CLI to create/update tasks when possible
 - Keep descriptions clear and concise
 - Update timestamps when modifying files
 - Use relationships to link related work
 - Tag tasks consistently
 - Review status before marking done
+- Move your todo items through statuses as you work
+- Complete all subtasks before moving to next epic task
 
 ❌ **DON'T**:
 - Delete or remove task files
@@ -330,8 +473,33 @@ Use tags consistently across tasks.
 - Skip the YAML frontmatter
 - Use non-standard status values
 - Leave orphan tasks without parent epic
+- **Leave a task marked `in-progress` at end of session without notes** ← CRITICAL
+- **Forget to mark task `done` before moving to next task** ← CRITICAL
+- Have multiple tasks marked `in-progress` without clear reason
+
+## Status Transition Rules (STRICT)
+
+**Always follow this pattern when switching tasks:**
+
+```
+Current Task          Next Task
+    ↓                   ↓
+in-progress    →    done (mark current)
+    ↓                   ↓
+(cleanup)      →    in-progress (mark next)
+```
+
+Never break the chain. Every task should have clear start and end points in the work log.
 
 ---
 
 **Last Updated**: 2025-11-02  
 **Applies to**: All agents and humans managing `.tasks/` directory
+
+### Pattern Override: Session-Specific Work
+If using `todowrite` for session-specific work items:
+- `todowrite` tracks sub-tasks within a single task
+- `opentask task update` tracks the overall task status
+- Both should be kept in sync
+- Mark opentask `done` when ALL subtasks are complete
+- Mark opentask `in-progress` when starting ANY subtask in that task
