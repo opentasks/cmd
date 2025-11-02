@@ -1,0 +1,8 @@
+# Go
+bin/
+dist/
+*.o
+*.a
+*.so
+.DS_Store
+.env
