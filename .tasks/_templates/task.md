@@ -7,6 +7,10 @@ tags: [<<TAG1>>, <<TAG2>>]
 relationships:
   - type: parent
     taskID: <<PARENT_EPIC_ID>>
+  - type: implements
+    taskID: <<PARENT_STORY_ID>>
+  - type: implements
+    taskID: <<PARENT_STORY_ID2>>
 createdAt: <<NOW_RFC3339>>
 updatedAt: <<NOW_RFC3339>>
 ---

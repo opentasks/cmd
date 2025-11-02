@@ -25,9 +25,26 @@ Business value, user need, or improvement.
 
 ## Acceptance Criteria
 
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Criterion 3
+
+**1. Scenario One**
+
+Given [context or precondition],  
+When [action or event occurs],  
+Then [expected outcome or result].
+
+Given [context or precondition],  
+When [action or event occurs],  
+Then [expected outcome or result].
+
+
+**2. Scenario Two**
+
+Given [context or precondition],  
+When [action or event occurs],  
+Then [expected outcome or result].
+Given [context or precondition],
+When [action or event occurs],  
+Then [expected outcome or result].
 
 ## Definition of Done
 
