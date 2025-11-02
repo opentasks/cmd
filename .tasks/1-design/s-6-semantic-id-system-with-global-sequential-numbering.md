@@ -7,6 +7,9 @@ tags: [design, id-system, core]
 relationships:
   - type: parent
     taskID: 1
+
+createdAt: 2025-11-02T08:00:00Z
+updatedAt: 2025-11-02T08:00:00Z
 ---
 
 # Semantic ID System with Global Sequential Numbering

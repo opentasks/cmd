@@ -11,6 +11,9 @@ relationships:
     taskID: 6
   - type: blocks
     taskID: 7
+
+createdAt: 2025-11-02T08:00:00Z
+updatedAt: 2025-11-02T08:00:00Z
 ---
 
 # Design OpenTasks Core System

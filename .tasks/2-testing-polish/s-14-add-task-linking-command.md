@@ -1,10 +1,10 @@
 ---
-id: 7
-title: Improve error messages
-type: task
+id: 14
+title: Add task linking command
+type: story
 status: todo
 tags:
-    - polish
+    - feature
 relationships:
     - type: parent
       taskID: 1

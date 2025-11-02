@@ -1,6 +1,6 @@
 ---
-id: 4
-title: Add task linking command
+id: 15
+title: Implement template system
 type: story
 status: todo
 tags:

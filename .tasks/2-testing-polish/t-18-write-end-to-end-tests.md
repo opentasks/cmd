@@ -1,10 +1,10 @@
 ---
-id: 5
-title: Implement template system
-type: story
+id: 18
+title: Write end-to-end tests
+type: task
 status: todo
 tags:
-    - feature
+    - testing
 relationships:
     - type: parent
       taskID: 1

@@ -7,6 +7,8 @@ tags: [design, storage, interface, reference]
 relationships:
   - type: parent
     taskID: 1
+createdAt: 2025-11-02T08:00:00Z
+updatedAt: 2025-11-02T08:00:00Z
 ---
 
 # Storage Interface and Implementations

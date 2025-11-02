@@ -1,10 +1,10 @@
 ---
-id: 3
-title: Write integration tests
+id: 16
+title: Add JSON/YAML output
 type: story
 status: todo
 tags:
-    - testing
+    - feature
 relationships:
     - type: parent
       taskID: 1

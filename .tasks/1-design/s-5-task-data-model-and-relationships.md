@@ -7,6 +7,8 @@ tags: [design, data-model, core]
 relationships:
   - type: parent
     taskID: 1
+createdAt: 2025-11-02T08:00:00Z
+updatedAt: 2025-11-02T08:00:00Z
 ---
 
 # Task Data Model and Relationships
