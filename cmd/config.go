@@ -105,12 +105,25 @@ var configViewCmd = &cobra.Command{
 		}
 
 		fmt.Println("\n[workflow]")
-		fmt.Printf("statuses = %v\n", merged.Workflow.Statuses)
+		fmt.Print("statuses = [ ")
+		for i, status := range merged.Workflow.Statuses {
+			if i > 0 {
+				fmt.Print(", ")
+			}
+			fmt.Printf("%q", status)
+		}
+		fmt.Println(" ]")
 		fmt.Printf("initial = %q\n", merged.Workflow.Initial)
 
 		fmt.Println("\n[storage]")
 		fmt.Printf("type = %q\n", merged.Storage.Backend)
-		fmt.Printf("path = %q  # RESOLVED ABSOLUTE PATH\n", merged.Storage.Path)
+		// Ensure absolute path
+		resolvedPath := info.ResolvedPath
+		if resolvedPath == "" {
+			cwd, _ := os.Getwd()
+			resolvedPath = cwd
+		}
+		fmt.Printf("path = %q  # RESOLVED ABSOLUTE PATH\n", resolvedPath)
 
 		if verboseFlag && len(info.FoundFiles) > 0 {
 			fmt.Println("\n=== Verbose Mode: Merging Details ===")
