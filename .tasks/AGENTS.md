@@ -1,5 +1,7 @@
 # Task Management Guide for Agents
 
+> **NOTE**: This guide describes manual task management using the OpenTasks CLI. This is temporary until the OpenTasks tool becomes feature-complete and fully usable through the MCP interface. Once complete, tasks should be managed through the proper tool integration rather than direct CLI commands.
+
 This file documents conventions and best practices for managing tasks in the `.tasks/` directory.
 
 ## Overview
