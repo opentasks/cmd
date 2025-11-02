@@ -16,14 +16,14 @@ Every task is a markdown file with YAML frontmatter:
 
 ```markdown
 ---
-id: s-42              # Semantic ID: type-prefix + sequence number
+id: 42                # Global sequential ID (simple integer)
 title: My task
 type: story           # epic|plan|research|story|decision|task
 status: in-progress   # Customizable per project
 tags: [feature, core]
 relationships:
   - type: parent      # "parent", "blocks", "relates-to"
-    taskID: e-5       # Links to other tasks
+    taskID: 5         # Links to other tasks (by numeric ID)
 createdAt: 2025-11-02T10:00:00Z
 updatedAt: 2025-11-02T10:30:00Z
 ---
@@ -35,11 +35,12 @@ Markdown content here.
 
 ### Semantic IDs
 
-- **Format**: `{type-prefix}-{sequence}{collision-suffix}`
-- **Type prefixes**: e(pic), p(lan), r(esearch), s(tory), d(ecision), t(ask)
-- **Sequence**: Per-type counter (first story is s-1, second is s-2)
-- **Collision suffix**: Letter appended if ID already exists (s-42a, s-42b)
-- **Generation**: Storage backend counts matching files, no persistent state
+- **Format**: Simple integers (1, 2, 3, ..., 42, ..., 1000)
+- **Scope**: Global across entire project
+- **Type prefixes**: e(pic), p(lan), r(esearch), s(tory), d(ecision), t(ask) (used in filenames only)
+- **Generation**: Count all task files in project, next ID = count + 1
+- **Type location**: Stored in frontmatter `type` field, not in ID
+- **No collisions**: Global counter guarantees uniqueness automatically
 
 ### Relationships
 
@@ -59,12 +60,16 @@ relationships:
 
 ```
 project-root/
-├── .tasks/                   # Default local task location
-│   ├── config.toml          # Optional (all defaults work without it)
-│   ├── 1.epic.md            # File naming: {seq}.{type}.md
-│   ├── 1.plan.md
-│   ├── 1.story.md
-│   └── templates/           # Optional local templates
+├── .tasks/                              # Default local task location
+│   ├── config.toml                      # Optional (all defaults work without it)
+│   ├── e-1-design-opentasks.md          # Epic at root: e-{id}-{slug}.md
+│   ├── 1-design-opentasks/              # Epic subdirectory: {id}-{slug}/
+│   │   ├── p-3-design-roadmap.md        # Child task: {type}-{id}-{slug}.md
+│   │   ├── s-5-task-data-model.md
+│   │   └── s-6-semantic-id-system.md
+│   ├── 2-implement-core/
+│   │   └── s-11-build-storage.md
+│   └── templates/                       # Optional local templates
 │       └── story.md
 └── ... (project files)
 ```
@@ -205,9 +210,9 @@ any-project/
 ## Implementation Roadmap
 
 **Phase 1 (Core)**:
-- [ ] Data models (Task, Relationship)
-- [ ] MarkdownFileStorage
-- [ ] BaseStorage interface
+- [ ] Data models (Task with int ID, Relationship)
+- [ ] MarkdownFileStorage with epic hierarchy support
+- [ ] BaseStorage interface (with simplified NextID)
 - [ ] QueryEngine with filters
 - [ ] Config loading (TOML)
 - [ ] CLI commands (create, list, show, update, delete)
@@ -234,7 +239,9 @@ any-project/
 
 | Decision | Choice | Why |
 |----------|--------|-----|
-| ID system | Semantic sequential per-type | Human-readable, collision-resistant, no state |
+| ID system | Global sequential integers | Simple generation, decouples from type, filesystem agnostic |
+| ID scope | One counter per project | Unique per project, easier to reason about |
+| Filename | `{epic_id}-{slug}/{type}-{id}-{slug}.md` | Human-readable, hierarchical, backend concern |
 | Storage | Pluggable interface | Different backends for different needs |
 | Config | Optional with defaults | Works without config, composable |
 | Relationships | Slice of structs | Single source of truth, flexible types |
@@ -256,7 +263,7 @@ All tasks are tracked in `.tasks/design/` using the OpenTasks format itself (dog
 **Create task file manually**:
 ```markdown
 ---
-id: s-1
+id: 42
 title: First story
 type: story
 status: todo
@@ -272,8 +279,9 @@ This is a test task.
 ```
 
 **ID format**:
-- Valid: `e-1`, `s-42`, `p-3a`, `d-1b`
-- Invalid: `story-1`, `s_1`, `s-01` (no leading zero)
+- Valid: `1`, `42`, `1000` (any positive integer)
+- Invalid: `0`, `-1`, `1a` (only digits allowed)
+- Type indicator: Use file naming `{type}-{id}.md`, not in ID itself
 
 **Common operations** (future CLI):
 ```bash
