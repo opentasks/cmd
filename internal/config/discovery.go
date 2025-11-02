@@ -7,7 +7,7 @@ import (
 )
 
 // DiscoverConfigFiles walks up from the given file path to find all opentask.toml files
-// Stops at filesystem root or git repository root (.git directory)
+// Stops at filesystem root
 // Returns files in order from closest to furthest (leaf to root)
 func DiscoverConfigFiles(startPath string) ([]string, error) {
 	var found []string
@@ -32,13 +32,6 @@ func DiscoverConfigFiles(startPath string) ([]string, error) {
 		configPath := filepath.Join(currentDir, "opentask.toml")
 		if _, err := os.Stat(configPath); err == nil {
 			found = append(found, configPath)
-		}
-
-		// Check if we're at git root (.git directory exists)
-		gitDir := filepath.Join(currentDir, ".git")
-		if _, err := os.Stat(gitDir); err == nil {
-			// Found .git, stop here
-			break
 		}
 
 		// Check if we're at filesystem root
@@ -177,15 +170,8 @@ func DiscoverAndAnalyze(startPath string) (*ConfigDiscoveryInfo, error) {
 		return nil, err
 	}
 
-	// Determine stop reason
+	// Always stops at filesystem root
 	stopReason := "filesystem root"
-	if len(found) > 0 {
-		furthestDir := filepath.Dir(found[len(found)-1])
-		gitDir := filepath.Join(furthestDir, ".git")
-		if _, err := os.Stat(gitDir); err == nil {
-			stopReason = "git repository root"
-		}
-	}
 
 	// Create reversed list for merging order
 	reversed := make([]string, len(found))

@@ -1,0 +1,6 @@
+[project]
+name = "Opentasks"
+
+[storage]
+backend = "markdown-fs"         # Default backend
+path = "../.tasks"     

@@ -8,7 +8,7 @@ The CLI searches for `opentask.toml` files starting from your current working di
 
 1. **Hierarchical resolution**: Configs are discovered from closest to furthest
 2. **Merging**: All discovered configs are merged (closer/later configs override earlier ones)
-3. **Stops at**: The filesystem root or when a `.git` directory is found (git repository root)
+3. **Stops at**: The filesystem root only
 4. **Optional**: If no config is found, all defaults are applied
 
 ### Discovery Examples

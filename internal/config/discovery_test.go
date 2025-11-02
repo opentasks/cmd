@@ -59,50 +59,56 @@ func TestDiscoverConfigFiles(t *testing.T) {
 	}
 }
 
-// TestDiscoverConfigStopsAtGitRoot tests that discovery stops at .git directory
-func TestDiscoverConfigStopsAtGitRoot(t *testing.T) {
+// TestDiscoverConfigContinuesPastGitRoot tests that discovery does NOT stop at .git directory
+func TestDiscoverConfigContinuesPastGitRoot(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create structure:
 	// tmpDir/
-	//   .git/
-	//   opentask.toml (should find this)
+	//   opentask.toml (further up the tree)
 	//   subdir/
-	//     opentask.toml (should find this)
+	//     .git/
+	//     opentask.toml (git repo root)
+	//     deep/
+	//       opentask.toml (discovery starts here)
 
-	gitDir := filepath.Join(tmpDir, ".git")
 	rootConfig := filepath.Join(tmpDir, "opentask.toml")
 	subdir := filepath.Join(tmpDir, "subdir")
+	gitDir := filepath.Join(subdir, ".git")
 	subConfig := filepath.Join(subdir, "opentask.toml")
+	deepdir := filepath.Join(subdir, "deep")
+	deepConfig := filepath.Join(deepdir, "opentask.toml")
 
 	// Create directories and files
+	if err := os.MkdirAll(deepdir, 0755); err != nil {
+		t.Fatalf("Failed to create deepdir: %v", err)
+	}
 	if err := os.MkdirAll(gitDir, 0755); err != nil {
 		t.Fatalf("Failed to create .git directory: %v", err)
 	}
-	if err := os.MkdirAll(subdir, 0755); err != nil {
-		t.Fatalf("Failed to create subdir: %v", err)
-	}
 
-	for _, path := range []string{rootConfig, subConfig} {
+	for _, path := range []string{rootConfig, subConfig, deepConfig} {
 		if err := os.WriteFile(path, []byte("[project]\nname=\"test\"\n"), 0644); err != nil {
 			t.Fatalf("Failed to create config: %v", err)
 		}
 	}
 
-	// Start discovery from subdir
-	found, err := DiscoverConfigFiles(subConfig)
+	// Start discovery from deep directory
+	found, err := DiscoverConfigFiles(deepConfig)
 	if err != nil {
 		t.Errorf("DiscoverConfigFiles() error = %v", err)
 	}
 
-	// Should find subConfig and rootConfig, but stop at tmpDir (git root)
-	if len(found) < 2 {
-		t.Errorf("DiscoverConfigFiles() found %d files, want at least 2", len(found))
+	// Should find all three configs even though .git is at subdir level
+	// (discovery should NOT stop at git root, it should continue walking up)
+	if len(found) != 3 {
+		t.Errorf("DiscoverConfigFiles() found %d files, want 3 (should continue past .git directory)", len(found))
 	}
 
-	// Verify we found both configs
+	// Verify we found all configs including the one above git root
 	hasRoot := false
 	hasSub := false
+	hasDeep := false
 	for _, f := range found {
 		if f == rootConfig {
 			hasRoot = true
@@ -110,16 +116,12 @@ func TestDiscoverConfigStopsAtGitRoot(t *testing.T) {
 		if f == subConfig {
 			hasSub = true
 		}
-	}
-	if !hasRoot || !hasSub {
-		t.Errorf("Missing expected config files. hasRoot=%v, hasSub=%v", hasRoot, hasSub)
-	}
-
-	// Verify we didn't go beyond git root
-	for _, f := range found {
-		if !strings.HasPrefix(f, tmpDir) {
-			t.Errorf("Found config outside git root: %s", f)
+		if f == deepConfig {
+			hasDeep = true
 		}
+	}
+	if !hasRoot || !hasSub || !hasDeep {
+		t.Errorf("Missing expected config files. hasRoot=%v, hasSub=%v, hasDeep=%v (should find configs above git root)", hasRoot, hasSub, hasDeep)
 	}
 }
 
