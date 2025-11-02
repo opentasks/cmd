@@ -1,0 +1,60 @@
+# OpenTasks - mise configuration
+# Specifies development environment requirements
+
+[tools]
+# Go version - pinned for consistency
+golang = "1.21"
+
+[tasks.build]
+description = "Build the OpenTasks CLI"
+run = "go build -o opentasks ./cmd/opentasks"
+
+[tasks.test]
+description = "Run all tests"
+run = "go test -v ./..."
+
+[tasks.test-storage]
+description = "Run storage package tests"
+run = "go test -v ./internal/storage/..."
+
+[tasks.test-model]
+description = "Run model package tests"
+run = "go test -v ./internal/model/..."
+
+[tasks.test-config]
+description = "Run config package tests"
+run = "go test -v ./internal/config/..."
+
+[tasks.test-query]
+description = "Run query package tests"
+run = "go test -v ./internal/query/..."
+
+[tasks.lint]
+description = "Run go vet"
+run = "go vet ./..."
+
+[tasks.fmt]
+description = "Format code with gofmt"
+run = "gofmt -w ."
+
+[tasks.clean]
+description = "Clean build artifacts"
+run = "rm -f opentasks test_project && find . -name '*.md' -path './test*' -delete"
+
+[tasks.demo]
+description = "Run demo workflow"
+run = """
+rm -rf demo_project
+mkdir -p demo_project
+./opentasks --path demo_project task new "Design Phase" --type epic
+./opentasks --path demo_project task new "Plan architecture" --type plan --parent 1
+./opentasks --path demo_project task new "Research patterns" --type research --parent 1
+./opentasks --path demo_project task new "Implement core" --type story --parent 1 --tag backend
+./opentasks --path demo_project task list
+echo ""
+echo "Demo project created at: demo_project/"
+"""
+
+[tasks.help]
+description = "Show available mise tasks"
+run = "mise tasks"

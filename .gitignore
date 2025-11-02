@@ -6,3 +6,11 @@ dist/
 *.so
 .DS_Store
 .env
+
+# Build artifacts
+opentasks
+opentasks.exe
+
+# Demo and test projects
+demo_project/
+test_project/
