@@ -13,3 +13,4 @@ opentask.exe
 
 # Demo and test projects
 demo/
+.worktrees/
