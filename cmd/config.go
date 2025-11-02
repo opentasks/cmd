@@ -133,7 +133,9 @@ var configViewCmd = &cobra.Command{
 			}
 		}
 
-		fmt.Printf("\nSearch stopped at: %s (%s)\n", filepath.Dir(filepath.Join(info.MergingOrder[len(info.MergingOrder)-1])), info.StopReason)
+		if len(info.MergingOrder) > 0 {
+			fmt.Printf("\nSearch stopped at: %s (%s)\n", filepath.Dir(filepath.Join(info.MergingOrder[len(info.MergingOrder)-1])), info.StopReason)
+		}
 
 		return nil
 	},
