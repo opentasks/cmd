@@ -4,41 +4,42 @@ Configuration files are **optional**. If none are found, sensible defaults are u
 
 ## Config Discovery
 
-The CLI searches for `opentask.toml` files starting from your current working directory and walking up the directory tree. This means:
+The CLI searches for `.opentask.toml` files starting from your current working directory and walking up the directory tree. It also checks for a user global config at `~/.config/opentask/config.toml`. This means:
 
 1. **Hierarchical resolution**: Configs are discovered from closest to furthest
 2. **Merging**: All discovered configs are merged (closer/later configs override earlier ones)
-3. **Stops at**: The filesystem root only
+3. **Discovery order**:
+   - Start from current directory
+   - Walk up through parent directories
+   - Stop at filesystem root
+   - Check user global config at `~/.config/opentask/config.toml` (if it exists)
 4. **Optional**: If no config is found, all defaults are applied
 
 ### Discovery Examples
 
 ```
-/                                        # filesystem root
+Project directory structure:
+/
 ├── home/user/
-│   ├── .config/opentask/config.toml     # global user config
-│   ├── .local/share/opentask/
-│   │   └── templates/
+│   ├── .config/opentask/config.toml     # global user config (lowest priority)
 │   └── projects/
-│       ├── .opentask.toml                # global projects config
 │       └── myproject/
-│           ├── .opentask.toml            # project-specific config
+│           ├── .opentask.toml            # project root config
 │           └── subproject/
-│               ├── .opentask.toml        # subproject-specific config
+│               ├── .opentask.toml        # subproject config (highest priority)
 │               └── workingdir/          # current working directory
 ```
 
-When running from workingdir/:
-- Searches: workingdir/ → subproject/ → myproject/ → projects/ → home/user/ → /
-- Finds: .opentask.toml (subproject), .opentask.toml (myproject), .config/opentask/config.toml (user)
-- Uses: merged config (subproject overrides myproject overrides user)                  (current working directory)
-```
+When running commands from `subproject/workingdir/`:
+1. **Discovery searches**:
+   - `subproject/workingdir/.opentask.toml` (not found)
+   - `subproject/.opentask.toml` (found - highest priority)
+   - `myproject/.opentask.toml` (found)
+   - `projects/.opentask.toml` (not found)
+   - `~/.config/opentask/config.toml` (found - lowest priority)
 
-When running from special-tasks/:
-- Searches: special-tasks/ → subproject/ → root/
-- Finds: .opentask.toml (root)
-- Uses: root config settings
-```
+2. **Config merging**: User global config first, then project, then subproject (subproject wins)
+   - Result: merged config with subproject settings overriding project, which override user global
 
 ## Configuration Structure
 
