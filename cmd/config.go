@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/spf13/cobra"
 	"github.com/zenobi-us/opentask/internal/config"
@@ -68,63 +69,51 @@ var configViewCmd = &cobra.Command{
 			return nil
 		}
 
-		// Default text output
-		fmt.Println("Config Resolution Search (starting from current directory, walking up):")
-		fmt.Println()
-		fmt.Println("Found config files:")
-		for i, file := range info.FoundFiles {
-			if i == 0 {
-				fmt.Printf("  %d. %s (HIGHEST PRIORITY - merged last)\n", i+1, file)
-			} else {
-				fmt.Printf("  %d. %s\n", i+1, file)
-			}
-		}
-
-		if len(info.FoundFiles) == 0 {
-			fmt.Println("  (none found - using defaults)")
-		}
-
-		fmt.Println("\nMerging order (lowest → highest priority):")
-		for _, file := range info.MergingOrder {
-			fmt.Println("  " + file)
-		}
+		// Prepare template data
+		stopDir := ""
 		if len(info.MergingOrder) > 0 {
-			fmt.Println("  = Resolved configuration")
+			stopDir = filepath.Dir(filepath.Join(info.MergingOrder[len(info.MergingOrder)-1]))
 		}
 
-		fmt.Println("\nResolved Configuration:")
-		fmt.Println("[project]")
-		if merged.Project.Name != "" {
-			fmt.Printf("name = %q\n", merged.Project.Name)
-		}
-		if merged.Project.Description != "" {
-			fmt.Printf("description = %q\n", merged.Project.Description)
-		}
-		if merged.Project.Owner != "" {
-			fmt.Printf("owner = %q\n", merged.Project.Owner)
-		}
-
-		fmt.Println("\n[workflow]")
-		fmt.Print("statuses = [ ")
-		for i, status := range merged.Workflow.Statuses {
-			if i > 0 {
-				fmt.Print(", ")
-			}
-			fmt.Printf("%q", status)
-		}
-		fmt.Println(" ]")
-		fmt.Printf("initial = %q\n", merged.Workflow.Initial)
-
-		fmt.Println("\n[storage]")
-		fmt.Printf("type = %q\n", merged.Storage.Backend)
-		// Ensure absolute path
 		resolvedPath := info.ResolvedPath
 		if resolvedPath == "" {
-			cwd, _ := os.Getwd()
 			resolvedPath = cwd
 		}
-		fmt.Printf("path = %q  # RESOLVED ABSOLUTE PATH\n", resolvedPath)
 
+		templateData := map[string]interface{}{
+			"FoundFiles":         info.FoundFiles,
+			"MergingOrder":       info.MergingOrder,
+			"ProjectName":        merged.Project.Name,
+			"ProjectDescription": merged.Project.Description,
+			"ProjectOwner":       merged.Project.Owner,
+			"Statuses":           merged.Workflow.Statuses,
+			"Initial":            merged.Workflow.Initial,
+			"StorageType":        merged.Storage.Backend,
+			"StoragePath":        resolvedPath,
+			"StopReason":         info.StopReason,
+			"StopDir":            stopDir,
+		}
+
+		// Execute template
+		tmpl, err := template.New("configView").
+			Funcs(template.FuncMap{
+				"quote": func(s string) string {
+					return `"` + s + `"`
+				},
+				"add": func(a, b int) int {
+					return a + b
+				},
+			}).
+			Parse(config.ViewTemplate)
+		if err != nil {
+			return fmt.Errorf("failed to parse template: %w", err)
+		}
+
+		if err := tmpl.Execute(os.Stdout, templateData); err != nil {
+			return fmt.Errorf("failed to execute template: %w", err)
+		}
+
+		// Verbose output
 		if verboseFlag && len(info.FoundFiles) > 0 {
 			fmt.Println("\n=== Verbose Mode: Merging Details ===")
 			for i, file := range info.MergingOrder {
@@ -144,10 +133,6 @@ var configViewCmd = &cobra.Command{
 					fmt.Printf("  - storage.path: %q\n", cfg.Storage.Path)
 				}
 			}
-		}
-
-		if len(info.MergingOrder) > 0 {
-			fmt.Printf("\nSearch stopped at: %s (%s)\n", filepath.Dir(filepath.Join(info.MergingOrder[len(info.MergingOrder)-1])), info.StopReason)
 		}
 
 		return nil

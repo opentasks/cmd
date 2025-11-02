@@ -1,0 +1,42 @@
+Config Resolution Search (starting from current directory, walking up):
+
+Found config files:
+{{- if .FoundFiles}}
+{{- range $i, $file := .FoundFiles}}
+  {{add $i 1}}. {{$file}}{{if eq $i 0}} (HIGHEST PRIORITY - merged last){{end}}
+{{- end}}
+{{- else}}
+  (none found - using defaults)
+{{- end}}
+
+Merging order (lowest → highest priority):
+{{- if .MergingOrder}}
+{{- range .MergingOrder}}
+  {{.}}
+{{- end}}
+  = Resolved configuration
+{{- end}}
+
+Resolved Configuration:
+[project]
+{{- if .ProjectName}}
+name = {{quote .ProjectName}}
+{{- end}}
+{{- if .ProjectDescription}}
+description = {{quote .ProjectDescription}}
+{{- end}}
+{{- if .ProjectOwner}}
+owner = {{quote .ProjectOwner}}
+{{- end}}
+
+[workflow]
+statuses = [ {{range $i, $status := .Statuses}}{{if gt $i 0}}, {{end}}{{quote $status}}{{end}} ]
+initial = {{quote .Initial}}
+
+[storage]
+type = {{quote .StorageType}}
+path = {{quote .StoragePath}}  # RESOLVED ABSOLUTE PATH
+{{- if and .StopReason .MergingOrder}}
+
+Search stopped at: {{.StopDir}} ({{.StopReason}})
+{{- end}}
