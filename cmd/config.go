@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"text/template"
 
+	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
 	"github.com/zenobi-us/opentask/internal/config"
 )
@@ -112,9 +114,27 @@ var configViewCmd = &cobra.Command{
 			return fmt.Errorf("failed to parse template: %w", err)
 		}
 
-		if err := tmpl.Execute(os.Stdout, templateData); err != nil {
+		// Render markdown to a buffer first
+		var mdBuf bytes.Buffer
+		if err := tmpl.Execute(&mdBuf, templateData); err != nil {
 			return fmt.Errorf("failed to execute template: %w", err)
 		}
+
+		// Render markdown with syntax highlighting using glamour
+		renderer, err := glamour.NewTermRenderer(
+			glamour.WithAutoStyle(),
+			glamour.WithWordWrap(120),
+		)
+		if err != nil {
+			return fmt.Errorf("failed to create markdown renderer: %w", err)
+		}
+
+		output, err := renderer.Render(mdBuf.String())
+		if err != nil {
+			return fmt.Errorf("failed to render markdown: %w", err)
+		}
+
+		fmt.Print(output)
 
 		// Verbose output
 		if verboseFlag && len(info.FoundFiles) > 0 {
