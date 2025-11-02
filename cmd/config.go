@@ -229,25 +229,41 @@ var configViewCmd = &cobra.Command{
 		fmt.Print(output)
 
 		// Verbose output
-		if verboseFlag && len(info.FoundFiles) > 0 {
+		if verboseFlag {
 			fmt.Println("\n=== Verbose Mode: Merging Details ===")
-			for i, file := range info.MergingOrder {
-				fmt.Printf("\n[Step %d] Applying: %s\n", i+1, file)
-				cfg, err := config.LoadConfig(file)
-				if err != nil {
-					fmt.Printf("  Error loading: %v\n", err)
-					continue
-				}
-				if cfg.Project.Name != "" {
-					fmt.Printf("  - project.name: %q\n", cfg.Project.Name)
-				}
-				if len(cfg.Workflow.Statuses) > 0 {
-					fmt.Printf("  - workflow.statuses: %v\n", cfg.Workflow.Statuses)
-				}
-				if cfg.Storage.Path != "" {
-					fmt.Printf("  - storage.path: %q\n", cfg.Storage.Path)
+
+			// Show discovered config files
+			if len(info.FoundFiles) > 0 {
+				for i, file := range info.MergingOrder {
+					fmt.Printf("\n[Step %d] Applying: %s\n", i+1, file)
+					cfg, err := config.LoadConfig(file)
+					if err != nil {
+						fmt.Printf("  Error loading: %v\n", err)
+						continue
+					}
+					if cfg.Project.Name != "" {
+						fmt.Printf("  - project.name: %q\n", cfg.Project.Name)
+					}
+					if len(cfg.Workflow.Statuses) > 0 {
+						fmt.Printf("  - workflow.statuses: %v\n", cfg.Workflow.Statuses)
+					}
+					if cfg.Storage.Path != "" {
+						fmt.Printf("  - storage.path: %q\n", cfg.Storage.Path)
+					}
 				}
 			}
+
+			// Show defaults as final virtual layer
+			stepNum := len(info.MergingOrder) + 1
+			fmt.Printf("\n[Step %d] (Virtual) Default configuration\n", stepNum)
+			defaults := config.ProjectConfig{
+				Workflow:  config.DefaultWorkflow(),
+				Templates: config.DefaultTemplates(),
+				Storage:   config.DefaultStorage(),
+			}
+			fmt.Printf("  - workflow.statuses: %v\n", defaults.Workflow.Statuses)
+			fmt.Printf("  - workflow.initial: %q\n", defaults.Workflow.Initial)
+			fmt.Printf("  - storage.backend: %q\n", defaults.Storage.Backend)
 		}
 
 		return nil
