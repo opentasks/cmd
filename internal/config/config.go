@@ -101,12 +101,21 @@ func LoadConfig(configPath string) (*ProjectConfig, error) {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
-	// Apply defaults for missing sections
+	// Apply defaults for missing sections (but preserve values that were set)
 	if len(config.Workflow.Statuses) == 0 {
 		config.Workflow = DefaultWorkflow()
 	}
 	if config.Storage.Backend == "" {
-		config.Storage = DefaultStorage()
+		defaultStorage := DefaultStorage()
+		config.Storage.Backend = defaultStorage.Backend
+		// Don't override path if it was explicitly set
+		if config.Storage.Path == "" {
+			config.Storage.Path = defaultStorage.Path
+		}
+		// Don't override options if they were set
+		if len(config.Storage.Options) == 0 {
+			config.Storage.Options = defaultStorage.Options
+		}
 	}
 
 	// Resolve relative paths

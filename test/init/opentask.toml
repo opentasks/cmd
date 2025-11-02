@@ -1,0 +1,40 @@
+# opentask configuration for MyProject
+[project]
+name = "MyProject"
+description = ""
+owner = ""
+
+[workflow]
+statuses = ["todo", "in-progress", "reviewing", "done", "archived"]
+initial = "todo"
+
+# Transitions define allowed state changes
+[[workflow.transitions]]
+from = "todo"
+to = ["in-progress", "archived"]
+
+[[workflow.transitions]]
+from = "in-progress"
+to = ["reviewing", "todo", "archived"]
+
+[[workflow.transitions]]
+from = "reviewing"
+to = ["done", "in-progress", "archived"]
+
+[[workflow.transitions]]
+from = "done"
+to = ["archived"]
+
+[storage]
+backend = "markdown-fs"
+path = "./.tasks"
+
+[templates]
+# Leave empty to use built-in templates
+# Or specify custom template paths
+# epic = "templates/epic.md"
+# plan = "templates/plan.md"
+# research = "templates/research.md"
+# story = "templates/story.md"
+# decision = "templates/decision.md"
+# task = "templates/task.md"

@@ -1,0 +1,11 @@
+[project]
+name = "Test Project"
+owner = "me"
+
+[workflow]
+statuses = ["todo", "in-progress", "done"]
+initial = "todo"
+
+[storage]
+backend = "markdown-fs"
+path = "./tasks"
