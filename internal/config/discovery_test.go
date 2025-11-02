@@ -13,17 +13,17 @@ func TestDiscoverConfigFiles(t *testing.T) {
 
 	// Create directory structure:
 	// tmpDir/
-	//   opentask.toml (root)
+	//   .opentask.toml (root)
 	//   subdir/
-	//     opentask.toml (mid)
+	//     .opentask.toml (mid)
 	//     deep/
-	//       opentask.toml (leaf)
+	//       .opentask.toml (leaf)
 
-	rootConfig := filepath.Join(tmpDir, "opentask.toml")
+	rootConfig := filepath.Join(tmpDir, ".opentask.toml")
 	subdir := filepath.Join(tmpDir, "subdir")
-	midConfig := filepath.Join(subdir, "opentask.toml")
+	midConfig := filepath.Join(subdir, ".opentask.toml")
 	deepdir := filepath.Join(subdir, "deep")
-	leafConfig := filepath.Join(deepdir, "opentask.toml")
+	leafConfig := filepath.Join(deepdir, ".opentask.toml")
 
 	// Create directories
 	if err := os.MkdirAll(deepdir, 0755); err != nil {
@@ -65,19 +65,19 @@ func TestDiscoverConfigContinuesPastGitRoot(t *testing.T) {
 
 	// Create structure:
 	// tmpDir/
-	//   opentask.toml (further up the tree)
+	//   .opentask.toml (further up the tree)
 	//   subdir/
 	//     .git/
-	//     opentask.toml (git repo root)
+	//     .opentask.toml (git repo root)
 	//     deep/
-	//       opentask.toml (discovery starts here)
+	//       .opentask.toml (discovery starts here)
 
-	rootConfig := filepath.Join(tmpDir, "opentask.toml")
+	rootConfig := filepath.Join(tmpDir, ".opentask.toml")
 	subdir := filepath.Join(tmpDir, "subdir")
 	gitDir := filepath.Join(subdir, ".git")
-	subConfig := filepath.Join(subdir, "opentask.toml")
+	subConfig := filepath.Join(subdir, ".opentask.toml")
 	deepdir := filepath.Join(subdir, "deep")
-	deepConfig := filepath.Join(deepdir, "opentask.toml")
+	deepConfig := filepath.Join(deepdir, ".opentask.toml")
 
 	// Create directories and files
 	if err := os.MkdirAll(deepdir, 0755); err != nil {
@@ -219,11 +219,11 @@ func TestLoadConfigHierarchicalWithParentConfig(t *testing.T) {
 
 	// Create structure:
 	// tmpDir/
-	//   opentask.toml (parent config)
+	//   .opentask.toml (parent config)
 	//   subdir/
 	//     (no config here - should inherit from parent)
 
-	parentConfig := filepath.Join(tmpDir, "opentask.toml")
+	parentConfig := filepath.Join(tmpDir, ".opentask.toml")
 	parentContent := `
 [project]
 name = "Parent Project"
@@ -283,13 +283,13 @@ func TestLoadConfigHierarchicalWithMultipleLevels(t *testing.T) {
 
 	// Create structure:
 	// tmpDir/
-	//   opentask.toml (root: name, workflow)
+	//   .opentask.toml (root: name, workflow)
 	//   subdir/
-	//     opentask.toml (override name, add description)
+	//     .opentask.toml (override name, add description)
 	//     deep/
 	//       (no config - inherits from subdir)
 
-	rootConfig := filepath.Join(tmpDir, "opentask.toml")
+	rootConfig := filepath.Join(tmpDir, ".opentask.toml")
 	rootContent := `
 [project]
 name = "Root Project"
@@ -307,7 +307,7 @@ initial = "todo"
 		t.Fatalf("Failed to create subdir: %v", err)
 	}
 
-	subConfig := filepath.Join(subdir, "opentask.toml")
+	subConfig := filepath.Join(subdir, ".opentask.toml")
 	subContent := `
 [project]
 name = "Sub Project"

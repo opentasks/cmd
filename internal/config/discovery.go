@@ -6,9 +6,10 @@ import (
 	"path/filepath"
 )
 
-// DiscoverConfigFiles walks up from the given file path to find all opentask.toml files
+// DiscoverConfigFiles walks up from the given file path to find all .opentask.toml files
+// Also checks for user global config at ~/.config/opentask/config.toml
 // Stops at filesystem root
-// Returns files in order from closest to furthest (leaf to root)
+// Returns files in order from closest to furthest (leaf to root), with user config last
 func DiscoverConfigFiles(startPath string) ([]string, error) {
 	var found []string
 
@@ -28,8 +29,8 @@ func DiscoverConfigFiles(startPath string) ([]string, error) {
 	}
 
 	for {
-		// Check if opentask.toml exists in current directory
-		configPath := filepath.Join(currentDir, "opentask.toml")
+		// Check if .opentask.toml exists in current directory
+		configPath := filepath.Join(currentDir, ".opentask.toml")
 		if _, err := os.Stat(configPath); err == nil {
 			found = append(found, configPath)
 		}
@@ -43,6 +44,15 @@ func DiscoverConfigFiles(startPath string) ([]string, error) {
 
 		// Move to parent directory
 		currentDir = parent
+	}
+
+	// Check for user global config at ~/.config/opentask/config.toml
+	homeDir, err := os.UserHomeDir()
+	if err == nil {
+		userConfigPath := filepath.Join(homeDir, ".config", "opentask", "config.toml")
+		if _, err := os.Stat(userConfigPath); err == nil {
+			found = append(found, userConfigPath)
+		}
 	}
 
 	return found, nil

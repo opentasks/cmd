@@ -13,12 +13,12 @@ func TestInitializeStorageWithParentConfig(t *testing.T) {
 
 	// Create structure:
 	// tmpDir/
-	//   opentask.toml (parent config)
+	//   .opentask.toml (parent config)
 	//   tasks/
 	//   subdir/
 	//     (no config - should inherit from parent)
 
-	parentConfig := filepath.Join(tmpDir, "opentask.toml")
+	parentConfig := filepath.Join(tmpDir, ".opentask.toml")
 	parentContent := `[project]
 name = "Parent Project"
 description = "Parent Description"
@@ -98,7 +98,7 @@ func TestInitializeStorageWithExplicitConfigPath(t *testing.T) {
 
 	// Create two config files at different locations
 	config1Dir := filepath.Join(tmpDir, "config1")
-	config1Path := filepath.Join(config1Dir, "opentask.toml")
+	config1Path := filepath.Join(config1Dir, ".opentask.toml")
 	if err := os.MkdirAll(config1Dir, 0755); err != nil {
 		t.Fatalf("Failed to create config1 dir: %v", err)
 	}
@@ -114,7 +114,7 @@ path = "config1-tasks"
 	}
 
 	config2Dir := filepath.Join(tmpDir, "config2")
-	config2Path := filepath.Join(config2Dir, "opentask.toml")
+	config2Path := filepath.Join(config2Dir, ".opentask.toml")
 	if err := os.MkdirAll(config2Dir, 0755); err != nil {
 		t.Fatalf("Failed to create config2 dir: %v", err)
 	}

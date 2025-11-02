@@ -14,17 +14,29 @@ The CLI searches for `opentask.toml` files starting from your current working di
 ### Discovery Examples
 
 ```
-Project structure:
-├── opentask.toml         # Root config (project-wide defaults)
-├── tasks/
-│   └── mytask.md
-└── subproject/
-    └── special-tasks/    # Working directory here
-        └── task.md
+/                                        # filesystem root
+├── home/user/
+│   ├── .config/opentask/config.toml     # global user config
+│   ├── .local/share/opentask/
+│   │   └── templates/
+│   └── projects/
+│       ├── .opentask.toml                # global projects config
+│       └── myproject/
+│           ├── .opentask.toml            # project-specific config
+│           └── subproject/
+│               ├── .opentask.toml        # subproject-specific config
+│               └── workingdir/          # current working directory
+```
+
+When running from workingdir/:
+- Searches: workingdir/ → subproject/ → myproject/ → projects/ → home/user/ → /
+- Finds: .opentask.toml (subproject), .opentask.toml (myproject), .config/opentask/config.toml (user)
+- Uses: merged config (subproject overrides myproject overrides user)                  (current working directory)
+```
 
 When running from special-tasks/:
 - Searches: special-tasks/ → subproject/ → root/
-- Finds: opentask.toml (root)
+- Finds: .opentask.toml (root)
 - Uses: root config settings
 ```
 

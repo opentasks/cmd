@@ -258,7 +258,7 @@ var configViewCmd = &cobra.Command{
 var configInitCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize a new project",
-	Long:  "Create a new opentask.toml configuration file in the current directory",
+	Long:  "Create a new .opentask.toml configuration file in the current directory",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		nameFlag, _ := cmd.Flags().GetString("name")
 		storagePath, _ := cmd.Flags().GetString("storage")
@@ -270,11 +270,11 @@ var configInitCmd = &cobra.Command{
 			return fmt.Errorf("failed to get current working directory: %w", err)
 		}
 
-		configPath := filepath.Join(cwd, "opentask.toml")
+		configPath := filepath.Join(cwd, ".opentask.toml")
 
 		// Check if config already exists
 		if _, err := os.Stat(configPath); err == nil && !forceFlag {
-			return fmt.Errorf("opentask.toml already exists in %s. Use --force to overwrite", cwd)
+			return fmt.Errorf(".opentask.toml already exists in %s. Use --force to overwrite", cwd)
 		}
 
 		// Determine project name
@@ -397,7 +397,7 @@ func init() {
 	// Flags for config init
 	configInitCmd.Flags().StringP("name", "n", "", "Project name (default: current directory name)")
 	configInitCmd.Flags().StringP("storage", "s", "./.tasks/", "Storage path (default: ./.tasks/)")
-	configInitCmd.Flags().BoolP("force", "f", false, "Overwrite existing config.toml")
+	configInitCmd.Flags().BoolP("force", "f", false, "Overwrite existing .opentask.toml")
 
 	// Flags for config view
 	configViewCmd.Flags().BoolP("path", "p", false, "Show only the resolved storage path")
