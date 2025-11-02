@@ -59,15 +59,21 @@ func initializeStorage(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to resolve project path: %w", err)
 	}
 
-	// Load configuration
-	cfgPath := filepath.Join(absPath, "config.toml")
-	if configPath != "" {
-		cfgPath = configPath
-	}
+	// Load configuration hierarchically (searches up from current path)
+	var cfg *config.ProjectConfig
 
-	cfg, err := config.LoadConfig(cfgPath)
-	if err != nil {
-		return fmt.Errorf("failed to load configuration: %w", err)
+	if configPath != "" {
+		// Explicit config path provided - load only that file
+		cfg, err = config.LoadConfig(configPath)
+		if err != nil {
+			return fmt.Errorf("failed to load configuration from %s: %w", configPath, err)
+		}
+	} else {
+		// Discover and load configs hierarchically from the project path
+		cfg, _, err = config.LoadConfigHierarchical(absPath)
+		if err != nil {
+			return fmt.Errorf("failed to load configuration: %w", err)
+		}
 	}
 
 	// Ensure storage path is set
