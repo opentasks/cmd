@@ -14,8 +14,8 @@ import (
 	"github.com/zenobi-us/opentask/internal/config"
 )
 
-// buildConfigFileTree creates a hierarchical list of resolved config files
-// Files are shown in priority order (highest first) with file tree ASCII characters
+// buildConfigFileTree creates a list of resolved config files with merge flow indicators
+// Files are shown in priority order (highest first)
 func buildConfigFileTree(files []string) string {
 	var result strings.Builder
 
@@ -43,17 +43,15 @@ func buildConfigFileTree(files []string) string {
 	}
 	allItems[len(files)] = "(builtin) defaults"
 
-	// Render as tree
+	// Render as vertical list
 	for i, item := range allItems {
-		indent := strings.Repeat("  ", i)
-
 		if i == len(allItems)-1 {
 			// Last item
-			result.WriteString(fmt.Sprintf("%s└── %s\n", indent, item))
+			result.WriteString(fmt.Sprintf("└── %s\n", item))
 		} else {
 			// Not last item
-			result.WriteString(fmt.Sprintf("%s├── %s\n", indent, item))
-			result.WriteString(fmt.Sprintf("%s│   ↓\n", indent))
+			result.WriteString(fmt.Sprintf("├── %s\n", item))
+			result.WriteString("│   ↓\n")
 		}
 	}
 
