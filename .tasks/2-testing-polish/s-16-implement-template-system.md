@@ -1,5 +1,5 @@
 ---
-id: 15
+id: 16
 title: Implement template system
 type: story
 status: todo
