@@ -15,11 +15,12 @@ import (
 )
 
 // buildConfigFileTree creates a hierarchical list of resolved config files
-// Files are shown in priority order (highest first) with proper indentation and merge indicators
+// Files are shown in priority order (highest first) with file tree ASCII characters
 func buildConfigFileTree(files []string) string {
 	var result strings.Builder
 
-	// Add discovered config files
+	// Build list with all items (config files + defaults)
+	allItems := make([]string, len(files)+1)
 	for i, file := range files {
 		// Get path relative to current directory for most readable display
 		cwd, err := os.Getwd()
@@ -38,32 +39,22 @@ func buildConfigFileTree(files []string) string {
 				relPath = "~" + relPath[idx+len(homeDir):]
 			}
 		}
+		allItems[i] = relPath
+	}
+	allItems[len(files)] = "(builtin) defaults"
 
-		// Add indentation based on position in hierarchy
+	// Render as tree
+	for i, item := range allItems {
 		indent := strings.Repeat("  ", i)
 
-		// Format with dash bullet
-		if i == 0 {
-			// First item - no leading dash
-			result.WriteString(fmt.Sprintf("%s%s", indent, relPath))
+		if i == len(allItems)-1 {
+			// Last item
+			result.WriteString(fmt.Sprintf("%s└── %s\n", indent, item))
 		} else {
-			// Subsequent items - with dash
-			result.WriteString(fmt.Sprintf("%s- %s", indent, relPath))
+			// Not last item
+			result.WriteString(fmt.Sprintf("%s├── %s\n", indent, item))
+			result.WriteString(fmt.Sprintf("%s│   ↓\n", indent))
 		}
-
-		// Add merge arrow if not the last item
-		if i < len(files)-1 {
-			result.WriteString("\n")
-			result.WriteString(fmt.Sprintf("%s  ↓\n", indent))
-		}
-	}
-
-	// Add builtin defaults as final item
-	if len(files) > 0 {
-		result.WriteString("\n")
-		result.WriteString(fmt.Sprintf("%s  ↓\n", strings.Repeat("  ", len(files)-1)))
-		indent := strings.Repeat("  ", len(files))
-		result.WriteString(fmt.Sprintf("%s- (builtin) defaults", indent))
 	}
 
 	return result.String()
