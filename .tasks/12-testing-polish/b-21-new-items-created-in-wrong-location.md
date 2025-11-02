@@ -16,55 +16,81 @@ updatedAt: "2025-11-02T20:50:00Z"
 ## Problem
 When creating new tasks via CLI, they are not being saved in the correct project location. This is likely due to insufficient configuration validation and unclear config resolution logic.
 
-The system should support hierarchical config discovery (local → parent dirs → home), but it's unclear if:
-- The resolved config path is correct
-- Multiple config files are being properly merged
-- Task storage location is being determined from the right config source
+## Config Resolution Strategy
+
+The system implements hierarchical config discovery with merging:
+
+1. **Config File Discovery:** Search for `opentasks.toml` starting from current directory and walking up parent directories
+2. **Stop Conditions:** Stop searching when reaching either:
+   - Filesystem root (`/`)
+   - Git repository root (`.git` directory found)
+3. **Merging Strategy:** Later configs (closer to current directory) are merged on top of earlier configs (parent directories), so:
+   - Closest `opentasks.toml` has highest priority
+   - Parent directory `opentasks.toml` values fill in gaps
+   - Further parent configs provide additional values
+   - System defaults are lowest priority
+
+**Example:** For `/path/to/project/subfolder/task`:
+```
+Start: /path/to/project/subfolder/
+Found: opentasks.toml ← highest priority (merge this first)
+
+Check parent: /path/to/project/
+Found: opentasks.toml ← merge on top
+
+Check parent: /path/to/
+Not found
+
+Stop: /path/to (or if .git found here)
+```
 
 ## Root Cause Analysis
 Suspected insufficient validation in config loading:
-1. Config file discovery may not be walking up parent directories correctly
-2. Multiple config sources (./opentasks.toml, parent dir opentasks.toml, ~/.config/opentasks/config.toml) may not be merged properly
-3. No visibility into which config is actually being used
+1. Config file discovery may not be stopping correctly at git repo root or filesystem root
+2. Multiple config files may not be merged in correct order (closest to current dir on top)
+3. No visibility into which config files were found or how they were merged
 4. No way to verify resolved storage path before creating tasks
 
 ## Solution: Two New Commands Needed
 
 ### 1. `config view` (or `config show`)
-Display the resolved configuration after all merging and defaults.
+Display the resolved configuration after all walking and merging.
 
-**Purpose:** Help users understand which config is being used and what the final settings are.
+**Purpose:** Help users understand which config files were found, how they were merged, and what the final settings are.
 
 **Output:**
 ```
-Config Resolution Path:
-  1. Current directory: ./opentasks.toml (found: yes/no)
-  2. Parent directories: ../, ../../ (found: yes/no)
-  3. Home directory: ~/.config/opentasks/config.toml (found: yes/no)
+Config Resolution Search (starting from current directory, walking up):
+
+Found config files:
+  1. /path/to/project/subfolder/opentasks.toml (HIGHEST PRIORITY - merged last)
+  2. /path/to/project/opentasks.toml
+  3. /path/to/opentasks.toml (stopped here - git repo root found)
+
+Merging order (lowest → highest priority):
+  /path/to/opentasks.toml
+  + /path/to/project/opentasks.toml
+  + /path/to/project/subfolder/opentasks.toml
+  = Resolved configuration
 
 Resolved Configuration:
 [project]
 name = "My Project"
-...
 
 [workflow]
 statuses = ["todo", "in-progress", "done"]
-...
 
 [storage]
 type = "markdown"
-path = "/Users/me/.local/share/opentasks/projects/abc123/"  # RESOLVED PATH
+path = "/path/to/project/subfolder/.tasks/"  # RESOLVED ABSOLUTE PATH
 
-Active config sources (in order of precedence):
-  - ./opentasks.toml (local, highest priority)
-  - ~/.config/opentasks/config.toml (user-level)
-  - Built-in defaults (lowest priority)
+Search stopped at: /path/to/ (git repository root)
 ```
 
 **Flags:**
 - `--json` - Output resolved config as JSON
-- `--path` - Show only the resolved storage path
-- `--verbose` - Show config resolution details and merging order
+- `--path` - Show only the resolved storage path  
+- `--verbose` - Show each config file contents during merging
 
 ### 2. `config init` (or `opentasks init`)
 Initialize a new OpenTasks project in the current directory.
@@ -104,26 +130,40 @@ Next steps:
 - Init creates valid TOML config
 
 ### Integration Tests
-1. **Config Discovery:**
+1. **Config Discovery and Merging:**
    - Config in current dir is found
-   - Config in parent dir is found
-   - Multiple levels of parent dirs are checked
-   - Precedence order is correct (local > parent > home)
+   - Configs in multiple parent dirs are found and walked
+   - Search stops at filesystem root
+   - Search stops at git repository root (.git directory)
+   - Configs are merged in correct order (furthest parent first, current dir last)
+   - Closest config values override parent values
+   - Merging respects TOML structure (sections merge correctly)
 
-2. **Task Creation After Init:**
+2. **Config View Output:**
+   - Lists all found config files in discovery order
+   - Shows merging order and precedence
+   - Displays final resolved storage path (absolute)
+   - `--path` flag shows only storage path
+   - `--json` outputs valid JSON with all resolution details
+
+3. **Task Creation After Init:**
    - `config init` creates valid config
-   - `task new` creates task in correct location specified by config
-   - Tasks appear when listed
-   - Storage path from config is used
+   - `task new` creates task in location specified by resolved config
+   - Tasks appear in correct directory when listed
+   - Storage path from merged config is respected
+   - Multiple config levels work together correctly
 
 ## Acceptance Criteria
-- [ ] `config view` displays resolved configuration
-- [ ] `config view --json` outputs valid JSON
-- [ ] `config view --path` shows only storage path
+- [ ] Config discovery walks up from current dir and stops at filesystem root or git repo root
+- [ ] Multiple config files found during walk are all listed by `config view`
+- [ ] Configs are merged in correct order (furthest parent first, current dir last/highest priority)
+- [ ] `config view` displays all found config files and merging order
+- [ ] `config view --path` shows only the resolved storage path (absolute)
+- [ ] `config view --json` outputs valid JSON with resolution details
 - [ ] `config init` creates ./opentasks.toml in current dir
-- [ ] Config is properly validated after init
-- [ ] Tasks created after init appear in correct location
-- [ ] Multiple config sources are merged in correct order (local → parent → home)
-- [ ] Helpful error messages if config is invalid
+- [ ] Config is properly validated and merged after init
+- [ ] Tasks created after init appear in correct location from resolved config
+- [ ] Helpful error messages if config files are invalid or unreadable
 - [ ] `--help` text provided for both commands
-- [ ] Integration tests verify full workflow
+- [ ] Integration tests verify config merging with multiple levels
+- [ ] Integration tests verify task creation uses merged config path
