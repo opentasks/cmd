@@ -2,7 +2,7 @@
 id: 24
 title: Add color output for terminal
 type: story
-status: todo
+status: done
 tags:
     - feature
     - ui

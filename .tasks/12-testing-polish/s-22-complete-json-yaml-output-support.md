@@ -2,7 +2,7 @@
 id: 22
 title: Complete JSON/YAML output support
 type: story
-status: todo
+status: done
 tags:
     - feature
     - output

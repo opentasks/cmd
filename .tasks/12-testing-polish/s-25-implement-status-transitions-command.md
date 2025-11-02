@@ -2,7 +2,7 @@
 id: 25
 title: Implement status transitions command
 type: story
-status: todo
+status: done
 tags:
     - feature
     - workflow

@@ -2,7 +2,7 @@
 id: 23
 title: Add command aliases for convenience
 type: story
-status: todo
+status: done
 tags:
     - feature
     - cli
