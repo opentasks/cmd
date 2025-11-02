@@ -3,8 +3,8 @@ package query
 import (
 	"context"
 
-	"github.com/zenobi-us/opentasks/internal/model"
-	"github.com/zenobi-us/opentasks/internal/storage"
+	"github.com/zenobi-us/opentask/internal/model"
+	"github.com/zenobi-us/opentask/internal/storage"
 )
 
 // QueryEngine provides a convenient query interface on top of storage

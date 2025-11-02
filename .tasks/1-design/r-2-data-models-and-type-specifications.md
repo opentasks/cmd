@@ -13,13 +13,13 @@ updatedAt: 2025-11-02T08:00:00Z
 
 # Data Models and Type Specifications
 
-Complete type specifications for the OpenTasks system. This is a reference document for implementation.
+Complete type specifications for the opentask system. This is a reference document for implementation.
 
 ## Core Types
 
 ### Task
 
-The fundamental unit in OpenTasks. Represents any trackable work item.
+The fundamental unit in opentask. Represents any trackable work item.
 
 ```go
 // NOTE: This is a design specification, not production code.
@@ -242,14 +242,14 @@ Files are organized hierarchically by epic with human-readable names:
 Example structure:
 
 ```
-1-design-opentasks/
+1-design-opentask/
   p-3-design-roadmap.md
   r-4-evaluate-storage.md
   s-5-task-data-model.md
 2-implement-core/
   s-11-build-storage.md
   t-13-write-tests.md
-e-1-design-opentasks.md
+e-1-design-opentask.md
 e-2-implement-core.md
 ```
 

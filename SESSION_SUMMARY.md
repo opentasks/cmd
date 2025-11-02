@@ -1,4 +1,4 @@
-# OpenTasks Session Summary
+# opentask Session Summary
 
 **Date**: November 2, 2025  
 **Duration**: Single comprehensive session  
@@ -48,7 +48,7 @@ Set up professional development environment:
   - Testing (3 tasks): unit, integration, e2e
   - Features (3 tasks): task linking, templates, output formats
   - Polish (1 task): error messages
-- Real tasks using OpenTasks itself (dog-food!)
+- Real tasks using opentask itself (dog-food!)
 
 #### Documentation
 - `.gitignore` updated for artifacts
@@ -76,7 +76,7 @@ b82abff docs: add mise configuration guide
 3f6ec1b docs: mark implementation phase as complete
 e3ad1f0 docs: add quickstart guide for users
 2d14f8e docs: add implementation summary for MVP completion
-306109e feat: implement core opentasks MVP (main work)
+306109e feat: implement core opentask MVP (main work)
 ```
 
 ## Current State
@@ -88,9 +88,9 @@ e3ad1f0 docs: add quickstart guide for users
 mise run build
 
 # Use
-./opentasks --path my_project task new "Epic" --type epic
-./opentasks --path my_project task list
-./opentasks --path my_project task show 1
+./opentask --path my_project task new "Epic" --type epic
+./opentask --path my_project task list
+./opentask --path my_project task show 1
 
 # Demo
 mise run demo
@@ -100,7 +100,7 @@ mise run demo
 
 ```bash
 # Work on next feature
-./opentasks --path .tasks task list
+./opentask --path .tasks task list
 
 # Pick a Phase 2 task and start implementing
 mise run test-storage  # Test one package
@@ -111,10 +111,10 @@ mise run lint          # Check for issues
 ## File Structure
 
 ```
-opentasks/
+opentask/
 ├── cmd/
 │   ├── config.go, project.go, root.go, task.go
-│   └── opentasks/main.go
+│   └── opentask/main.go
 ├── internal/
 │   ├── model/          (Task, Relationship)
 │   ├── storage/        (Interface + 2 backends)
@@ -170,7 +170,7 @@ opentasks/
 
 ### CLI Commands
 ```
-opentasks
+opentask
   ├── task
   │   ├── new [title] --type --status --parent --tag
   │   ├── list [--status] [--type] [--parent] [--tag]
@@ -211,13 +211,13 @@ The following tasks are tracked in `.tasks/`:
 To start Phase 2:
 
 ```bash
-./opentasks --path .tasks task list
+./opentask --path .tasks task list
 # Pick a task and update its status
-./opentasks --path .tasks task update <id> --status in-progress
+./opentask --path .tasks task update <id> --status in-progress
 # Implement and test
 mise run test
 # Mark complete when done
-./opentasks --path .tasks task update <id> --status done
+./opentask --path .tasks task update <id> --status done
 ```
 
 ## Testing Status
@@ -242,7 +242,7 @@ mise run test
 
 ### Build
 ```bash
-go build -o opentasks ./cmd/opentasks
+go build -o opentask ./cmd/opentask
 ```
 
 ### Test
@@ -252,21 +252,21 @@ go test ./...
 
 ### Run
 ```bash
-./opentasks --help
+./opentask --help
 ```
 
 ## Key Decisions Made
 
-1. **Module Name**: `github.com/zenobi-us/opentasks` (corrected from initial typo)
+1. **Module Name**: `github.com/zenobi-us/opentask` (corrected from initial typo)
 2. **Go Version**: 1.21 (via mise)
 3. **Storage Path**: Empty string defaults to project directory (not ".")
 4. **Demo Projects**: Added to .gitignore to keep repo clean
-5. **Development Tasks**: Tracked in `.tasks/` using OpenTasks itself
+5. **Development Tasks**: Tracked in `.tasks/` using opentask itself
 
 ## Lessons & Best Practices
 
 1. **Design Phase Preparation**: Having complete design specs made implementation straightforward
-2. **Dog-Fooding**: Using OpenTasks for its own task tracking is excellent validation
+2. **Dog-Fooding**: Using opentask for its own task tracking is excellent validation
 3. **Mise Integration**: Task runner makes development faster and more consistent
 4. **Documentation**: Comprehensive docs for both users and developers
 5. **Clean Git History**: Meaningful commits with good messages
@@ -301,13 +301,13 @@ go test ./...
 
 ```bash
 # Start next session
-cd /mnt/Store/Projects/Mine/Github/opentasks
+cd /mnt/Store/Projects/Mine/Github/opentask
 
 # Check development status
-./opentasks --path .tasks task list
+./opentask --path .tasks task list
 
 # Pick a Phase 2 task
-./opentasks --path .tasks task update <id> --status in-progress
+./opentask --path .tasks task update <id> --status in-progress
 
 # Work on it using mise
 mise run build
@@ -316,14 +316,14 @@ mise run fmt
 mise run lint
 
 # When done
-./opentasks --path .tasks task update <id> --status done
+./opentask --path .tasks task update <id> --status done
 ```
 
 ---
 
 **Status**: ✅ COMPLETE & READY  
 **Branch**: `design`  
-**Module**: `github.com/zenobi-us/opentasks`  
+**Module**: `github.com/zenobi-us/opentask`  
 **Quality**: Production-ready for MVP  
 **Documentation**: Comprehensive  
 **Next Phase**: Ready to implement Phase 2 (testing, features, polish)

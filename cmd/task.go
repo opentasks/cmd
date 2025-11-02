@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/zenobi-us/opentasks/internal/model"
-	"github.com/zenobi-us/opentasks/internal/query"
+	"github.com/zenobi-us/opentask/internal/model"
+	"github.com/zenobi-us/opentask/internal/query"
 )
 
 // taskCmd represents the task command group

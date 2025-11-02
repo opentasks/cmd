@@ -1,8 +1,8 @@
-# OpenTasks Design Summary
+# opentask Design Summary
 
 Quick reference for understanding the system architecture. Read this first, then consult `.tasks/design/` for detailed specifications.
 
-## What is OpenTasks?
+## What is opentask?
 
 A markdown-based task management system written in Go. Tasks are stored as `.md` files with YAML frontmatter metadata. The system supports customizable workflows, task relationships, and pluggable storage backends.
 
@@ -62,8 +62,8 @@ relationships:
 project-root/
 ├── .tasks/                              # Default local task location
 │   ├── config.toml                      # Optional (all defaults work without it)
-│   ├── e-1-design-opentasks.md          # Epic at root: e-{id}-{slug}.md
-│   ├── 1-design-opentasks/              # Epic subdirectory: {id}-{slug}/
+│   ├── e-1-design-opentask.md          # Epic at root: e-{id}-{slug}.md
+│   ├── 1-design-opentask/              # Epic subdirectory: {id}-{slug}/
 │   │   ├── p-3-design-roadmap.md        # Child task: {type}-{id}-{slug}.md
 │   │   ├── s-5-task-data-model.md
 │   │   └── s-6-semantic-id-system.md
@@ -75,8 +75,8 @@ project-root/
 ```
 
 Alternative locations:
-- `${XDG_DATA_HOME}/opentasks/projects/{derived-id}/` (user-level, git-aware)
-- Any path via `--path` flag or `OPENTASKS_PROJECT_PATH` env var
+- `${XDG_DATA_HOME}/opentask/projects/{derived-id}/` (user-level, git-aware)
+- Any path via `--path` flag or `opentask_PROJECT_PATH` env var
 
 ### Configuration (config.toml)
 
@@ -150,7 +150,7 @@ Filter helpers: `WithStatus()`, `WithType()`, `WithTag()`, `WithParent()`, `With
 Commands follow this structure:
 
 ```
-opentasks
+opentask
 ├── task
 │   ├── new <title>        # Create new task
 │   ├── list               # List tasks with filters
@@ -180,7 +180,7 @@ See `.tasks/design/1.research.md` for complete Go code.
 ### In Git Repo
 
 ```
-opentasks/
+opentask/
 ├── README.md
 ├── DESIGN_SUMMARY.md       # This file
 ├── go.mod, go.sum
@@ -256,7 +256,7 @@ any-project/
 4. **File structure**: `.tasks/design/3.research.md`
 5. **Design rationale**: `.tasks/design/*story.md`
 
-All tasks are tracked in `.tasks/design/` using the OpenTasks format itself (dog-fooding).
+All tasks are tracked in `.tasks/design/` using the opentask format itself (dog-fooding).
 
 ## Quick Reference
 
@@ -285,8 +285,8 @@ This is a test task.
 
 **Common operations** (future CLI):
 ```bash
-opentasks task new "Build API" --type story --parent e-5
-opentasks task ls --status in-progress --type story
-opentasks task show s-42
-opentasks task link s-42 --blocks s-10
+opentask task new "Build API" --type story --parent e-5
+opentask task ls --status in-progress --type story
+opentask task show s-42
+opentask task link s-42 --blocks s-10
 ```

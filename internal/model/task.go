@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-// Task represents a trackable work item in OpenTasks
+// Task represents a trackable work item in opentask
 type Task struct {
 	// Identity and Metadata
 	ID     int    // Global sequential ID (e.g., 42, 5)

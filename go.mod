@@ -1,4 +1,4 @@
-module github.com/zenobi-us/opentasks
+module github.com/zenobi-us/opentask
 
 go 1.21
 

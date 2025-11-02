@@ -8,8 +8,8 @@ dist/
 .env
 
 # Build artifacts
-opentasks
-opentasks.exe
+opentask
+opentask.exe
 
 # Demo and test projects
 demo/

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zenobi-us/opentasks/internal/model"
-	"github.com/zenobi-us/opentasks/internal/storage"
+	"github.com/zenobi-us/opentask/internal/model"
+	"github.com/zenobi-us/opentask/internal/storage"
 )
 
 func newTestTask(id int, title, taskType, status string) *model.Task {

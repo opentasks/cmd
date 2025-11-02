@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/zenobi-us/opentasks/internal/config"
-	"github.com/zenobi-us/opentasks/internal/query"
-	"github.com/zenobi-us/opentasks/internal/storage"
+	"github.com/zenobi-us/opentask/internal/config"
+	"github.com/zenobi-us/opentask/internal/query"
+	"github.com/zenobi-us/opentask/internal/storage"
 )
 
 var (
@@ -26,9 +26,9 @@ var (
 
 // rootCmd represents the base command
 var rootCmd = &cobra.Command{
-	Use:   "opentasks",
-	Short: "OpenTasks - A simple task management system",
-	Long: `OpenTasks is a task management system that stores tasks as markdown files
+	Use:   "opentask",
+	Short: "opentask - A simple task management system",
+	Long: `opentask is a task management system that stores tasks as markdown files
 with YAML frontmatter. It provides a command-line interface for managing tasks,
 organizing them hierarchically, and tracking relationships.`,
 	PersistentPreRunE:  initializeStorage,
@@ -46,7 +46,7 @@ func initializeStorage(cmd *cobra.Command, args []string) error {
 	path := projectPath
 	if path == "" {
 		// Try environment variable
-		path = os.Getenv("OPENTASKS_PROJECT_PATH")
+		path = os.Getenv("opentask_PROJECT_PATH")
 	}
 	if path == "" {
 		// Use current directory

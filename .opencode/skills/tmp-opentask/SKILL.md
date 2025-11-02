@@ -1,17 +1,17 @@
 ---
 name: tmp-opentask
-description: Use when needing to create temporary OpenTasks documentation for agents.
+description: Use when needing to create temporary opentask documentation for agents.
 license: MIT
 ---
 # Task Management Guide for Agents
 
-> **NOTE**: This guide describes manual task management using the OpenTasks CLI. This is temporary until the OpenTasks tool becomes feature-complete and fully usable through the MCP interface. Once complete, tasks should be managed through the proper tool integration rather than direct CLI commands.
+> **NOTE**: This guide describes manual task management using the opentask CLI. This is temporary until the opentask tool becomes feature-complete and fully usable through the MCP interface. Once complete, tasks should be managed through the proper tool integration rather than direct CLI commands.
 
 This file documents conventions and best practices for managing tasks in the `.tasks/` directory.
 
 ## Overview
 
-The `.tasks/` directory uses the OpenTasks format itself to track project work. All files in this directory are task files (`.md` format) with YAML frontmatter metadata.
+The `.tasks/` directory uses the opentask format itself to track project work. All files in this directory are task files (`.md` format) with YAML frontmatter metadata.
 
 **Core Principle**: Tasks are immutable records. Files are **never removed** - only marked as complete or archived.
 
@@ -42,19 +42,19 @@ Markdown content describing the task, requirements, notes, etc.
 
 ## Creating New Tasks
 
-### Using OpenTasks CLI
+### Using opentask CLI
 
 The easiest way to create new tasks:
 
 ```bash
 # Create a simple task
-./opentasks --path .tasks task new "Task title" --type story
+./opentask --path .tasks task new "Task title" --type story
 
 # Create with parent epic
-./opentasks --path .tasks task new "Task title" --type story --parent 1
+./opentask --path .tasks task new "Task title" --type story --parent 1
 
 # Create with tags
-./opentasks --path .tasks task new "Task title" --type story --tag feature --tag urgent
+./opentask --path .tasks task new "Task title" --type story --tag feature --tag urgent
 ```
 
 ### Using Templates
@@ -74,7 +74,7 @@ If creating files manually:
 
 ```bash
 # Get next ID
-./opentasks --path .tasks task list | tail -1  # Shows max current ID
+./opentask --path .tasks task list | tail -1  # Shows max current ID
 
 # Create file with proper naming
 touch ".tasks/1-my-epic/s-<next_id>-my-story.md"
@@ -183,7 +183,7 @@ updatedAt: 2025-11-02T12:34:56Z  # RFC3339 format
 
 Or use CLI to update automatically:
 ```bash
-./opentasks --path .tasks task update <id> --status in-progress
+./opentask --path .tasks task update <id> --status in-progress
 ```
 
 ### Keep Files Organized
@@ -198,7 +198,7 @@ Or use CLI to update automatically:
 IDs are globally sequential integers (1, 2, 3, ...). Use the CLI to get the next ID:
 
 ```bash
-./opentasks --path .tasks task list | wc -l  # Current count
+./opentask --path .tasks task list | wc -l  # Current count
 ```
 
 Next ID = current count + 1
@@ -209,23 +209,23 @@ Next ID = current count + 1
 
 1. **List current tasks**
    ```bash
-   ./opentasks --path .tasks task list
-   ./opentasks --path .tasks task list --status todo
+   ./opentask --path .tasks task list
+   ./opentask --path .tasks task list --status todo
    ```
 
 2. **Create new epic** (for major features)
    ```bash
-   ./opentasks --path .tasks task new "Epic Name" --type epic
+   ./opentask --path .tasks task new "Epic Name" --type epic
    ```
 
 3. **Create subtasks** (under epic)
    ```bash
-   ./opentasks --path .tasks task new "Task name" --type story --parent <epic_id>
+   ./opentask --path .tasks task new "Task name" --type story --parent <epic_id>
    ```
 
 4. **Mark in progress** (when starting work)
    ```bash
-   ./opentasks --path .tasks task update <id> --status in-progress
+   ./opentask --path .tasks task update <id> --status in-progress
    ```
 
 5. **Update content** (add details, notes)
@@ -236,12 +236,12 @@ Next ID = current count + 1
 
 6. **Mark complete** (when done)
    ```bash
-   ./opentasks --path .tasks task update <id> --status done
+   ./opentask --path .tasks task update <id> --status done
    ```
 
 7. **Archive old tasks** (after long period)
    ```bash
-   ./opentasks --path .tasks task update <id> --status archived
+   ./opentask --path .tasks task update <id> --status archived
    ```
 
 ## File Locations and Purposes
@@ -275,42 +275,42 @@ Use tags consistently across tasks.
 
 ```bash
 # 1. Create epic for feature
-./opentasks --path .tasks task new "Add user authentication" --type epic
+./opentask --path .tasks task new "Add user authentication" --type epic
 
 # 2. Check it was created (note the ID)
-./opentasks --path .tasks task list --type epic
+./opentask --path .tasks task list --type epic
 
 # 3. Create research task
-./opentasks --path .tasks task new "Research OAuth providers" \
+./opentask --path .tasks task new "Research OAuth providers" \
   --type research --parent 1 --tag research
 
 # 4. Create implementation stories
-./opentasks --path .tasks task new "Implement OAuth login" \
+./opentask --path .tasks task new "Implement OAuth login" \
   --type story --parent 1 --tag feature
 
-./opentasks --path .tasks task new "Add password reset flow" \
+./opentask --path .tasks task new "Add password reset flow" \
   --type story --parent 1 --tag feature
 
 # 5. Create testing task
-./opentasks --path .tasks task new "Test authentication flows" \
+./opentask --path .tasks task new "Test authentication flows" \
   --type task --parent 1 --tag testing
 
 # 6. View all tasks for this epic
-./opentasks --path .tasks task list --parent 1
+./opentask --path .tasks task list --parent 1
 
 # 7. Mark one as in progress
-./opentasks --path .tasks task update 2 --status in-progress
+./opentask --path .tasks task update 2 --status in-progress
 
 # 8. When complete, mark done
-./opentasks --path .tasks task update 2 --status done
+./opentask --path .tasks task update 2 --status done
 ```
 
 ## For Future Reference
 
-- **OpenTasks CLI**: `./opentasks --help`
-- **List tasks**: `./opentasks --path .tasks task list`
-- **Show task details**: `./opentasks --path .tasks task show <id>`
-- **List all commands**: `./opentasks --path .tasks task --help`
+- **opentask CLI**: `./opentask --help`
+- **List tasks**: `./opentask --path .tasks task list`
+- **Show task details**: `./opentask --path .tasks task show <id>`
+- **List all commands**: `./opentask --path .tasks task --help`
 - **Mise tasks**: `mise run help` (for development tasks)
 
 ## Conventions

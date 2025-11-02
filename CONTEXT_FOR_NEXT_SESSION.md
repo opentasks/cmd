@@ -10,7 +10,7 @@
 
 ## Project State
 
-- **Repository**: `/mnt/Store/Projects/Mine/Github/opentasks`
+- **Repository**: `/mnt/Store/Projects/Mine/Github/opentask`
 - **Current branch**: `master`
 - **Last commit**: Design summary documentation
 
@@ -113,17 +113,17 @@
 
 ```bash
 # Create isolated worktree for implementation
-git worktree add ../opentasks-impl
+git worktree add ../opentask-impl
 
 # In isolated worktree
-cd ../opentasks-impl
+cd ../opentask-impl
 git checkout -b feat/core-implementation
 
 # Make changes, commit, push
 # Create PR when ready
 
 # Back in main worktree to review/merge
-cd ../opentasks
+cd ../opentask
 ```
 
 ## Dependencies

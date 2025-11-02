@@ -34,7 +34,7 @@ CLI uses Cobra for command structure and Viper for configuration management. Thi
 
 ### Current Implementation
 ```
-opentasks
+opentask
 ├── task
 │   ├── new
 │   ├── list
@@ -78,12 +78,12 @@ opentasks
 ```go
 // Global config binding
 viper.SetConfigName("config")
-viper.AddConfigPath("$HOME/.config/opentasks")
+viper.AddConfigPath("$HOME/.config/opentask")
 viper.AddConfigPath(".")
 
 // Environment variable binding
-viper.BindEnv("project.path", "OPENTASKS_PROJECT_PATH")
-viper.BindEnv("storage.backend", "OPENTASKS_STORAGE_BACKEND")
+viper.BindEnv("project.path", "opentask_PROJECT_PATH")
+viper.BindEnv("storage.backend", "opentask_STORAGE_BACKEND")
 
 // Flag binding (per command)
 cmd.Flags().StringVar(&path, "path", "", "Project path")
@@ -94,12 +94,12 @@ viper.BindPFlag("project.path", cmd.Flags().Lookup("path"))
 
 Config loaded in order:
 1. Built-in defaults
-2. Global config (`~/.config/opentasks/config.toml`)
+2. Global config (`~/.config/opentask/config.toml`)
 3. Project configs via hierarchical walk:
-   - Walk up from current directory looking for `opentasks.toml`
+   - Walk up from current directory looking for `opentask.toml`
    - Stop at filesystem root (`/`) or git repository root (`.git`)
    - Merge configs with closest (current dir) having highest priority
-4. Environment variables (`OPENTASKS_*`)
+4. Environment variables (`opentask_*`)
 5. CLI flags (highest priority)
 
 **Note:** Hierarchical config discovery and merging is implemented but not transparent. See b-21 for `config view` and `config init` commands to help users understand resolved config.
@@ -108,25 +108,25 @@ Config loaded in order:
 
 ### Create Task
 ```bash
-opentasks task new "My story title" --type story --parent 5 --tag feature
+opentask task new "My story title" --type story --parent 5 --tag feature
 ```
 
 ### List Tasks
 ```bash
-opentasks task ls --status in-progress --type story
-opentasks task ls --parent 5     # Tasks under epic 5
-opentasks task ls --tag feature
+opentask task ls --status in-progress --type story
+opentask task ls --parent 5     # Tasks under epic 5
+opentask task ls --tag feature
 ```
 
 ### Show Task Details
 ```bash
-opentasks task show 42
+opentask task show 42
 ```
 
 ### Link Tasks
 ```bash
-opentasks task link 42 --blocks 10
-opentasks task link 42 --relates-to 3
+opentask task link 42 --blocks 10
+opentask task link 42 --relates-to 3
 ```
 
 ## Implementation Status

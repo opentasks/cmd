@@ -27,7 +27,7 @@ Test complete user workflows from CLI invocation through result verification. E2
 Verify a user can initialize a project and start working:
 
 ```
-1. Initialize project: opentasks init --path /tmp/myproject
+1. Initialize project: opentask init --path /tmp/myproject
    - Verify: .tasks/ directory created
    - Verify: config.toml created with defaults
    - Verify: No tasks exist yet
@@ -165,7 +165,7 @@ Verify a user can initialize a project and start working:
    
 3. Test path resolution:
    - Use --path flag
-   - Use OPENTASKS_PROJECT_PATH env var
+   - Use opentask_PROJECT_PATH env var
    - Verify: Same project accessed
 ```
 
@@ -213,7 +213,7 @@ Create `internal/tests/e2e/` with tests for each workflow:
 ### CLI Invocation Approach
 Two options:
 1. **Direct CLI call**: Import cmd package, call handlers directly
-2. **Exec subprocess**: Run `opentasks` binary directly
+2. **Exec subprocess**: Run `opentask` binary directly
 
 Use direct calls for speed, subprocess for true integration testing.
 

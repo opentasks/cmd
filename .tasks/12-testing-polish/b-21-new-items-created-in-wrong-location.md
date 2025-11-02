@@ -20,23 +20,23 @@ When creating new tasks via CLI, they are not being saved in the correct project
 
 The system implements hierarchical config discovery with merging:
 
-1. **Config File Discovery:** Search for `opentasks.toml` starting from current directory and walking up parent directories
+1. **Config File Discovery:** Search for `opentask.toml` starting from current directory and walking up parent directories
 2. **Stop Conditions:** Stop searching when reaching either:
    - Filesystem root (`/`)
    - Git repository root (`.git` directory found)
 3. **Merging Strategy:** Later configs (closer to current directory) are merged on top of earlier configs (parent directories), so:
-   - Closest `opentasks.toml` has highest priority
-   - Parent directory `opentasks.toml` values fill in gaps
+   - Closest `opentask.toml` has highest priority
+   - Parent directory `opentask.toml` values fill in gaps
    - Further parent configs provide additional values
    - System defaults are lowest priority
 
 **Example:** For `/path/to/project/subfolder/task`:
 ```
 Start: /path/to/project/subfolder/
-Found: opentasks.toml ← highest priority (merge this first)
+Found: opentask.toml ← highest priority (merge this first)
 
 Check parent: /path/to/project/
-Found: opentasks.toml ← merge on top
+Found: opentask.toml ← merge on top
 
 Check parent: /path/to/
 Not found
@@ -63,14 +63,14 @@ Display the resolved configuration after all walking and merging.
 Config Resolution Search (starting from current directory, walking up):
 
 Found config files:
-  1. /path/to/project/subfolder/opentasks.toml (HIGHEST PRIORITY - merged last)
-  2. /path/to/project/opentasks.toml
-  3. /path/to/opentasks.toml (stopped here - git repo root found)
+  1. /path/to/project/subfolder/opentask.toml (HIGHEST PRIORITY - merged last)
+  2. /path/to/project/opentask.toml
+  3. /path/to/opentask.toml (stopped here - git repo root found)
 
 Merging order (lowest → highest priority):
-  /path/to/opentasks.toml
-  + /path/to/project/opentasks.toml
-  + /path/to/project/subfolder/opentasks.toml
+  /path/to/opentask.toml
+  + /path/to/project/opentask.toml
+  + /path/to/project/subfolder/opentask.toml
   = Resolved configuration
 
 Resolved Configuration:
@@ -92,13 +92,13 @@ Search stopped at: /path/to/ (git repository root)
 - `--path` - Show only the resolved storage path  
 - `--verbose` - Show each config file contents during merging
 
-### 2. `config init` (or `opentasks init`)
-Initialize a new OpenTasks project in the current directory.
+### 2. `config init` (or `opentask init`)
+Initialize a new opentask project in the current directory.
 
 **Purpose:** Create local config file with sensible defaults, making project-specific configuration explicit.
 
 **Behavior:**
-- Create `./opentasks.toml` in current directory with:
+- Create `./opentask.toml` in current directory with:
   - Project name (derived from directory name or prompted)
   - Sensible defaults for workflow statuses
   - Local storage path (default: `./.tasks/`)
@@ -106,14 +106,14 @@ Initialize a new OpenTasks project in the current directory.
 
 **Output:**
 ```
-Initialized OpenTasks project in /path/to/current/dir
-Created: ./opentasks.toml
+Initialized opentask project in /path/to/current/dir
+Created: ./opentask.toml
 Storage: ./.tasks/ (local directory)
 
 Next steps:
-  1. Create a task: opentasks task new "Title"
-  2. View tasks: opentasks task list
-  3. Edit config: ./opentasks.toml
+  1. Create a task: opentask task new "Title"
+  2. View tasks: opentask task list
+  3. Edit config: ./opentask.toml
 ```
 
 **Flags:**
@@ -160,7 +160,7 @@ Next steps:
 - [ ] `config view` displays all found config files and merging order
 - [ ] `config view --path` shows only the resolved storage path (absolute)
 - [ ] `config view --json` outputs valid JSON with resolution details
-- [ ] `config init` creates ./opentasks.toml in current dir
+- [ ] `config init` creates ./opentask.toml in current dir
 - [ ] Config is properly validated and merged after init
 - [ ] Tasks created after init appear in correct location from resolved config
 - [ ] Helpful error messages if config files are invalid or unreadable

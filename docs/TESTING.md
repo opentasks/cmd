@@ -1,8 +1,8 @@
-# OpenTasks Testing Guide
+# opentask Testing Guide
 
 ## Overview
 
-This document describes the testing strategy and patterns used in the OpenTasks project.
+This document describes the testing strategy and patterns used in the opentask project.
 
 ## Test Structure
 

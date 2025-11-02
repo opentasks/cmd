@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/zenobi-us/opentasks/internal/model"
+	"github.com/zenobi-us/opentask/internal/model"
 )
 
 // MemoryStorage implements BaseStorage using in-memory storage

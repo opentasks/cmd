@@ -112,7 +112,7 @@ import (
     "strings"
     "time"
     
-    "github.com/yourusername/opentasks/model"
+    "github.com/yourusername/opentask/model"
     "gopkg.in/yaml.v3"
 )
 
@@ -132,9 +132,9 @@ func NewMarkdownFileStorage(basePath string) (*MarkdownFileStorage, error) {
 
 // File naming: <epic_id>-<epic_slug>/<typecode>-<id>-<slug>.md
 // Examples:
-//   1-design-opentasks/s-5-task-data-model.md
-//   1-design-opentasks/s-6-semantic-id-system.md
-//   e-1-design-opentasks.md (epic at root)
+//   1-design-opentask/s-5-task-data-model.md
+//   1-design-opentask/s-6-semantic-id-system.md
+//   e-1-design-opentask.md (epic at root)
 // NOTE: Implementation guidance - adjust as needed for actual requirements
 func (s *MarkdownFileStorage) taskToPath(task *model.Task) (string, error) {
     // Determine parent epic directory
@@ -498,7 +498,7 @@ func (s *MarkdownFileStorage) Close() error {
 
 - All paths in config are relative to the config file location
 - If no config provided, uses project root (.)
-- Environment variable `OPENTASKS_PROJECT_PATH` overrides config
+- Environment variable `opentask_PROJECT_PATH` overrides config
 
 ### Concurrency
 

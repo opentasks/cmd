@@ -3,7 +3,7 @@ package testutil
 import (
 	"time"
 
-	"github.com/zenobi-us/opentasks/internal/model"
+	"github.com/zenobi-us/opentask/internal/model"
 )
 
 // NewTestTask creates a task with sensible defaults for testing

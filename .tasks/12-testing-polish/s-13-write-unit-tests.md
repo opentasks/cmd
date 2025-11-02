@@ -53,7 +53,7 @@ Use `t.TempDir()` for isolated filesystem tests. Test with realistic markdown fi
 ### 4. `internal/config` - **Status: ⚠️ 18.9% (partial coverage)**
 Existing tests cover default loading. Gaps:
 - TOML parsing with various syntaxes and nesting
-- Path resolution with environment variables (OPENTASKS_PROJECT_PATH)
+- Path resolution with environment variables (opentask_PROJECT_PATH)
 - Config file location discovery (local .tasks/, XDG paths, explicit paths)
 - Configuration hierarchy merging (defaults → project config → env overrides)
 - Invalid config file handling (malformed TOML, missing required fields)

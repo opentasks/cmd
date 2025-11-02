@@ -1,4 +1,4 @@
-# OpenTasks Implementation Summary
+# opentask Implementation Summary
 
 ## Completion Status
 
@@ -102,9 +102,9 @@ All core components have been implemented and tested.
 
 ### Configuration Hierarchy
 1. Built-in defaults
-2. Global config (`~/.config/opentasks/config.toml`)
+2. Global config (`~/.config/opentask/config.toml`)
 3. Project config (`./config.toml` or `--path/config.toml`)
-4. Environment variables (`OPENTASKS_*`)
+4. Environment variables (`opentask_*`)
 5. CLI flags (highest priority)
 
 ### Task Organization
@@ -162,7 +162,7 @@ cmd/
   ├── project.go         (NEW)
   ├── root.go            (NEW)
   ├── task.go            (NEW)
-  └── opentasks/
+  └── opentask/
       └── main.go        (MODIFIED)
 
 internal/
@@ -186,33 +186,33 @@ go.mod, go.sum          (MODIFIED)
 
 ```bash
 # Build
-go build -o opentasks ./cmd/opentasks
+go build -o opentask ./cmd/opentask
 
 # Create task
-./opentasks --path my_project task new "Epic Title" --type epic
+./opentask --path my_project task new "Epic Title" --type epic
 
 # List tasks
-./opentasks --path my_project task list
+./opentask --path my_project task list
 
 # Show details
-./opentasks --path my_project task show 1
+./opentask --path my_project task show 1
 
 # List with filters
-./opentasks --path my_project task list --type story --status todo --parent 1
+./opentask --path my_project task list --type story --status todo --parent 1
 
 # Update status
-./opentasks --path my_project task update 1 --status in-progress
+./opentask --path my_project task update 1 --status in-progress
 
 # Delete task
-./opentasks --path my_project task delete 1
+./opentask --path my_project task delete 1
 ```
 
 ## Commit Message
 
 ```
-feat: implement core opentasks MVP
+feat: implement core opentask MVP
 
-Implements the complete OpenTasks MVP including:
+Implements the complete opentask MVP including:
 - Model types with validation
 - MarkdownFileStorage and MemoryStorage backends
 - Configuration system with TOML support
@@ -231,7 +231,7 @@ go build ./internal/model
 go build ./internal/storage
 go build ./internal/config
 go build ./internal/query
-go build ./cmd/opentasks
+go build ./cmd/opentask
 ```
 
 End-to-end functionality verified with manual testing.

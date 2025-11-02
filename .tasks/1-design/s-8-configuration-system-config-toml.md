@@ -73,7 +73,7 @@ path = "/custom/path"
 todo → in-progress → reviewing → done → archived
 ```
 
-**Templates**: Provided in `${XDG_DATA_HOME}/opentasks/templates/`
+**Templates**: Provided in `${XDG_DATA_HOME}/opentask/templates/`
 
 **Storage**: Markdown filesystem at project root
 
@@ -83,7 +83,7 @@ When creating a task of type "story":
 
 1. Check `config.toml#templates.story`
 2. Check `{project-root}/templates/story.md`
-3. Check `${XDG_DATA_HOME}/opentasks/templates/story.md`
+3. Check `${XDG_DATA_HOME}/opentask/templates/story.md`
 4. Fall back to built-in template
 
 This allows customization at any level without requiring full config.

@@ -87,9 +87,9 @@ This is a storage backend implementation detail. The directory and filename stru
 - `slug`: Slugified summary of task title
 
 **Examples**:
-- `1-design-opentasks/p-3-design-roadmap.md` (task 3, plan, under epic 1)
-- `1-design-opentasks/s-5-task-data-model.md` (task 5, story, under epic 1)
-- `e-1-design-opentasks.md` (task 1, epic, at root level)
+- `1-design-opentask/p-3-design-roadmap.md` (task 3, plan, under epic 1)
+- `1-design-opentask/s-5-task-data-model.md` (task 5, story, under epic 1)
+- `e-1-design-opentask.md` (task 1, epic, at root level)
 - `2-implement-core/s-11-build-storage-layer.md` (task 11, story, under epic 2)
 
 ## Implementation Notes
@@ -104,9 +104,9 @@ This is a storage backend implementation detail. The directory and filename stru
 
 ```
 project/
-├── e-1-design-opentasks.md                          (epic 1, root level only)
+├── e-1-design-opentask.md                          (epic 1, root level only)
 ├── e-2-implement-core.md                            (epic 2, root level only)
-├── 1-design-opentasks/                              (epic 1 dir: id-slug)
+├── 1-design-opentask/                              (epic 1 dir: id-slug)
 │   ├── p-3-design-roadmap.md                        (id:3, plan)
 │   ├── r-4-evaluate-storage-options.md              (id:4, research, slug: 3-5 words)
 │   ├── s-5-task-data-model.md                       (id:5, story)

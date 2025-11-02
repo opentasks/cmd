@@ -249,7 +249,7 @@ func ResolveTemplate(taskType, configPath string) (string, error) {
 	// Try XDG_DATA_HOME
 	xdgDataHome := os.Getenv("XDG_DATA_HOME")
 	if xdgDataHome != "" {
-		xdgTemplatePath := filepath.Join(xdgDataHome, "opentasks", "templates", defaultTemplate)
+		xdgTemplatePath := filepath.Join(xdgDataHome, "opentask", "templates", defaultTemplate)
 		if _, err := os.Stat(xdgTemplatePath); err == nil {
 			return xdgTemplatePath, nil
 		}
@@ -258,7 +258,7 @@ func ResolveTemplate(taskType, configPath string) (string, error) {
 	// Fall back to HOME/.local/share
 	homeDir, err := os.UserHomeDir()
 	if err == nil {
-		homeTemplatePath := filepath.Join(homeDir, ".local", "share", "opentasks", "templates", defaultTemplate)
+		homeTemplatePath := filepath.Join(homeDir, ".local", "share", "opentask", "templates", defaultTemplate)
 		if _, err := os.Stat(homeTemplatePath); err == nil {
 			return homeTemplatePath, nil
 		}

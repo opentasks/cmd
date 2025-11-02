@@ -17,7 +17,7 @@ var projectCmd = &cobra.Command{
 var projectNewCmd = &cobra.Command{
 	Use:   "new [name]",
 	Short: "Create a new project",
-	Long:  "Initialize a new OpenTasks project",
+	Long:  "Initialize a new opentask project",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name := args[0]

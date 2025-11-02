@@ -1,12 +1,12 @@
-# OpenTasks Quick Start
+# opentask Quick Start
 
 ## Building
 
 ```bash
-go build -o opentasks ./cmd/opentasks
+go build -o opentask ./cmd/opentask
 ```
 
-The binary will be available as `./opentasks`
+The binary will be available as `./opentask`
 
 ## Basic Usage
 
@@ -20,7 +20,7 @@ cd my_project
 ### Create Your First Task
 
 ```bash
-opentasks task new "My Epic" --type epic
+opentask task new "My Epic" --type epic
 ```
 
 This creates task ID 1. Tasks are stored as markdown files with YAML frontmatter.
@@ -28,50 +28,50 @@ This creates task ID 1. Tasks are stored as markdown files with YAML frontmatter
 ### Create Subtasks
 
 ```bash
-opentasks task new "Plan the Work" --type plan --parent 1
-opentasks task new "Research Design" --type research --parent 1
-opentasks task new "Write Code" --type story --parent 1 --tag feature
+opentask task new "Plan the Work" --type plan --parent 1
+opentask task new "Research Design" --type research --parent 1
+opentask task new "Write Code" --type story --parent 1 --tag feature
 ```
 
 ### List Tasks
 
 ```bash
 # List all tasks
-opentasks task list
+opentask task list
 
 # List by type
-opentasks task list --type story
+opentask task list --type story
 
 # List by status
-opentasks task list --status todo
+opentask task list --status todo
 
 # List by parent epic
-opentasks task list --parent 1
+opentask task list --parent 1
 
 # List by tag
-opentasks task list --tag feature
+opentask task list --tag feature
 
 # Combine filters
-opentasks task list --type story --status in-progress --parent 1
+opentask task list --type story --status in-progress --parent 1
 ```
 
 ### Show Task Details
 
 ```bash
-opentasks task show 3
+opentask task show 3
 ```
 
 ### Update Task Status
 
 ```bash
-opentasks task update 3 --status in-progress
-opentasks task update 3 --status done
+opentask task update 3 --status in-progress
+opentask task update 3 --status done
 ```
 
 ### Delete Tasks
 
 ```bash
-opentasks task delete 3
+opentask task delete 3
 ```
 
 ## Task Types
@@ -153,13 +153,13 @@ path = "."
 
 ```bash
 # Specify project path
-opentasks --path /path/to/project task list
+opentask --path /path/to/project task list
 
 # Specify config file
-opentasks --config /path/to/config.toml task list
+opentask --config /path/to/config.toml task list
 
 # Enable verbose output
-opentasks --verbose task list
+opentask --verbose task list
 ```
 
 ## File Organization
@@ -193,7 +193,7 @@ All commands support these flags:
 
 ## Tips
 
-1. **Dog-food the system**: Use `.tasks/` in your project to track OpenTasks development itself
+1. **Dog-food the system**: Use `.tasks/` in your project to track opentask development itself
 2. **Use tags**: Tags help organize related work across epics
 3. **Keep descriptions concise**: YAML frontmatter is metadata, markdown content is for details
 4. **Commit regularly**: Tasks are files - commit them with your code
@@ -204,7 +204,7 @@ All commands support these flags:
 ### Create a user story with acceptance criteria
 
 ```bash
-opentasks task new "Display user profile" --type story --parent 5 --tag ui
+opentask task new "Display user profile" --type story --parent 5 --tag ui
 
 # Then edit the file to add details:
 # ---
@@ -224,24 +224,24 @@ opentasks task new "Display user profile" --type story --parent 5 --tag ui
 ### Track research and implementation together
 
 ```bash
-opentasks task new "User Authentication" --type epic
-opentasks task new "Research auth strategies" --type research --parent 1
-opentasks task new "Plan auth system" --type plan --parent 1
-opentasks task new "Implement OAuth" --type story --parent 1
-opentasks task new "Add password reset" --type story --parent 1
+opentask task new "User Authentication" --type epic
+opentask task new "Research auth strategies" --type research --parent 1
+opentask task new "Plan auth system" --type plan --parent 1
+opentask task new "Implement OAuth" --type story --parent 1
+opentask task new "Add password reset" --type story --parent 1
 ```
 
 ### Filter work by status
 
 ```bash
 # Show all in-progress work
-opentasks task list --status in-progress
+opentask task list --status in-progress
 
 # Show all done work this epic
-opentasks task list --parent 5 --status done
+opentask task list --parent 5 --status done
 
 # Show all pending stories
-opentasks task list --type story --status todo
+opentask task list --type story --status todo
 ```
 
 ## Next Steps

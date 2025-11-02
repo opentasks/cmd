@@ -9,7 +9,7 @@ createdAt: 2025-11-02T08:00:00Z
 updatedAt: 2025-11-02T19:35:00Z
 ---
 
-# OpenTasks Design Decisions
+# opentask Design Decisions
 
 Final decisions on architecture and implementation strategy. All rationale documented in `.tasks/design/` story files.
 
@@ -39,7 +39,7 @@ See: `.tasks/design/2.story.md` (Story 6: Semantic ID System)
 
 Pattern: `{epic_id}-{epic_slug}/`
 - Include both ID and slug for discoverability
-- Example: `1-design-opentasks/` instead of just `1/`
+- Example: `1-design-opentask/` instead of just `1/`
 - Slug is informational (stale slugs acceptable if title changes)
 
 **Why**: Self-documenting directories, browsable without opening files
@@ -59,7 +59,7 @@ Pattern: `{epic_id}-{epic_slug}/`
 - "Task Data Model and Relationships" → `task-data-model`
 - "Semantic ID System with Collision Detection" → `semantic-id-system`
 - "BaseStorage Interface and Responsibilities" → `base-storage-interface`
-- "Design OpenTasks Core System" → `design-opentasks-core`
+- "Design opentask Core System" → `design-opentask-core`
 
 **Why**: Balance between clarity and path length, human-readable filenames
 
@@ -129,12 +129,12 @@ Return maximum ID + 1
 **Framework**: Cobra (commands) + Viper (config)
 
 **Commands**:
-- `opentasks task new` - Create task
-- `opentasks task ls` - List tasks with filters
-- `opentasks task show {id}` - Show task details
-- `opentasks task update {id}` - Update task
-- `opentasks task delete {id}` - Delete task
-- `opentasks project` - Project management
+- `opentask task new` - Create task
+- `opentask task ls` - List tasks with filters
+- `opentask task show {id}` - Show task details
+- `opentask task update {id}` - Update task
+- `opentask task delete {id}` - Delete task
+- `opentask project` - Project management
 
 **Why**: Standard Go CLI framework, handles config hierarchy automatically
 
@@ -258,7 +258,7 @@ All design decisions have been successfully implemented in Phase 1 (Core System)
 - No MCP server (future)
 
 ### Module Info
-- **Module**: github.com/zenobi-us/opentasks
+- **Module**: github.com/zenobi-us/opentask
 - **Go Version**: 1.21+
 - **Branch**: design
 - **Dependencies**: cobra v1.7.0, viper v1.16.0, toml v1.5.0, yaml.v3 v3.0.1

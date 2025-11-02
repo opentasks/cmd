@@ -13,7 +13,7 @@ curl https://mise.jdx.dev/install.sh | sh
 Then trust the project configuration:
 
 ```bash
-cd /path/to/opentasks
+cd /path/to/opentask
 mise trust
 ```
 
@@ -26,7 +26,7 @@ The project pins the following tools:
 When you enter the project directory, mise automatically activates Go 1.21:
 
 ```bash
-cd opentasks
+cd opentask
 go version  # Should show go version go1.21.x
 ```
 
@@ -36,8 +36,8 @@ Run any task with `mise run <task>`:
 
 ### Build Tasks
 
-**`mise run build`** - Build the OpenTasks CLI binary
-- Compiles `./cmd/opentasks` to `./opentasks`
+**`mise run build`** - Build the opentask CLI binary
+- Compiles `./cmd/opentask` to `./opentask`
 - Includes all packages and dependencies
 
 ### Testing Tasks
@@ -71,7 +71,7 @@ Run any task with `mise run <task>`:
 ### Utility Tasks
 
 **`mise run clean`** - Clean build artifacts
-- Removes `opentasks` binary
+- Removes `opentask` binary
 - Removes `test_project/` and `demo_project/` directories
 - Cleans up temporary test files
 
@@ -153,8 +153,8 @@ Example:
 
 ```toml
 [tasks.build]
-description = "Build the OpenTasks CLI"
-run = "go build -o opentasks ./cmd/opentasks"
+description = "Build the opentask CLI"
+run = "go build -o opentask ./cmd/opentask"
 ```
 
 ## Adding New Tasks
@@ -202,7 +202,7 @@ Most IDEs support mise tasks:
 
 **Task not found** - Run `mise tasks` to list all available tasks
 
-**Permission denied** - The binary may not be executable. Run `chmod +x opentasks`
+**Permission denied** - The binary may not be executable. Run `chmod +x opentask`
 
 ## More Information
 

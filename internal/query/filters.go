@@ -1,8 +1,8 @@
 package query
 
 import (
-	"github.com/zenobi-us/opentasks/internal/model"
-	"github.com/zenobi-us/opentasks/internal/storage"
+	"github.com/zenobi-us/opentask/internal/model"
+	"github.com/zenobi-us/opentask/internal/storage"
 )
 
 // TaskFilter is a functional option for filtering tasks

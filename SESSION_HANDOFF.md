@@ -10,7 +10,7 @@ A new session has everything needed to understand and implement the system witho
 
 **Step 1: Orient Yourself (10 minutes)**
 ```bash
-cd /mnt/Store/Projects/Mine/Github/opentasks
+cd /mnt/Store/Projects/Mine/Github/opentask
 cat DESIGN_SUMMARY.md          # Read this first (quick reference)
 cat CONTEXT_FOR_NEXT_SESSION.md # Then this (implementation plan)
 ```
@@ -121,10 +121,10 @@ That's all you need to start coding.
 
 ## Verification: Test the Design with Actual Tasks
 
-The `.tasks/design/` directory demonstrates the OpenTasks format works:
+The `.tasks/design/` directory demonstrates the opentask format works:
 
 ```bash
-# These are real task files in OpenTasks format
+# These are real task files in opentask format
 cat .tasks/design/1.epic.md    # Shows epic structure
 cat .tasks/design/1.story.md   # Shows story structure
 cat .tasks/design/1.research.md # Shows research structure

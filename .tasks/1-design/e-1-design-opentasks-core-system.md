@@ -1,6 +1,6 @@
 ---
 id: 1
-title: Design OpenTasks Core System
+title: Design opentask Core System
 type: epic
 status: done
 tags: [design, architecture]
@@ -18,13 +18,13 @@ createdAt: 2025-11-02T08:00:00Z
 updatedAt: 2025-11-02T21:00:00Z
 ---
 
-# Design OpenTasks Core System
+# Design opentask Core System
 
-Complete architectural design for the OpenTasks markdown-based task management system. This epic encompasses the core data model, storage interface, configuration system, and query capabilities.
+Complete architectural design for the opentask markdown-based task management system. This epic encompasses the core data model, storage interface, configuration system, and query capabilities.
 
 ## Overview
 
-OpenTasks is a markdown-based task manager written in Go with pluggable storage backends, customizable workflows, and semantic task IDs. The design focuses on simplicity, extensibility, and dog-fooding the system itself for internal task management.
+opentask is a markdown-based task manager written in Go with pluggable storage backends, customizable workflows, and semantic task IDs. The design focuses on simplicity, extensibility, and dog-fooding the system itself for internal task management.
 
 ## Scope
 

@@ -67,7 +67,7 @@ For MVP, templates can be static with no placeholders.
 ### Template Locations (in order of precedence)
 1. Explicit path in config file: `templates.story = "./custom/story.md"`
 2. Project local: `.tasks/templates/story.md`
-3. User XDG data: `${XDG_DATA_HOME}/opentasks/templates/story.md`
+3. User XDG data: `${XDG_DATA_HOME}/opentask/templates/story.md`
 4. System default: Built-in templates in code
 
 ### Task Type to Template Mapping

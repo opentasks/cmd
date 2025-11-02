@@ -1,10 +1,10 @@
-# OpenTasks
+# opentask
 
 A markdown-based task management system written in Go that tracks tasks with metadata, relationships, and flexible status workflows.
 
 ## Core Vision
 
-OpenTasks lets you manage tasks as markdown files with YAML frontmatter. Tasks live anywhere—in your project directories, XDG data directories, via environment variables, or command-line arguments. This flexibility makes it ideal for integrating task management into any workflow, whether solo developers or AI agents collaborating with humans.
+opentask lets you manage tasks as markdown files with YAML frontmatter. Tasks live anywhere—in your project directories, XDG data directories, via environment variables, or command-line arguments. This flexibility makes it ideal for integrating task management into any workflow, whether solo developers or AI agents collaborating with humans.
 
 ## Key Features
 
@@ -19,14 +19,14 @@ Task storage is pluggable, allowing different backends to be used. The default i
 - **Markdown-based**: Tasks stored as `.md` files with YAML frontmatter metadata
 - **Flexible location discovery**: Load projects from (in order of precedence):
   - Explicit paths via:
-    - `OPENTASKS_PROJECT_PATH` environment variable
+    - `opentask_PROJECT_PATH` environment variable
     - `--path` CLI argument (cli, mcp, etc)
-    - `#path` field in a `.opentasks.toml` config file
+    - `#path` field in a `.opentask.toml` config file
     - Defaults to creating defined project if not found.
     - if `config.strict`, Errors if not found.
 
   - implicit paths:
-    - `${XDG_DATA_HOME}/opentasks/projects/<derived_git_repo_url_project_id>/` 
+    - `${XDG_DATA_HOME}/opentask/projects/<derived_git_repo_url_project_id>/` 
     - Local directories (`.tasks` convention)
     - if `config.strict`, Errors if not found, otherwise creates at highest precedence location.
 
@@ -89,7 +89,7 @@ project_id/
 Depending on where the project is resolved this might be in: 
 
 ```sh
-${XDG_DATA_HOME}/opentasks/
+${XDG_DATA_HOME}/opentask/
   config.toml                 # global user opentask config 
   templates/
     epic.md
@@ -107,7 +107,7 @@ ${XDG_DATA_HOME}/opentasks/
         ...
 ```
 
-or at `OPENTASKS_PROJECT_PATH` or `--path` specified location.
+or at `opentask_PROJECT_PATH` or `--path` specified location.
 
 ```sh
 /my/custom/path/

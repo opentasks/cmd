@@ -14,7 +14,7 @@ updatedAt: 2025-11-02T08:00:00Z
 
 # Project Structure and Directory Layout
 
-Complete specification of how OpenTasks projects are organized on disk and how project discovery works.
+Complete specification of how opentask projects are organized on disk and how project discovery works.
 
 ## Project Directory Structure
 
@@ -24,9 +24,9 @@ Complete specification of how OpenTasks projects are organized on disk and how p
 my-git-repo/
 ├── .tasks/                                  # Project root directory
 │   ├── config.toml                          # Project configuration
-│   ├── e-1-design-opentasks.md              # Only epics at root level
+│   ├── e-1-design-opentask.md              # Only epics at root level
 │   ├── e-2-implement-core.md
-│   ├── 1-design-opentasks/                  # Epic 1 subdirectory (ID + slug)
+│   ├── 1-design-opentask/                  # Epic 1 subdirectory (ID + slug)
 │   │   ├── p-3-design-roadmap.md            # All child tasks grouped here
 │   │   ├── r-4-evaluate-storage.md
 │   │   ├── s-5-task-data-model.md
@@ -47,7 +47,7 @@ my-git-repo/
 ### XDG Layout (user data directory)
 
 ```
-${XDG_DATA_HOME}/opentasks/
+${XDG_DATA_HOME}/opentask/
 ├── config.toml                              # Global user configuration
 ├── templates/                               # User-level templates (fallback for all projects)
 │   ├── epic.md
@@ -57,10 +57,10 @@ ${XDG_DATA_HOME}/opentasks/
 │   ├── decision.md
 │   └── task.md
 └── projects/                                # User's projects
-    ├── github_com-user-opentasks/
+    ├── github_com-user-opentask/
     │   ├── config.toml                      # Project-level config
-    │   ├── e-1-design-opentasks.md
-    │   ├── 1-design-opentasks/
+    │   ├── e-1-design-opentask.md
+    │   ├── 1-design-opentask/
     │   │   ├── p-3-design-roadmap.md
     │   │   └── ...
     │   └── ...
@@ -76,8 +76,8 @@ ${XDG_DATA_HOME}/opentasks/
 ```
 /my/custom/tasks/path/
 ├── config.toml                              # Project config
-├── e-1-design-opentasks.md
-├── 1-design-opentasks/
+├── e-1-design-opentask.md
+├── 1-design-opentask/
 │   ├── p-3-design-roadmap.md
 │   └── ...
 └── 2-implement-core/
@@ -109,7 +109,7 @@ Slugs are human-readable summaries in the filename for discoverability.
 - "Task Data Model and Relationships" → `task-data-model` (3 words)
 - "Semantic ID System with Collision Detection" → `semantic-id-system` (3 words)
 - "BaseStorage Interface and Responsibilities" → `base-storage-interface` (3 words)
-- "Design OpenTasks Core System" → `design-opentasks-core` (4 words, under 60 chars)
+- "Design opentask Core System" → `design-opentask-core` (4 words, under 60 chars)
 
 **Implementation**:
 1. Convert to lowercase
@@ -122,11 +122,11 @@ Slugs are human-readable summaries in the filename for discoverability.
 
 **Examples**:
 ```
-e-1-design-opentasks.md                     # Epic 1, root level
+e-1-design-opentask.md                     # Epic 1, root level
 e-2-implement-core.md                       # Epic 2, root level
-1-design-opentasks/p-3-design-roadmap.md    # Task 3 (plan), under epic 1
-1-design-opentasks/r-4-evaluate-storage.md  # Task 4 (research), under epic 1
-1-design-opentasks/s-5-task-data-model.md   # Task 5 (story), under epic 1
+1-design-opentask/p-3-design-roadmap.md    # Task 3 (plan), under epic 1
+1-design-opentask/r-4-evaluate-storage.md  # Task 4 (research), under epic 1
+1-design-opentask/s-5-task-data-model.md   # Task 5 (story), under epic 1
 2-implement-core/s-11-build-storage.md      # Task 11 (story), under epic 2
 ```
 
@@ -155,9 +155,9 @@ relationships:
 
 When loading a project, the system looks for config in this order:
 
-1. **Explicit**: Path specified via CLI flag `--path` or env var `OPENTASKS_PROJECT_PATH`
+1. **Explicit**: Path specified via CLI flag `--path` or env var `opentask_PROJECT_PATH`
 2. **Local**: `{project-root}/config.toml`
-3. **XDG**: `${XDG_DATA_HOME}/opentasks/config.toml` (global defaults)
+3. **XDG**: `${XDG_DATA_HOME}/opentask/config.toml` (global defaults)
 
 Config files are cumulative:
 - Global config provides user-wide defaults
@@ -170,9 +170,9 @@ Config files are cumulative:
 
 ```bash
 # All of these point to the same project
-opentasks --path /my/project/tasks
-OPENTASKS_PROJECT_PATH=/my/project/tasks opentasks
-opentasks  # If config.toml specifies path
+opentask --path /my/project/tasks
+opentask_PROJECT_PATH=/my/project/tasks opentask
+opentask  # If config.toml specifies path
 ```
 
 ### Implicit Project Paths
@@ -181,7 +181,7 @@ When no explicit path is given:
 
 1. Check current directory for `.tasks/` → use it if found
 2. Check parent directories recursively for `.tasks/` (up to home or root)
-3. Check `${XDG_DATA_HOME}/opentasks/projects/{derived-id}/` for git-based projects
+3. Check `${XDG_DATA_HOME}/opentask/projects/{derived-id}/` for git-based projects
 4. If config.strict=true: Error if not found
 5. If config.strict=false: Create at highest precedence location (usually `${XDG_DATA_HOME}/...`)
 
@@ -190,11 +190,11 @@ When no explicit path is given:
 For projects inside git repositories, derive a stable project ID from the repo URL:
 
 ```go
-// Example: https://github.com/user/opentasks.git
-// Derived ID: github_com-user-opentasks
+// Example: https://github.com/user/opentask.git
+// Derived ID: github_com-user-opentask
 
-// Example: git@github.com:user/opentasks.git
-// Derived ID: github_com-user-opentasks
+// Example: git@github.com:user/opentask.git
+// Derived ID: github_com-user-opentask
 
 // Example: /path/to/local/repo/.git
 // Derived ID: (based on dir name + some hash)
@@ -203,7 +203,7 @@ Algorithm:
 1. Read .git/config (for remote URL or use directory name)
 2. Normalize URL (remove protocol, .git suffix)
 3. Replace special chars with underscores
-4. Use as subdirectory in ${XDG_DATA_HOME}/opentasks/projects/
+4. Use as subdirectory in ${XDG_DATA_HOME}/opentask/projects/
 ```
 
 ## Template Search Path
@@ -212,7 +212,7 @@ When creating a new task of type "story", templates are resolved in this order:
 
 1. **Config-specified**: `config.toml#templates.story` (absolute or relative path)
 2. **Project-local**: `{project-root}/templates/story.md`
-3. **User-level**: `${XDG_DATA_HOME}/opentasks/templates/story.md`
+3. **User-level**: `${XDG_DATA_HOME}/opentask/templates/story.md`
 4. **Built-in**: Hard-coded Go embedded templates
 
 If a path doesn't exist, fall through to the next. If all fail, return error.
@@ -220,7 +220,7 @@ If a path doesn't exist, fall through to the next. If all fail, return error.
 ## Go Project Structure
 
 ```
-opentasks/
+opentask/
 ├── main.go                                  # CLI entry point
 ├── go.mod
 ├── go.sum
@@ -253,7 +253,7 @@ opentasks/
 ├── README.md
 ├── .tasks/                                  # Dog-food: project's own tasks
 │   ├── design/
-│   │   ├── e-1-design-opentasks.md
+│   │   ├── e-1-design-opentask.md
 │   │   └── ...
 │   └── config.toml
 └── .github/
@@ -320,13 +320,13 @@ The system supports working with multiple projects:
 
 ```bash
 # Work with project A
-opentasks --path /path/to/project-a task ls
+opentask --path /path/to/project-a task ls
 
 # Work with project B
-opentasks --path /path/to/project-b task ls
+opentask --path /path/to/project-b task ls
 
 # List tasks from both (handled by higher-level tools)
-opentasks-query-all-projects --filter "status:in-progress"
+opentask-query-all-projects --filter "status:in-progress"
 ```
 
 Each BaseStorage instance is scoped to one project via its initialization config.
