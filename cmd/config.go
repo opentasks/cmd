@@ -15,7 +15,7 @@ import (
 )
 
 // buildConfigFileTree creates a hierarchical list of resolved config files
-// Files are shown in priority order (highest first) with proper indentation and bullets
+// Files are shown in priority order (highest first) with proper indentation and merge indicators
 func buildConfigFileTree(files []string) string {
 	var result strings.Builder
 
@@ -51,20 +51,18 @@ func buildConfigFileTree(files []string) string {
 			result.WriteString(fmt.Sprintf("%s- %s", indent, relPath))
 		}
 
-		// Add arrow if not the last item
-		if i < len(files) {
+		// Add merge arrow if not the last item
+		if i < len(files)-1 {
 			result.WriteString("\n")
-			if i < len(files)-1 {
-				result.WriteString(fmt.Sprintf("%s  :point_down:\n", indent))
-			}
+			result.WriteString(fmt.Sprintf("%s  ↓\n", indent))
 		}
 	}
 
 	// Add builtin defaults as final item
 	if len(files) > 0 {
 		result.WriteString("\n")
+		result.WriteString(fmt.Sprintf("%s  ↓\n", strings.Repeat("  ", len(files)-1)))
 		indent := strings.Repeat("  ", len(files))
-		result.WriteString(fmt.Sprintf("%s  :point_down:\n", strings.Repeat("  ", len(files)-1)))
 		result.WriteString(fmt.Sprintf("%s- (builtin) defaults", indent))
 	}
 
