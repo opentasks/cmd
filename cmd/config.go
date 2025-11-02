@@ -25,6 +25,10 @@ func buildConfigFileTree(files []string) string {
 	tree := treeprint.New()
 	root := findRootPath(files)
 
+	// Track which nodes we've added to avoid duplicates
+	addedNodes := make(map[string]treeprint.Tree)
+	addedNodes[""] = tree
+
 	for i, file := range files {
 		// Make path relative to root for display
 		relPath, err := filepath.Rel(root, file)
@@ -32,13 +36,39 @@ func buildConfigFileTree(files []string) string {
 			relPath = file
 		}
 
-		// Mark the last file (highest priority) with a special indicator
-		label := relPath
-		if i == 0 {
-			label = relPath + " ⭐ (merged last)"
-		}
+		// Split path into parts to build tree hierarchy
+		parts := strings.Split(relPath, string(filepath.Separator))
+		currentPath := ""
+		currentNode := tree
 
-		tree.AddNode(label)
+		// Navigate/create the directory hierarchy
+		for j, part := range parts {
+			if j == len(parts)-1 {
+				// This is the file itself
+				label := part
+				if i == 0 {
+					label = part + " ⭐ (merged first/highest priority)"
+				}
+				currentNode.AddNode(label)
+			} else {
+				// This is a directory
+				if currentPath != "" {
+					currentPath = filepath.Join(currentPath, part)
+				} else {
+					currentPath = part
+				}
+
+				// Check if we've already added this directory node
+				if node, exists := addedNodes[currentPath]; exists {
+					currentNode = node
+				} else {
+					// Create new directory node
+					newNode := currentNode.AddBranch(part)
+					addedNodes[currentPath] = newNode
+					currentNode = newNode
+				}
+			}
+		}
 	}
 
 	return tree.String()
