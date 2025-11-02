@@ -1,0 +1,24 @@
+
+Found config files:
+{{- if .FoundFiles}}
+{{- range $i, $file := .FoundFiles}}
+  {{add $i 1}}. {{$file}}{{if eq $i 0}} (HIGHEST PRIORITY - merged last){{end}}
+{{- end}}
+{{- else}}
+  (none found - using defaults)
+{{- end}}
+
+Merging order (lowest → highest priority):
+{{- if .MergingOrder}}
+{{- range .MergingOrder}}
+  {{.}}
+{{- end}}
+  = Resolved configuration
+{{- end}}
+
+Resolved Configuration:
+{{.ResolvedConfigAsTomlString}}
+{{- if and .StopReason .MergingOrder}}
+
+Search stopped at: {{.StopDir}} ({{.StopReason}})
+{{- end}}

@@ -80,18 +80,21 @@ var configViewCmd = &cobra.Command{
 			resolvedPath = cwd
 		}
 
+		// Update merged config storage path to show resolved absolute path
+		merged.Storage.Path = resolvedPath
+
+		// Convert config to TOML string
+		tomlStr, err := config.ConfigAsToml(merged)
+		if err != nil {
+			return fmt.Errorf("failed to format config as TOML: %w", err)
+		}
+
 		templateData := map[string]interface{}{
-			"FoundFiles":         info.FoundFiles,
-			"MergingOrder":       info.MergingOrder,
-			"ProjectName":        merged.Project.Name,
-			"ProjectDescription": merged.Project.Description,
-			"ProjectOwner":       merged.Project.Owner,
-			"Statuses":           merged.Workflow.Statuses,
-			"Initial":            merged.Workflow.Initial,
-			"StorageType":        merged.Storage.Backend,
-			"StoragePath":        resolvedPath,
-			"StopReason":         info.StopReason,
-			"StopDir":            stopDir,
+			"FoundFiles":                 info.FoundFiles,
+			"MergingOrder":               info.MergingOrder,
+			"ResolvedConfigAsTomlString": tomlStr,
+			"StopReason":                 info.StopReason,
+			"StopDir":                    stopDir,
 		}
 
 		// Execute template
