@@ -3,11 +3,13 @@
 ```
 
 
+## Resolved Config Files
+
 {{- if .FoundFiles}}
-From:
-{{- range $i, $file := .FoundFiles}}
-  {{add $i 1}}. {{$file}}{{if eq $i 0}} (HIGHEST PRIORITY - merged last){{end}}
-{{- end}}
+
+```
+{{.FileTree}}```
+
 {{- else}}
-  (none found - using defaults)
+*(none found - using defaults)*
 {{- end}}

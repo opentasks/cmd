@@ -6,12 +6,100 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
+	"github.com/xlab/treeprint"
 	"github.com/zenobi-us/opentask/internal/config"
 )
+
+// buildConfigFileTree creates a tree structure of the resolved config files
+func buildConfigFileTree(files []string) string {
+	if len(files) == 0 {
+		return ""
+	}
+
+	// Build tree starting from root
+	tree := treeprint.New()
+	root := findRootPath(files)
+
+	for i, file := range files {
+		// Make path relative to root for display
+		relPath, err := filepath.Rel(root, file)
+		if err != nil {
+			relPath = file
+		}
+
+		// Mark the last file (highest priority) with a special indicator
+		label := relPath
+		if i == 0 {
+			label = relPath + " ⭐ (merged last)"
+		}
+
+		tree.AddNode(label)
+	}
+
+	return tree.String()
+}
+
+// findRootPath finds the common root directory for all files
+func findRootPath(files []string) string {
+	if len(files) == 0 {
+		return "/"
+	}
+	if len(files) == 1 {
+		return filepath.Dir(files[0])
+	}
+
+	// Start with first file's directory
+	parts := strings.Split(filepath.Clean(filepath.Dir(files[0])), string(filepath.Separator))
+
+	// Find common path parts with other files
+	for _, file := range files[1:] {
+		otherParts := strings.Split(filepath.Clean(filepath.Dir(file)), string(filepath.Separator))
+		// Trim to common prefix length
+		minLen := len(parts)
+		if len(otherParts) < minLen {
+			minLen = len(otherParts)
+		}
+		parts = parts[:minLen]
+
+		// Check which parts match
+		for i := 0; i < len(parts); i++ {
+			if i >= len(otherParts) || parts[i] != otherParts[i] {
+				parts = parts[:i]
+				break
+			}
+		}
+	}
+
+	if len(parts) == 0 {
+		return "/"
+	}
+	return filepath.Join(parts...)
+}
+
+// commonPath finds the common path between two paths
+func commonPath(a, b string) string {
+	aParts := strings.Split(filepath.Clean(a), string(filepath.Separator))
+	bParts := strings.Split(filepath.Clean(b), string(filepath.Separator))
+
+	var common []string
+	for i := 0; i < len(aParts) && i < len(bParts); i++ {
+		if aParts[i] == bParts[i] {
+			common = append(common, aParts[i])
+		} else {
+			break
+		}
+	}
+
+	if len(common) == 0 {
+		return "/"
+	}
+	return filepath.Join(common...)
+}
 
 // configCmd represents the config command group
 var configCmd = &cobra.Command{
@@ -91,12 +179,16 @@ var configViewCmd = &cobra.Command{
 			return fmt.Errorf("failed to format config as TOML: %w", err)
 		}
 
+		// Build file tree
+		fileTree := buildConfigFileTree(info.FoundFiles)
+
 		templateData := map[string]interface{}{
 			"FoundFiles":                 info.FoundFiles,
 			"MergingOrder":               info.MergingOrder,
 			"ResolvedConfigAsTomlString": tomlStr,
 			"StopReason":                 info.StopReason,
 			"StopDir":                    stopDir,
+			"FileTree":                   fileTree,
 		}
 
 		// Execute template
