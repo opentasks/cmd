@@ -11,124 +11,64 @@ import (
 
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
-	"github.com/xlab/treeprint"
 	"github.com/zenobi-us/opentask/internal/config"
 )
 
-// buildConfigFileTree creates a tree structure of the resolved config files
+// buildConfigFileTree creates a hierarchical list of resolved config files
+// Files are shown in priority order (highest first) with proper indentation and bullets
 func buildConfigFileTree(files []string) string {
-	if len(files) == 0 {
-		return ""
-	}
+	var result strings.Builder
 
-	// Build tree starting from root
-	tree := treeprint.New()
-	root := findRootPath(files)
-
-	// Track which nodes we've added to avoid duplicates
-	addedNodes := make(map[string]treeprint.Tree)
-	addedNodes[""] = tree
-
+	// Add discovered config files
 	for i, file := range files {
-		// Make path relative to root for display
-		relPath, err := filepath.Rel(root, file)
-		if err != nil {
+		// Get path relative to current directory for most readable display
+		cwd, err := os.Getwd()
+		var relPath string
+		if err == nil {
+			relPath, err = filepath.Rel(cwd, file)
+		}
+		if err != nil || relPath == "" {
 			relPath = file
 		}
 
-		// Split path into parts to build tree hierarchy
-		parts := strings.Split(relPath, string(filepath.Separator))
-		currentPath := ""
-		currentNode := tree
-
-		// Navigate/create the directory hierarchy
-		for j, part := range parts {
-			if j == len(parts)-1 {
-				// This is the file itself
-				label := part
-				if i == 0 {
-					label = part + " ⭐ (merged first/highest priority)"
-				}
-				currentNode.AddNode(label)
-			} else {
-				// This is a directory
-				if currentPath != "" {
-					currentPath = filepath.Join(currentPath, part)
-				} else {
-					currentPath = part
-				}
-
-				// Check if we've already added this directory node
-				if node, exists := addedNodes[currentPath]; exists {
-					currentNode = node
-				} else {
-					// Create new directory node
-					newNode := currentNode.AddBranch(part)
-					addedNodes[currentPath] = newNode
-					currentNode = newNode
-				}
+		// Handle special case for user config path (expand ~)
+		if strings.HasPrefix(relPath, filepath.Join(os.Getenv("HOME"), ".config")) {
+			homeDir, _ := os.UserHomeDir()
+			if idx := strings.Index(relPath, filepath.Join(homeDir, ".config")); idx != -1 {
+				relPath = "~" + relPath[idx+len(homeDir):]
 			}
 		}
-	}
 
-	return tree.String()
-}
+		// Add indentation based on position in hierarchy
+		indent := strings.Repeat("  ", i)
 
-// findRootPath finds the common root directory for all files
-func findRootPath(files []string) string {
-	if len(files) == 0 {
-		return "/"
-	}
-	if len(files) == 1 {
-		return filepath.Dir(files[0])
-	}
-
-	// Start with first file's directory
-	parts := strings.Split(filepath.Clean(filepath.Dir(files[0])), string(filepath.Separator))
-
-	// Find common path parts with other files
-	for _, file := range files[1:] {
-		otherParts := strings.Split(filepath.Clean(filepath.Dir(file)), string(filepath.Separator))
-		// Trim to common prefix length
-		minLen := len(parts)
-		if len(otherParts) < minLen {
-			minLen = len(otherParts)
-		}
-		parts = parts[:minLen]
-
-		// Check which parts match
-		for i := 0; i < len(parts); i++ {
-			if i >= len(otherParts) || parts[i] != otherParts[i] {
-				parts = parts[:i]
-				break
-			}
-		}
-	}
-
-	if len(parts) == 0 {
-		return "/"
-	}
-	return filepath.Join(parts...)
-}
-
-// commonPath finds the common path between two paths
-func commonPath(a, b string) string {
-	aParts := strings.Split(filepath.Clean(a), string(filepath.Separator))
-	bParts := strings.Split(filepath.Clean(b), string(filepath.Separator))
-
-	var common []string
-	for i := 0; i < len(aParts) && i < len(bParts); i++ {
-		if aParts[i] == bParts[i] {
-			common = append(common, aParts[i])
+		// Format with dash bullet
+		if i == 0 {
+			// First item - no leading dash
+			result.WriteString(fmt.Sprintf("%s%s", indent, relPath))
 		} else {
-			break
+			// Subsequent items - with dash
+			result.WriteString(fmt.Sprintf("%s- %s", indent, relPath))
+		}
+
+		// Add arrow if not the last item
+		if i < len(files) {
+			result.WriteString("\n")
+			if i < len(files)-1 {
+				result.WriteString(fmt.Sprintf("%s  :point_down:\n", indent))
+			}
 		}
 	}
 
-	if len(common) == 0 {
-		return "/"
+	// Add builtin defaults as final item
+	if len(files) > 0 {
+		result.WriteString("\n")
+		indent := strings.Repeat("  ", len(files))
+		result.WriteString(fmt.Sprintf("%s  :point_down:\n", strings.Repeat("  ", len(files)-1)))
+		result.WriteString(fmt.Sprintf("%s- (builtin) defaults", indent))
 	}
-	return filepath.Join(common...)
+
+	return result.String()
 }
 
 // configCmd represents the config command group
