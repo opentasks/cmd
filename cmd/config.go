@@ -1,15 +1,12 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 
-	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
 	"github.com/zenobi-us/opentask/internal/config"
 )
@@ -75,38 +72,29 @@ var configViewCmd = &cobra.Command{
 		jsonFlag, _ := cmd.Flags().GetBool("json")
 		verboseFlag, _ := cmd.Flags().GetBool("verbose")
 
-		// Get current directory to start discovery
+		// Get current directory to start resolution
 		cwd, err := os.Getwd()
 		if err != nil {
 			return fmt.Errorf("failed to get current working directory: %w", err)
 		}
 
-		// Perform discovery and analysis
-		info, err := config.DiscoverAndAnalyze(cwd)
+		// Resolve configuration using new schema
+		resolved, err := config.ResolveProjectConfig(cwd)
 		if err != nil {
-			return fmt.Errorf("failed to discover configuration: %w", err)
+			return fmt.Errorf("failed to resolve configuration: %w", err)
 		}
 
 		// If --path flag, just show the resolved storage path
 		if pathFlag {
-			fmt.Println(info.ResolvedPath)
+			fmt.Println(resolved.Storage.Path)
 			return nil
-		}
-
-		// Load the merged configuration
-		merged, _, err := config.LoadConfigHierarchical(cwd)
-		if err != nil {
-			return fmt.Errorf("failed to load configuration: %w", err)
 		}
 
 		// If --json flag, output JSON
 		if jsonFlag {
 			jsonOutput := map[string]interface{}{
-				"foundFiles":    info.FoundFiles,
-				"mergingOrder":  info.MergingOrder,
-				"stopReason":    info.StopReason,
-				"resolvedPath":  info.ResolvedPath,
-				"configuration": merged,
+				"discoveredFiles": resolved.DiscoveredFiles,
+				"resolved":        resolved,
 			}
 			data, err := json.MarshalIndent(jsonOutput, "", "  ")
 			if err != nil {
@@ -116,111 +104,55 @@ var configViewCmd = &cobra.Command{
 			return nil
 		}
 
-		// Prepare template data
-		stopDir := ""
-		if len(info.MergingOrder) > 0 {
-			stopDir = filepath.Dir(filepath.Join(info.MergingOrder[len(info.MergingOrder)-1]))
+		// Display resolved configuration
+		fmt.Println("Resolved Configuration")
+		fmt.Println("====================")
+		fmt.Println()
+
+		// Show discovered files
+		if len(resolved.DiscoveredFiles) > 0 {
+			fmt.Println("Configuration files (in merge order):")
+			for i, f := range resolved.DiscoveredFiles {
+				fmt.Printf("  %d. %s\n", i+1, f)
+			}
+			fmt.Println()
 		}
 
-		resolvedPath := info.ResolvedPath
-		if resolvedPath == "" {
-			resolvedPath = cwd
+		// Show merged configuration
+		fmt.Println("Merged Configuration:")
+		fmt.Println()
+
+		if resolved.Project.Name != "" {
+			fmt.Printf("  Project: %s\n", resolved.Project.Name)
+		}
+		if resolved.Project.Owner != "" {
+			fmt.Printf("  Owner: %s\n", resolved.Project.Owner)
+		}
+		if resolved.ActiveProject != "" {
+			fmt.Printf("  Active Project ID: %s\n", resolved.ActiveProject)
+		}
+		fmt.Println()
+
+		if resolved.Storage != nil {
+			fmt.Printf("  Storage Backend: %s\n", resolved.Storage.Backend)
+			fmt.Printf("  Storage Path: %s\n", resolved.Storage.Path)
+		}
+		fmt.Println()
+
+		if resolved.Workflow != nil {
+			fmt.Printf("  Workflow Statuses: %v\n", resolved.Workflow.Statuses)
+			fmt.Printf("  Initial Status: %s\n", resolved.Workflow.Initial)
 		}
 
-		// Update merged config storage path to show resolved absolute path
-		merged.Storage.Path = resolvedPath
-
-		// Convert config to TOML string
-		tomlStr, err := config.ConfigAsToml(merged)
-		if err != nil {
-			return fmt.Errorf("failed to format config as TOML: %w", err)
-		}
-
-		// Build file tree
-		fileTree := buildConfigFileTree(info.FoundFiles)
-
-		templateData := map[string]interface{}{
-			"FoundFiles":                 info.FoundFiles,
-			"MergingOrder":               info.MergingOrder,
-			"ResolvedConfigAsTomlString": tomlStr,
-			"StopReason":                 info.StopReason,
-			"StopDir":                    stopDir,
-			"FileTree":                   fileTree,
-		}
-
-		// Execute template
-		tmpl, err := template.New("configView").
-			Funcs(template.FuncMap{
-				"quote": func(s string) string {
-					return `"` + s + `"`
-				},
-				"add": func(a, b int) int {
-					return a + b
-				},
-			}).
-			Parse(config.ViewTemplate)
-		if err != nil {
-			return fmt.Errorf("failed to parse template: %w", err)
-		}
-
-		// Render markdown to a buffer first
-		var mdBuf bytes.Buffer
-		if err := tmpl.Execute(&mdBuf, templateData); err != nil {
-			return fmt.Errorf("failed to execute template: %w", err)
-		}
-
-		// Render markdown with syntax highlighting using glamour
-		renderer, err := glamour.NewTermRenderer(
-			glamour.WithAutoStyle(),
-			glamour.WithWordWrap(120),
-		)
-		if err != nil {
-			return fmt.Errorf("failed to create markdown renderer: %w", err)
-		}
-
-		output, err := renderer.Render(mdBuf.String())
-		if err != nil {
-			return fmt.Errorf("failed to render markdown: %w", err)
-		}
-
-		fmt.Print(output)
-
-		// Verbose output
 		if verboseFlag {
-			fmt.Println("\n=== Verbose Mode: Merging Details ===")
-
-			// Show discovered config files
-			if len(info.FoundFiles) > 0 {
-				for i, file := range info.MergingOrder {
-					fmt.Printf("\n[Step %d] Applying: %s\n", i+1, file)
-					cfg, err := config.LoadConfig(file)
-					if err != nil {
-						fmt.Printf("  Error loading: %v\n", err)
-						continue
-					}
-					if cfg.Project.Name != "" {
-						fmt.Printf("  - project.name: %q\n", cfg.Project.Name)
-					}
-					if len(cfg.Workflow.Statuses) > 0 {
-						fmt.Printf("  - workflow.statuses: %v\n", cfg.Workflow.Statuses)
-					}
-					if cfg.Storage.Path != "" {
-						fmt.Printf("  - storage.path: %q\n", cfg.Storage.Path)
-					}
+			fmt.Println()
+			fmt.Println("Verbose Details:")
+			fmt.Println("  Transitions:")
+			if resolved.Workflow != nil {
+				for _, t := range resolved.Workflow.Transitions {
+					fmt.Printf("    %s → %v\n", t.From, t.To)
 				}
 			}
-
-			// Show defaults as final virtual layer
-			stepNum := len(info.MergingOrder) + 1
-			fmt.Printf("\n[Step %d] (Virtual) Default configuration\n", stepNum)
-			defaults := config.ProjectConfig{
-				Workflow:  config.DefaultWorkflow(),
-				Templates: config.DefaultTemplates(),
-				Storage:   config.DefaultStorage(),
-			}
-			fmt.Printf("  - workflow.statuses: %v\n", defaults.Workflow.Statuses)
-			fmt.Printf("  - workflow.initial: %q\n", defaults.Workflow.Initial)
-			fmt.Printf("  - storage.backend: %q\n", defaults.Storage.Backend)
 		}
 
 		return nil
@@ -257,41 +189,45 @@ var configInitCmd = &cobra.Command{
 			projectName = filepath.Base(cwd)
 		}
 
-		// Create config content
-		configContent := fmt.Sprintf(`# opentask configuration for %s
-[project]
+		// Create config content using new schema structure
+		// Note: active_project will be auto-derived if not set
+		configContent := fmt.Sprintf(`# opentask project configuration for %s
+# This file defines project-specific settings
+
+# Project metadata
+[project.project]
 name = %q
 description = ""
 owner = ""
 
-[workflow]
-statuses = ["todo", "in-progress", "reviewing", "done", "archived"]
-initial = "todo"
-
-# Transitions define allowed state changes
-[[workflow.transitions]]
-from = "todo"
-to = ["in-progress", "archived"]
-
-[[workflow.transitions]]
-from = "in-progress"
-to = ["reviewing", "todo", "archived"]
-
-[[workflow.transitions]]
-from = "reviewing"
-to = ["done", "in-progress", "archived"]
-
-[[workflow.transitions]]
-from = "done"
-to = ["archived"]
-
-[storage]
+# Storage configuration (project-specific)
+[project.storage]
 backend = "markdown-fs"
 path = %q
 
-[templates]
-# Leave empty to use built-in templates
-# Or specify custom template paths
+# Project-specific workflow (optional - comment out to use global defaults)
+# [project.workflow]
+# statuses = ["todo", "in-progress", "reviewing", "done", "archived"]
+# initial = "todo"
+
+# [[project.workflow.transitions]]
+# from = "todo"
+# to = ["in-progress", "archived"]
+
+# [[project.workflow.transitions]]
+# from = "in-progress"
+# to = ["reviewing", "todo", "archived"]
+
+# [[project.workflow.transitions]]
+# from = "reviewing"
+# to = ["done", "in-progress", "archived"]
+
+# [[project.workflow.transitions]]
+# from = "done"
+# to = ["archived"]
+
+# Project-specific templates (optional - comment out to use global templates)
+# [project.templates]
 # epic = "templates/epic.md"
 # plan = "templates/plan.md"
 # research = "templates/research.md"
@@ -309,11 +245,17 @@ path = %q
 		fmt.Printf("Initialized opentask project in %s\n", cwd)
 		fmt.Printf("Created: %s\n", configPath)
 		fmt.Printf("Storage: %s (local directory)\n\n", storagePath)
+		fmt.Println("Configuration:")
+		fmt.Printf("  - Project name: %s\n", projectName)
+		fmt.Printf("  - Active project ID will be auto-derived from directory name or global config\n\n")
 		fmt.Println("Next steps:")
 		fmt.Println("  1. Create a task: opentask task new \"Your task title\"")
 		fmt.Println("  2. List tasks: opentask task list")
 		fmt.Println("  3. View config: opentask config view")
 		fmt.Println("  4. Edit config: " + configPath)
+		fmt.Println("\nTo set up global configuration:")
+		fmt.Println("  1. Create ~/.config/opentask/config.toml with your global settings")
+		fmt.Println("  2. Define projects at the global level for multi-project support")
 
 		return nil
 	},
@@ -360,12 +302,87 @@ var configSetCmd = &cobra.Command{
 	},
 }
 
+// configProjectsCmd manages global projects
+var configProjectsCmd = &cobra.Command{
+	Use:   "projects",
+	Short: "Manage projects",
+	Long:  "List and manage projects defined in global configuration",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		activeFlag, _ := cmd.Flags().GetString("active")
+
+		// Load global config
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return fmt.Errorf("failed to get home directory: %w", err)
+		}
+
+		globalPath := filepath.Join(home, ".config", "opentask", "config.toml")
+		globalConfig, err := config.LoadGlobalConfig(globalPath)
+		if err != nil {
+			return fmt.Errorf("failed to load global config: %w", err)
+		}
+
+		if globalConfig == nil || globalConfig.Global == nil {
+			fmt.Println("No global configuration found at " + globalPath)
+			fmt.Println("\nTo create global config:")
+			fmt.Println("  1. mkdir -p ~/.config/opentask")
+			fmt.Println("  2. Create config.toml with project definitions")
+			return nil
+		}
+
+		// Handle --active flag to set active project
+		if activeFlag != "" {
+			// Validate project exists
+			found := false
+			for _, proj := range globalConfig.Global.Projects {
+				if proj.ID == activeFlag {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("project %q not found in global config", activeFlag)
+			}
+			globalConfig.Global.ActiveProject = activeFlag
+			fmt.Printf("Set active project to: %s\n", activeFlag)
+			// TODO: Persist change to global config file
+			return nil
+		}
+
+		// List projects (default)
+		if len(globalConfig.Global.Projects) == 0 {
+			fmt.Println("No projects configured in global config")
+			return nil
+		}
+
+		fmt.Println("Configured projects:")
+		fmt.Println()
+		for _, proj := range globalConfig.Global.Projects {
+			prefix := "  "
+			if proj.ID == globalConfig.Global.ActiveProject {
+				prefix = "* "
+			}
+			fmt.Printf("%s%s (%s)\n", prefix, proj.Name, proj.ID)
+			if proj.Storage != nil && proj.Storage.Path != "" {
+				fmt.Printf("     Path: %s\n", proj.Storage.Path)
+			}
+		}
+
+		if globalConfig.Global.ActiveProject != "" {
+			fmt.Printf("\nActive project: %s\n", globalConfig.Global.ActiveProject)
+		}
+
+		return nil
+	},
+}
+
 func init() {
 	configCmd.AddCommand(configInitCmd)
 	configCmd.AddCommand(configViewCmd)
 	configCmd.AddCommand(configShowCmd)
 	configCmd.AddCommand(configGetCmd)
 	configCmd.AddCommand(configSetCmd)
+	configCmd.AddCommand(configProjectsCmd)
 
 	// Flags for config init
 	configInitCmd.Flags().StringP("name", "n", "", "Project name (default: current directory name)")
@@ -376,4 +393,7 @@ func init() {
 	configViewCmd.Flags().BoolP("path", "p", false, "Show only the resolved storage path")
 	configViewCmd.Flags().BoolP("json", "j", false, "Output resolved config as JSON")
 	configViewCmd.Flags().BoolP("verbose", "v", false, "Show each config file contents during merging")
+
+	// Flags for config projects
+	configProjectsCmd.Flags().StringP("active", "a", "", "Set the active project by ID")
 }

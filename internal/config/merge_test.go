@@ -357,7 +357,7 @@ func TestMergeConfigsSimple(t *testing.T) {
 	}
 
 	resolved := NewResolvedConfig()
-	resolved = mergeGlobalConfig(resolved, global)
+	resolved = MergeGlobalConfig(resolved, global)
 
 	if len(resolved.Workflow.Statuses) != 2 {
 		t.Errorf("Workflow.Statuses count = %d, want 2", len(resolved.Workflow.Statuses))
@@ -389,8 +389,8 @@ func TestMergeConfigsProjectOverridesGlobal(t *testing.T) {
 	}
 
 	resolved := NewResolvedConfig()
-	resolved = mergeGlobalConfig(resolved, global)
-	resolved = mergeProjectConfig(resolved, project)
+	resolved = MergeGlobalConfig(resolved, global)
+	resolved = MergeProjectConfig(resolved, project)
 
 	if len(resolved.Workflow.Statuses) != 3 {
 		t.Errorf("Workflow.Statuses count = %d, want 3 (from project)", len(resolved.Workflow.Statuses))

@@ -40,10 +40,10 @@ func LoadProjectConfig(path string) (*OpentaskProjectConfigFile, error) {
 	return &cfg, nil
 }
 
-// mergeGlobalConfig merges global config into the resolved config.
+// MergeGlobalConfig merges global config into the resolved config.
 // Global config provides defaults that can be overridden by project configs.
 // Note: We start with defaults, so global config will override them if present.
-func mergeGlobalConfig(resolved *OpentaskResolvedConfig, global *OpentaskGlobalConfigFile) *OpentaskResolvedConfig {
+func MergeGlobalConfig(resolved *OpentaskResolvedConfig, global *OpentaskGlobalConfigFile) *OpentaskResolvedConfig {
 	if global == nil {
 		return resolved
 	}
@@ -68,9 +68,9 @@ func mergeGlobalConfig(resolved *OpentaskResolvedConfig, global *OpentaskGlobalC
 	return resolved
 }
 
-// mergeProjectConfig merges project config into the resolved config.
+// MergeProjectConfig merges project config into the resolved config.
 // Project config has higher priority than global config.
-func mergeProjectConfig(resolved *OpentaskResolvedConfig, project *OpentaskProjectConfigFile) *OpentaskResolvedConfig {
+func MergeProjectConfig(resolved *OpentaskResolvedConfig, project *OpentaskProjectConfigFile) *OpentaskResolvedConfig {
 	if project == nil {
 		return resolved
 	}
@@ -190,7 +190,7 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 			return nil, fmt.Errorf("failed to load global config: %w", err)
 		}
 		if globalConfig != nil {
-			resolved = mergeGlobalConfig(resolved, globalConfig)
+			resolved = MergeGlobalConfig(resolved, globalConfig)
 			resolved.DiscoveredFiles = append(resolved.DiscoveredFiles, globalPath)
 		}
 	}
@@ -204,7 +204,7 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 		}
 
 		if projectConfig != nil {
-			resolved = mergeProjectConfig(resolved, projectConfig)
+			resolved = MergeProjectConfig(resolved, projectConfig)
 			// Insert at beginning to maintain order (closest first)
 			resolved.DiscoveredFiles = append([]string{projectFile}, resolved.DiscoveredFiles...)
 		}

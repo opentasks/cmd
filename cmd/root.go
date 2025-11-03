@@ -59,33 +59,39 @@ func initializeStorage(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to resolve project path: %w", err)
 	}
 
-	// Load configuration hierarchically (searches up from current path)
-	var cfg *config.ProjectConfig
+	// Resolve configuration (searches hierarchically from current path)
+	var resolved *config.OpentaskResolvedConfig
 
 	if configPath != "" {
 		// Explicit config path provided - load only that file
-		cfg, err = config.LoadConfig(configPath)
+		projectConfig, err := config.LoadProjectConfig(configPath)
 		if err != nil {
 			return fmt.Errorf("failed to load configuration from %s: %w", configPath, err)
 		}
+		if projectConfig == nil {
+			return fmt.Errorf("configuration file not found: %s", configPath)
+		}
+		// Convert to resolved config
+		resolved = config.NewResolvedConfig()
+		resolved = config.MergeProjectConfig(resolved, projectConfig)
 	} else {
-		// Discover and load configs hierarchically from the project path
-		cfg, _, err = config.LoadConfigHierarchical(absPath)
+		// Discover and resolve configs hierarchically from the project path
+		resolved, err = config.ResolveProjectConfig(absPath)
 		if err != nil {
-			return fmt.Errorf("failed to load configuration: %w", err)
+			return fmt.Errorf("failed to resolve configuration: %w", err)
 		}
 	}
 
 	// Ensure storage path is set
-	if cfg.Storage.Path == "" {
-		cfg.Storage.Path = absPath
+	if resolved.Storage.Path == "" {
+		resolved.Storage.Path = absPath
 	}
 
 	// Initialize storage
 	storageConfig := storage.StorageConfig{
-		Backend: cfg.Storage.Backend,
-		Path:    cfg.Storage.Path,
-		Options: cfg.Storage.Options,
+		Backend: resolved.Storage.Backend,
+		Path:    resolved.Storage.Path,
+		Options: resolved.Storage.Options,
 	}
 
 	Store, err = storage.NewStorage(storageConfig)
@@ -97,7 +103,13 @@ func initializeStorage(cmd *cobra.Command, args []string) error {
 	Engine = query.NewQueryEngine(Store)
 
 	if verbose {
-		fmt.Fprintf(os.Stderr, "Initialized storage: %s at %s\n", cfg.Storage.Backend, cfg.Storage.Path)
+		fmt.Fprintf(os.Stderr, "Initialized storage: %s at %s\n", resolved.Storage.Backend, resolved.Storage.Path)
+		if len(resolved.DiscoveredFiles) > 0 {
+			fmt.Fprintf(os.Stderr, "Configuration files:\n")
+			for _, f := range resolved.DiscoveredFiles {
+				fmt.Fprintf(os.Stderr, "  - %s\n", f)
+			}
+		}
 	}
 
 	return nil
