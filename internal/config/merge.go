@@ -245,14 +245,32 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 		}
 	}
 
-	// Merge storage from matching global project if not already set
-	if resolved.Storage.Path == "" && globalConfig != nil {
+	// Merge settings from matching global project if not already set
+	if globalConfig != nil {
 		for _, globalProj := range globalConfig.Projects {
-			if globalProj.ID == resolved.ActiveProject && globalProj.Storage != nil {
-				// Found matching global project, use its storage
-				if globalProj.Storage.Path != "" {
-					resolved.Storage.Path = globalProj.Storage.Path
+			if globalProj.ID == resolved.ActiveProject {
+				// Found matching global project, merge its settings
+
+				// Merge storage if not already set
+				if resolved.Storage.Path == "" && globalProj.Storage != nil {
+					if globalProj.Storage.Path != "" {
+						resolved.Storage.Path = globalProj.Storage.Path
+					}
 				}
+
+				// Merge templates if all are empty (only set if project config didn't provide them)
+				if resolved.Templates != nil && resolved.Templates.Epic == "" && resolved.Templates.Plan == "" &&
+					resolved.Templates.Research == "" && resolved.Templates.Story == "" &&
+					resolved.Templates.Decision == "" && resolved.Templates.Task == "" &&
+					globalProj.Templates != nil {
+					resolved.Templates = globalProj.Templates
+				}
+
+				// Merge workflow if not already set (only if project config didn't provide it)
+				if (resolved.Workflow == nil || len(resolved.Workflow.Statuses) == 0) && globalProj.Workflow != nil {
+					resolved.Workflow = globalProj.Workflow
+				}
+
 				break
 			}
 		}
