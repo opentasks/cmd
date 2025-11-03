@@ -1,52 +1,92 @@
 # opentask
 
-A markdown-based task management system written in Go that tracks tasks with metadata, relationships, and flexible status workflows.
+**Git-agnostic task management for developers and AI agents.**
 
-## Core Vision
+Markdown-based tasks that live anywhere—in your projects, user directories, or CI pipelines. No database, no setup, no pollution of your Git repos. Perfect for solo developers, teams tracking work in code, and organizations planning AI agent integration.
 
-opentask lets you manage tasks as markdown files with YAML frontmatter. Tasks live anywhere—in your project directories, XDG data directories, via environment variables, or command-line arguments. This flexibility makes it ideal for integrating task management into any workflow, whether solo developers or AI agents collaborating with humans.
+## Why opentask?
 
-## Key Features
+- 📁 **Git-clean** – Store tasks outside project repos, keep them in sync anywhere
+- 🔗 **Flexible paths** – XDG directories, environment variables, explicit paths—your choice
+- 🤖 **AI-ready** ⏳ – Built for agent collaboration via MCP (Phase 3 roadmap)
+- 📝 **Markdown native** – Edit in VS Code, Vim, or any editor
+- ⚡ **Zero setup** – Works with sensible defaults, optional TOML configuration
+- 🔌 **Pluggable storage** ⏳ – Swap backends (file → SQLite → cloud) without changing code
 
-### Worktree Friendly
+## Quick Start
 
-- option to not store task data in the same git repository where your agents or users work, avoiding pollution of their project repos.
+```bash
+# Build the CLI
+go build -o opentask ./cmd/opentask
 
-### Task Storage
+# Create your first task
+./opentask --path my_project task new "Build login page" --type story
 
-Task storage is pluggable, allowing different backends to be used. The default is a simple file-based storage using markdown files.
+# List all tasks
+./opentask --path my_project task list
 
-- **Markdown-based**: Tasks stored as `.md` files with YAML frontmatter metadata
-- **Flexible location discovery**: Load projects from (in order of precedence):
-  - Explicit paths via:
-    - `opentask_PROJECT_PATH` environment variable
-    - `--path` CLI argument (cli, mcp, etc)
-    - `#path` field in a `.opentask.toml` config file
-    - Defaults to creating defined project if not found.
-    - if `config.strict`, Errors if not found.
+# Filter by status or type
+./opentask --path my_project task list --status todo --type story
 
-  - implicit paths:
-    - `${XDG_DATA_HOME}/opentask/projects/<derived_git_repo_url_project_id>/` 
-    - Local directories (`.tasks` convention)
-    - if `config.strict`, Errors if not found, otherwise creates at highest precedence location.
+# Show task details
+./opentask --path my_project task show 1
 
-### Task Metadata
-- **Status**: Customizable per project (e.g., todo → in-progress → done → archived)
-- **Type**: Predefined categories - research, spec, plan, story, epic, decision
-- **Tags**: Flexible labels for organization and filtering
-- **Relationships**: Link tasks with other tasks
-  - `blocks` - this task blocks others
-  - `relates-to` - related but independent
-  - `parent` - hierarchical relationships
-  - all tasks have at least one link: to their initiative/epic
+# Update task status
+./opentask --path my_project task update 1 --status in-progress
+```
 
-### Project Organization
-- **Kanban-style workflow**: Status determines column position
-- **Type-driven filtering**: Filter by research, specs, plans, etc.
-- **simple project rules**: "When creating tasks, read the plans [linked in the epic](opentask://the-epic-task-id) to guide task creation."
-- **Templates**: Predefined task templates for common types
+For detailed usage, see [QUICKSTART.md](docs/QUICKSTART.md).
+
+## Core Features
+
+### ✅ Ready Now (MVP)
+
+**Task Management**
+- Full CRUD operations (create, read, update, delete)
+- Markdown files with YAML frontmatter
+- Customizable status workflows (todo → in-progress → done → archived)
+- Type-driven organization (research, spec, plan, story, epic, decision)
+- Flexible tagging and filtering
+
+**Relationships**
+- Link tasks together: `blocks`, `relates-to`, `parent`
+- Hierarchical task organization (epics contain stories and tasks)
+- Query and traverse task dependencies
+
+**Flexible Storage**
+- Default: File-based markdown storage (no database needed)
+- Project discovery from multiple locations (in order of precedence):
+  - Explicit paths: `--path` CLI flag or `opentask_PROJECT_PATH` env var
+  - Config file: `.opentask.toml` with `#path` field
+  - Implicit paths: `${XDG_DATA_HOME}/opentask/projects/`, `.tasks/` directories
+  - Sensible defaults: Creates projects automatically or errors if `config.strict` is set
+
+**Configuration**
+- Optional TOML-based config for project settings
+- Per-project workflow customization
+- Global defaults in `${XDG_DATA_HOME}/opentask/config.toml`
+
+### ⏳ In Development (Phase 2)
+
+- Task templating system with built-in templates
+- Enhanced CLI UX for epic/story workflows
+- Improved error messages and guidance
+- End-to-end testing suite
+- Interactive task editing within the CLI
+- Status transition validation
+- Better task list printing and formatting
+
+### 🔮 Planned (Phase 3)
+
+- **MCP (Model Context Protocol)** – AI agents discover and manage tasks
+- Advanced query capabilities and saved filters
+- Additional storage backends (SQLite, DuckDB, cloud)
+- Interactive terminal UI (alongside CLI)
+- Task delegation and assignment tracking
 
 ## Example Task File
+
+Tasks are simple markdown files with YAML frontmatter:
 
 ```markdown
 ---
@@ -55,10 +95,10 @@ title: Implement task linking
 type: story
 status: in-progress
 tags: [feature, core]
-parent: setup-data-model
+parent: e-1
 links:
   - relates-to: s-5678
-  - blocks: s-91011
+  - blocks: s-9101
 ---
 
 # Implement task linking
@@ -66,83 +106,140 @@ links:
 Add support for linking tasks together (blocks, relates-to, parent relationships).
 
 This enables building task dependency graphs and hierarchical task organization.
+
+## Acceptance Criteria
+- [ ] Tasks can reference other tasks by ID
+- [ ] CLI shows task relationships
+- [ ] Parent-child relationships organize epics
+```
+
+Edit directly in your editor, or use the CLI:
+```bash
+./opentask --path my_project task update s-1234 --status done
+```
+
+## Use Cases
+
+### Solo Developers
+Keep tasks in version control, alongside your code. No separate tool to update.
+
+```bash
+# In your project repo
+./opentask --path .tasks task new "Add dark mode" --type story
+```
+
+### Teams Coordinating in Code
+Track work that's tied to specific codebases without polluting Git with task files.
+
+```bash
+# Separate task repo
+export opentask_PROJECT_PATH=/mnt/team-tasks
+opentask task list --status in-progress
+```
+
+### AI Agent Collaboration ⏳ (Phase 3)
+Agents will discover and autonomously manage task workflows via MCP.
+
+```python
+# Coming in Phase 3
+async with MCPClient('opentask') as client:
+    tasks = await client.get_tasks(status='todo')
+    await client.update_task(tasks[0].id, status='in-progress')
 ```
 
 ## Project Structure
 
-```sh
-project_id/
-  config.toml                # project config (undecided what this contains yet)
-  1234-some-name/
-    1234.epic.md             # epic task
-    1234.1.plan.md           # plan
-    1234.2.research.md       # research
-    1234.3.story.md          # story task
-    1234.4.story.md          # story task
-    1234.5.decision.md       # decision
-    1234.6.story.md          # story task
-    1234.7.task.md           # task
-    1234.8.task.md           # task
-    1234.9.task.md           # task
+Tasks organize hierarchically. By default, they live in `.tasks/`:
+
+```
+.tasks/
+├── .opentask.toml              # Project configuration
+└── 1-my-epic/
+    ├── 1.epic.md               # Epic task
+    ├── 1.1.plan.md             # Plans tied to epic
+    ├── 1.2.research.md         # Research
+    ├── 1.3.story.md            # Implementation stories
+    ├── 1.4.story.md
+    └── 1.5.task.md             # Specific tasks
 ```
 
-Depending on where the project is resolved this might be in: 
+Or store globally, organized by repo:
 
-```sh
+```
 ${XDG_DATA_HOME}/opentask/
-  config.toml                 # global user opentask config 
-  templates/
-    epic.md
-    plan.md
-    research.md
-    story.md
-    decision.md
-    task.md
-
-  projects/
-    <derived_git_repo_url_project_id>/
-      config.toml              # project config
-      1234-some-name/
-        1234.epic.md
-        ...
+├── config.toml                 # Global opentask config
+├── templates/                  # Task templates
+└── projects/
+    ├── github.com-org-project/
+    │   ├── 1-my-epic/
+    │   │   └── ...
+    └── github.com-another-org-project/
+        └── ...
 ```
 
-or at `opentask_PROJECT_PATH` or `--path` specified location.
+## AI-Ready Workflow (Coming Soon)
 
-```sh
-/my/custom/path/
-  config.toml                   # project config
-  1234-some-name/
-    1234.epic.md
-    ...
+opentask is designed with AI agents in mind. The core task management is **ready today**, but the full AI experience (MCP support, autonomous task management) ships in **Phase 3**.
+
+**Today**: Humans organize tasks that agents will eventually manage  
+**Phase 3**: Agents can discover projects via MCP and autonomously coordinate work
+
+See [AGENTS.md](AGENTS.md) for current collaboration patterns and the roadmap.
+
+## Roadmap
+
+### ✅ Phase 1: MVP (Complete)
+- [x] Task CRUD operations
+- [x] Markdown-based storage
+- [x] Flexible project discovery
+- [x] Task relationships and filtering
+- [x] CLI with Cobra/Viper
+- [x] Configuration system
+
+### ⏳ Phase 2: Polish & Features (In Progress)
+- [ ] Task templating system
+- [ ] Enhanced CLI UX for epics/stories
+- [ ] Improved error messages
+- [ ] End-to-end testing
+- [ ] Interactive task editing
+- [ ] Status transition validation
+
+### 🔮 Phase 3: AI Integration
+- [ ] MCP (Model Context Protocol) server
+- [ ] Agent task discovery and delegation
+- [ ] Advanced query engine
+- [ ] Multiple storage backends (SQLite, DuckDB, etc.)
+- [ ] Collaboration features
+
+For detailed progress, check [SESSION_SUMMARY.md](SESSION_SUMMARY.md).
+
+## Documentation
+
+- **[QUICKSTART.md](docs/QUICKSTART.md)** – Get started in 5 minutes
+- **[DESIGN_SUMMARY.md](docs/DESIGN_SUMMARY.md)** – Architecture overview
+- **[IMPLEMENTATION_SUMMARY.md](docs/IMPLEMENTATION_SUMMARY.md)** – What's built
+- **[MISE.md](docs/MISE.md)** – Development task runner guide
+- **[AGENTS.md](AGENTS.md)** – AI agent integration (roadmap)
+
+## Build & Run
+
+**Requirements**: Go 1.21+ (or use `mise` for task automation)
+
+```bash
+# Build
+go build -o opentask ./cmd/opentask
+
+# Run tests
+go test ./...
+
+# Use it
+./opentask --help
 ```
 
-## Planned Components
-
-- **Core**: Task model, parsing, relationship resolution
-- **Storage**: Load/save from multiple locations
-  - BaseStorage interface
-  - MarkdownFileStorage implementation
-- **Query**: Filter by status, type, tags, relationships
-- **CLI**: Interactive and batch operations
-  - Use viper/cobra for config and CLI
-- **MCP STDIO**: Multi-Client Proxy for AI agent integration
-
-## Near Term Roadmap
-
-- Task delegation: agents can assign tasks to themselves
-- Status workflows: customizable per project
-- Task templates: predefined structures for common task types
-
-
-## Non-Goals (For Now)
-
-- Cloud sync or authentication
-- Web UI (CLI-first)
-- Real-time collaboration (file-based for now)
-- Integration with other tools (extensible later)
-- **Export**: Various formats (JSON, YAML, etc.) (this is up to the storage backend)
+For development: see [MISE.md](docs/MISE.md) for task automation.
 
 ---
 
-**Status**: Planning phase
+**Status**: MVP Complete (Phase 1 ✅)  
+**Next**: Phase 2 (Polish & Features) – Estimated Q4 2025  
+**Future**: Phase 3 (AI Integration) – Estimated Q1 2026
