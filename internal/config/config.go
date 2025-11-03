@@ -9,7 +9,67 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// ProjectConfig holds all configuration for a project
+// OpentaskConfigCoreSchema defines shared configuration fields used in both global and project contexts.
+// This includes workflow definitions and template configurations that can be overridden at different levels.
+type OpentaskConfigCoreSchema struct {
+	Workflow  *WorkflowConfig `toml:"workflow"`
+	Templates *TemplateConfig `toml:"templates"`
+}
+
+// OpentaskConfigGlobalSchema defines user-level global configuration.
+// This includes the active project selection and list of known projects.
+type OpentaskConfigGlobalSchema struct {
+	ActiveProject string                `toml:"active_project"`
+	Projects      []GlobalProjectConfig `toml:"projects"`
+}
+
+// GlobalProjectConfig represents a project entry in the global configuration.
+// Projects can be defined at the global level with their storage configuration.
+type GlobalProjectConfig struct {
+	ID        string          `toml:"id"`
+	Name      string          `toml:"name"`
+	Storage   *StorageConfig  `toml:"storage"`
+	Workflow  *WorkflowConfig `toml:"workflow"`  // Optional project-specific workflow override
+	Templates *TemplateConfig `toml:"templates"` // Optional project-specific templates override
+}
+
+// OpentaskConfigProjectSchema defines project-level configuration.
+// This includes project metadata, storage path, and optional workflow/template overrides specific to this project.
+type OpentaskConfigProjectSchema struct {
+	Project       *ProjectSection `toml:"project"`
+	Storage       *StorageConfig  `toml:"storage"`
+	Workflow      *WorkflowConfig `toml:"workflow"`
+	Templates     *TemplateConfig `toml:"templates"`
+	ActiveProject string          `toml:"active_project"` // May be auto-populated if not specified
+}
+
+// OpentaskGlobalConfigFile represents the complete structure of a global config file (~/.config/opentask/config.toml).
+// It combines the global schema with shared core settings.
+type OpentaskGlobalConfigFile struct {
+	Global *OpentaskConfigGlobalSchema `toml:"global"`
+	Core   *OpentaskConfigCoreSchema   `toml:"core"` // Optional global defaults for workflow/templates
+}
+
+// OpentaskProjectConfigFile represents the complete structure of a project config file (.opentask.toml).
+// It combines project-specific settings with core settings that can be overridden at project level.
+type OpentaskProjectConfigFile struct {
+	Project *OpentaskConfigProjectSchema `toml:"project"`
+	Core    *OpentaskConfigCoreSchema    `toml:"core"` // Optional project-specific workflow/templates
+}
+
+// OpentaskResolvedConfig is the final merged configuration after resolving from all sources.
+// This is what the application uses at runtime - a complete, validated configuration with no ambiguities.
+// The DiscoveredFiles field tracks which config files were merged to produce this result.
+type OpentaskResolvedConfig struct {
+	Project         *ProjectSection `toml:"-"`
+	Workflow        *WorkflowConfig `toml:"-"`
+	Templates       *TemplateConfig `toml:"-"`
+	Storage         *StorageConfig  `toml:"-"`
+	ActiveProject   string          `toml:"-"`
+	DiscoveredFiles []string        `toml:"-"` // Config files that were merged (for debugging/display)
+}
+
+// ProjectConfig holds all configuration for a project (legacy, kept for backwards compatibility during transition)
 type ProjectConfig struct {
 	Project   ProjectSection `toml:"project"`
 	Workflow  WorkflowConfig `toml:"workflow"`
@@ -80,6 +140,28 @@ func DefaultStorage() StorageConfig {
 // DefaultTemplates returns the default template configuration
 func DefaultTemplates() TemplateConfig {
 	return TemplateConfig{}
+}
+
+// NewResolvedConfig creates a new resolved config with sensible defaults.
+// This is used as the starting point before merging from actual config files.
+func NewResolvedConfig() *OpentaskResolvedConfig {
+	return &OpentaskResolvedConfig{
+		Project: &ProjectSection{},
+		Workflow: &WorkflowConfig{
+			Statuses: []string{"todo", "in-progress", "reviewing", "done", "archived"},
+			Initial:  "todo",
+			Transitions: []TransitionConfig{
+				{From: "todo", To: []string{"in-progress", "archived"}},
+				{From: "in-progress", To: []string{"reviewing", "todo", "archived"}},
+				{From: "reviewing", To: []string{"done", "in-progress", "archived"}},
+				{From: "done", To: []string{"archived"}},
+			},
+		},
+		Templates:       &TemplateConfig{},
+		Storage:         &StorageConfig{Backend: "markdown-fs"},
+		ActiveProject:   "",
+		DiscoveredFiles: []string{},
+	}
 }
 
 // LoadConfig loads configuration from a config.toml file
