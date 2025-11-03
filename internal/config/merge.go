@@ -180,33 +180,45 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 		return nil, fmt.Errorf("failed to discover config files: %w", err)
 	}
 
-	// Load global config if it exists
-	home, err := os.UserHomeDir()
-	var globalConfig *OpentaskGlobalConfigFile
-	if err == nil {
-		globalPath := filepath.Join(home, ".config", "opentask", "config.toml")
-		globalConfig, err = LoadGlobalConfig(globalPath)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load global config: %w", err)
-		}
-		if globalConfig != nil {
-			resolved = MergeGlobalConfig(resolved, globalConfig)
-			resolved.DiscoveredFiles = append(resolved.DiscoveredFiles, globalPath)
-		}
-	}
-
 	// Load and merge project configs (furthest to closest, so closest overrides)
+	// Note: projectFiles may include the global config at the end
+	var globalConfig *OpentaskGlobalConfigFile
+	var globalPath string
+
 	for i := len(projectFiles) - 1; i >= 0; i-- {
 		projectFile := projectFiles[i]
-		projectConfig, err := LoadProjectConfig(projectFile)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load project config %s: %w", projectFile, err)
+
+		// Check if this is the global config file
+		home, err := os.UserHomeDir()
+		isGlobalConfig := false
+		if err == nil {
+			globalPath = filepath.Join(home, ".config", "opentask", "config.toml")
+			isGlobalConfig = (projectFile == globalPath)
 		}
 
-		if projectConfig != nil {
-			resolved = MergeProjectConfig(resolved, projectConfig)
-			// Insert at beginning to maintain order (closest first)
-			resolved.DiscoveredFiles = append([]string{projectFile}, resolved.DiscoveredFiles...)
+		if isGlobalConfig {
+			// Load global config separately
+			var err error
+			globalConfig, err = LoadGlobalConfig(projectFile)
+			if err != nil {
+				return nil, fmt.Errorf("failed to load global config: %w", err)
+			}
+			if globalConfig != nil {
+				resolved = MergeGlobalConfig(resolved, globalConfig)
+				resolved.DiscoveredFiles = append([]string{projectFile}, resolved.DiscoveredFiles...)
+			}
+		} else {
+			// Load project config
+			projectConfig, err := LoadProjectConfig(projectFile)
+			if err != nil {
+				return nil, fmt.Errorf("failed to load project config %s: %w", projectFile, err)
+			}
+
+			if projectConfig != nil {
+				resolved = MergeProjectConfig(resolved, projectConfig)
+				// Insert at beginning to maintain order (closest first)
+				resolved.DiscoveredFiles = append([]string{projectFile}, resolved.DiscoveredFiles...)
+			}
 		}
 	}
 
