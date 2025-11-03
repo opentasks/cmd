@@ -23,14 +23,21 @@ type OpentaskConfigGlobalSchema struct {
 	Projects      []GlobalProjectConfig `toml:"projects"`
 }
 
+// ProjectContext represents a working directory context associated with a project.
+// Used to match cwd to a project without requiring .opentask.toml in each repo.
+type ProjectContext struct {
+	Path string `toml:"path"`
+}
+
 // GlobalProjectConfig represents a project entry in the global configuration.
 // Projects can be defined at the global level with their storage configuration.
 type GlobalProjectConfig struct {
-	ID        string          `toml:"id"`
-	Name      string          `toml:"name"`
-	Storage   *StorageConfig  `toml:"storage"`
-	Workflow  *WorkflowConfig `toml:"workflow"`  // Optional project-specific workflow override
-	Templates *TemplateConfig `toml:"templates"` // Optional project-specific templates override
+	ID        string           `toml:"id"`
+	Name      string           `toml:"name"`
+	Storage   *StorageConfig   `toml:"storage"`
+	Workflow  *WorkflowConfig  `toml:"workflow"`  // Optional project-specific workflow override
+	Templates *TemplateConfig  `toml:"templates"` // Optional project-specific templates override
+	Context   []ProjectContext `toml:"context"`   // List of working directories for this project
 }
 
 // OpentaskConfigProjectSchema defines project-level configuration.

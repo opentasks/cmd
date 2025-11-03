@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -228,20 +229,43 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 		}
 	}
 
-	// Derive active_project if not set (do this BEFORE resolving storage path)
+	// Try to match context if no .opentask.toml found and no active_project set
+	if resolved.ActiveProject == "" && len(projectFiles) == 0 {
+		if globalConfig != nil {
+			// Try to find a project by context matching
+			projectID, matchedProject := FindProjectByContext(cwd, globalConfig.Projects)
+			if matchedProject != nil {
+				resolved.ActiveProject = projectID
+				// Use the matched project's storage immediately
+				if matchedProject.Storage != nil {
+					resolved.Storage = matchedProject.Storage
+				}
+				if matchedProject.Workflow != nil {
+					resolved.Workflow = matchedProject.Workflow
+				}
+				if matchedProject.Templates != nil {
+					resolved.Templates = matchedProject.Templates
+				}
+			}
+		}
+	}
+
+	// Derive active_project if still not set (do this BEFORE resolving storage path)
 	if resolved.ActiveProject == "" {
 		var globalProjects []GlobalProjectConfig
 		if globalConfig != nil {
 			globalProjects = globalConfig.Projects
 		}
 
-		// Find the closest project config directory
+		// Find the closest project config directory (only if we found local .opentask.toml files)
 		if len(projectFiles) > 0 {
 			configDir := filepath.Dir(projectFiles[0])
 			resolved.ActiveProject = deriveActiveProject("", configDir, globalProjects)
 		} else {
-			// No project config, derive from cwd
-			resolved.ActiveProject = deriveActiveProject("", cwd, globalProjects)
+			// No project config and no context match, use global active_project if available
+			if globalConfig != nil && globalConfig.ActiveProject != "" {
+				resolved.ActiveProject = globalConfig.ActiveProject
+			}
 		}
 	}
 
@@ -297,4 +321,126 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 	}
 
 	return resolved, nil
+}
+
+// FindProjectByContext finds a project in global config that matches the given cwd.
+// Returns the project ID and project config if found, empty string if no match.
+// Matching algorithm:
+// 1. Find longest matching context path (most specific wins)
+// 2. Return that project's ID
+// If multiple projects have overlapping contexts, longest match takes precedence.
+func FindProjectByContext(cwd string, globalProjects []GlobalProjectConfig) (string, *GlobalProjectConfig) {
+	// Convert cwd to absolute path
+	cwdAbs, err := filepath.Abs(cwd)
+	if err != nil {
+		return "", nil
+	}
+
+	// Normalize path
+	cwdAbs = filepath.Clean(cwdAbs)
+
+	var longestMatchPath string
+	var matchedProject *GlobalProjectConfig
+
+	// Check all projects for context matches
+	for i := range globalProjects {
+		for _, ctx := range globalProjects[i].Context {
+			// Normalize context path
+			ctxPath := filepath.Clean(ctx.Path)
+
+			// Expand ~ to home directory
+			if len(ctxPath) > 0 && ctxPath[0] == '~' {
+				home, err := os.UserHomeDir()
+				if err == nil {
+					ctxPath = filepath.Join(home, ctxPath[1:])
+				}
+			}
+
+			// Convert to absolute
+			ctxPath, err := filepath.Abs(ctxPath)
+			if err != nil {
+				continue
+			}
+			ctxPath = filepath.Clean(ctxPath)
+
+			// Check if cwd is under this context path
+			// Use HasPrefix to check if cwd starts with context path
+			if cwdAbs == ctxPath || strings.HasPrefix(cwdAbs+string(filepath.Separator), ctxPath+string(filepath.Separator)) {
+				// This context matches
+				// Keep the longest match (most specific)
+				if len(ctxPath) > len(longestMatchPath) {
+					longestMatchPath = ctxPath
+					matchedProject = &globalProjects[i]
+				}
+			}
+		}
+	}
+
+	if matchedProject != nil {
+		return matchedProject.ID, matchedProject
+	}
+
+	return "", nil
+}
+
+// AddContextPath adds a context path to a project.
+// Resolves the path to absolute and normalizes it.
+func (p *GlobalProjectConfig) AddContextPath(path string) error {
+	// Expand ~ to home directory
+	if len(path) > 0 && path[0] == '~' {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return fmt.Errorf("failed to expand home directory: %w", err)
+		}
+		path = filepath.Join(home, path[1:])
+	}
+
+	// Convert to absolute
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path: %w", err)
+	}
+
+	absPath = filepath.Clean(absPath)
+
+	// Check if path already exists
+	for _, ctx := range p.Context {
+		if filepath.Clean(ctx.Path) == absPath {
+			return fmt.Errorf("context path already exists: %s", absPath)
+		}
+	}
+
+	// Add the context
+	p.Context = append(p.Context, ProjectContext{Path: absPath})
+	return nil
+}
+
+// RemoveContextPath removes a context path from a project.
+func (p *GlobalProjectConfig) RemoveContextPath(path string) error {
+	// Expand ~ to home directory
+	if len(path) > 0 && path[0] == '~' {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return fmt.Errorf("failed to expand home directory: %w", err)
+		}
+		path = filepath.Join(home, path[1:])
+	}
+
+	// Convert to absolute
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("failed to get absolute path: %w", err)
+	}
+
+	absPath = filepath.Clean(absPath)
+
+	// Find and remove the context
+	for i, ctx := range p.Context {
+		if filepath.Clean(ctx.Path) == absPath {
+			p.Context = append(p.Context[:i], p.Context[i+1:]...)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("context path not found: %s", absPath)
 }
