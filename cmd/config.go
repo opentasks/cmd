@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
+	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
 	"github.com/zenobi-us/opentask/internal/config"
 )
@@ -104,55 +107,102 @@ var configViewCmd = &cobra.Command{
 			return nil
 		}
 
-		// Display resolved configuration
-		fmt.Println("Resolved Configuration")
-		fmt.Println("====================")
-		fmt.Println()
+		// Build file tree
+		fileTree := buildConfigFileTree(resolved.DiscoveredFiles)
 
-		// Show discovered files
-		if len(resolved.DiscoveredFiles) > 0 {
-			fmt.Println("Configuration files (in merge order):")
-			for i, f := range resolved.DiscoveredFiles {
-				fmt.Printf("  %d. %s\n", i+1, f)
-			}
-			fmt.Println()
+		// Convert resolved config to legacy ProjectConfig format for display
+		displayConfig := &config.ProjectConfig{
+			Project:   *resolved.Project,
+			Workflow:  *resolved.Workflow,
+			Templates: *resolved.Templates,
+			Storage:   *resolved.Storage,
 		}
 
-		// Show merged configuration
-		fmt.Println("Merged Configuration:")
-		fmt.Println()
-
-		if resolved.Project.Name != "" {
-			fmt.Printf("  Project: %s\n", resolved.Project.Name)
-		}
-		if resolved.Project.Owner != "" {
-			fmt.Printf("  Owner: %s\n", resolved.Project.Owner)
-		}
-		if resolved.ActiveProject != "" {
-			fmt.Printf("  Active Project ID: %s\n", resolved.ActiveProject)
-		}
-		fmt.Println()
-
-		if resolved.Storage != nil {
-			fmt.Printf("  Storage Backend: %s\n", resolved.Storage.Backend)
-			fmt.Printf("  Storage Path: %s\n", resolved.Storage.Path)
-		}
-		fmt.Println()
-
-		if resolved.Workflow != nil {
-			fmt.Printf("  Workflow Statuses: %v\n", resolved.Workflow.Statuses)
-			fmt.Printf("  Initial Status: %s\n", resolved.Workflow.Initial)
+		// Convert config to TOML string
+		tomlStr, err := config.ConfigAsToml(displayConfig)
+		if err != nil {
+			return fmt.Errorf("failed to format config as TOML: %w", err)
 		}
 
+		// Prepare template data
+		templateData := map[string]interface{}{
+			"FoundFiles":                 resolved.DiscoveredFiles,
+			"MergingOrder":               resolved.DiscoveredFiles,
+			"ResolvedConfigAsTomlString": tomlStr,
+			"StopReason":                 "reached filesystem root",
+			"StopDir":                    cwd,
+			"FileTree":                   fileTree,
+		}
+
+		// Execute template
+		tmpl, err := template.New("configView").
+			Funcs(template.FuncMap{
+				"quote": func(s string) string {
+					return `"` + s + `"`
+				},
+				"add": func(a, b int) int {
+					return a + b
+				},
+			}).
+			Parse(config.ViewTemplate)
+		if err != nil {
+			return fmt.Errorf("failed to parse template: %w", err)
+		}
+
+		// Render markdown to a buffer first
+		var mdBuf bytes.Buffer
+		if err := tmpl.Execute(&mdBuf, templateData); err != nil {
+			return fmt.Errorf("failed to execute template: %w", err)
+		}
+
+		// Render markdown with syntax highlighting using glamour
+		renderer, err := glamour.NewTermRenderer(
+			glamour.WithAutoStyle(),
+			glamour.WithWordWrap(120),
+		)
+		if err != nil {
+			return fmt.Errorf("failed to create markdown renderer: %w", err)
+		}
+
+		output, err := renderer.Render(mdBuf.String())
+		if err != nil {
+			return fmt.Errorf("failed to render markdown: %w", err)
+		}
+
+		fmt.Print(output)
+
+		// Verbose output
 		if verboseFlag {
-			fmt.Println()
-			fmt.Println("Verbose Details:")
-			fmt.Println("  Transitions:")
-			if resolved.Workflow != nil {
-				for _, t := range resolved.Workflow.Transitions {
-					fmt.Printf("    %s → %v\n", t.From, t.To)
+			fmt.Println("\n=== Verbose Mode: Merging Details ===")
+
+			// Show discovered config files
+			if len(resolved.DiscoveredFiles) > 0 {
+				for i, file := range resolved.DiscoveredFiles {
+					fmt.Printf("\n[Step %d] Applying: %s\n", i+1, file)
+					// For resolved config, just show what was merged
+					if resolved.Project.Name != "" {
+						fmt.Printf("  - project.name: %q\n", resolved.Project.Name)
+					}
+					if len(resolved.Workflow.Statuses) > 0 {
+						fmt.Printf("  - workflow.statuses: %v\n", resolved.Workflow.Statuses)
+					}
+					if resolved.Storage.Path != "" {
+						fmt.Printf("  - storage.path: %q\n", resolved.Storage.Path)
+					}
 				}
 			}
+
+			// Show defaults as final virtual layer
+			stepNum := len(resolved.DiscoveredFiles) + 1
+			fmt.Printf("\n[Step %d] (Virtual) Default configuration\n", stepNum)
+			defaults := config.ProjectConfig{
+				Workflow:  config.DefaultWorkflow(),
+				Templates: config.DefaultTemplates(),
+				Storage:   config.DefaultStorage(),
+			}
+			fmt.Printf("  - workflow.statuses: %v\n", defaults.Workflow.Statuses)
+			fmt.Printf("  - workflow.initial: %q\n", defaults.Workflow.Initial)
+			fmt.Printf("  - storage.backend: %q\n", defaults.Storage.Backend)
 		}
 
 		return nil
