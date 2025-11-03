@@ -228,6 +228,36 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 		}
 	}
 
+	// Derive active_project if not set (do this BEFORE resolving storage path)
+	if resolved.ActiveProject == "" {
+		var globalProjects []GlobalProjectConfig
+		if globalConfig != nil {
+			globalProjects = globalConfig.Projects
+		}
+
+		// Find the closest project config directory
+		if len(projectFiles) > 0 {
+			configDir := filepath.Dir(projectFiles[0])
+			resolved.ActiveProject = deriveActiveProject("", configDir, globalProjects)
+		} else {
+			// No project config, derive from cwd
+			resolved.ActiveProject = deriveActiveProject("", cwd, globalProjects)
+		}
+	}
+
+	// Merge storage from matching global project if not already set
+	if resolved.Storage.Path == "" && globalConfig != nil {
+		for _, globalProj := range globalConfig.Projects {
+			if globalProj.ID == resolved.ActiveProject && globalProj.Storage != nil {
+				// Found matching global project, use its storage
+				if globalProj.Storage.Path != "" {
+					resolved.Storage.Path = globalProj.Storage.Path
+				}
+				break
+			}
+		}
+	}
+
 	// Resolve storage path (must be absolute)
 	if resolved.Storage != nil && resolved.Storage.Path != "" {
 		storagePath := resolved.Storage.Path
@@ -246,23 +276,6 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 		}
 
 		resolved.Storage.Path = storagePath
-	}
-
-	// Derive active_project if not set
-	if resolved.ActiveProject == "" {
-		var globalProjects []GlobalProjectConfig
-		if globalConfig != nil {
-			globalProjects = globalConfig.Projects
-		}
-
-		// Find the closest project config directory
-		if len(projectFiles) > 0 {
-			configDir := filepath.Dir(projectFiles[0])
-			resolved.ActiveProject = deriveActiveProject("", configDir, globalProjects)
-		} else {
-			// No project config, derive from cwd
-			resolved.ActiveProject = deriveActiveProject("", cwd, globalProjects)
-		}
 	}
 
 	return resolved, nil
