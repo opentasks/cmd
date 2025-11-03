@@ -44,17 +44,29 @@ type OpentaskConfigProjectSchema struct {
 }
 
 // OpentaskGlobalConfigFile represents the complete structure of a global config file (~/.config/opentask/config.toml).
-// It combines the global schema with shared core settings.
+// Top-level keys are implicitly global - no [global] section wrapper needed.
 type OpentaskGlobalConfigFile struct {
-	Global *OpentaskConfigGlobalSchema `toml:"global"`
-	Core   *OpentaskConfigCoreSchema   `toml:"core"` // Optional global defaults for workflow/templates
+	ActiveProject string                `toml:"active_project"`
+	Projects      []GlobalProjectConfig `toml:"projects"`
+	Workflow      *WorkflowConfig       `toml:"workflow"`
+	Templates     *TemplateConfig       `toml:"templates"`
 }
 
 // OpentaskProjectConfigFile represents the complete structure of a project config file (.opentask.toml).
-// It combines project-specific settings with core settings that can be overridden at project level.
+// Top-level keys map directly to project settings - no [project] wrapper needed.
+// Example:
+//
+//	[project]
+//	name = "My Project"
+//	[storage]
+//	path = "./.tasks"
 type OpentaskProjectConfigFile struct {
-	Project *OpentaskConfigProjectSchema `toml:"project"`
-	Core    *OpentaskConfigCoreSchema    `toml:"core"` // Optional project-specific workflow/templates
+	Project       *ProjectSection           `toml:"project"`
+	Storage       *StorageConfig            `toml:"storage"`
+	Workflow      *WorkflowConfig           `toml:"workflow"`
+	Templates     *TemplateConfig           `toml:"templates"`
+	ActiveProject string                    `toml:"active_project"`
+	Core          *OpentaskConfigCoreSchema `toml:"core"` // Optional project-specific workflow/templates
 }
 
 // OpentaskResolvedConfig is the final merged configuration after resolving from all sources.

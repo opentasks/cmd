@@ -101,53 +101,47 @@ func TestOpentaskConfigProjectSchemaStructure(t *testing.T) {
 // TestOpentaskGlobalConfigFile tests the complete global config file type
 func TestOpentaskGlobalConfigFile(t *testing.T) {
 	globalConfig := &OpentaskGlobalConfigFile{
-		Global: &OpentaskConfigGlobalSchema{
-			ActiveProject: "work",
-			Projects: []GlobalProjectConfig{
-				{
-					ID:   "work",
-					Name: "Work Projects",
-					Storage: &StorageConfig{
-						Backend: "markdown-fs",
-						Path:    "~/work/.tasks",
-					},
+		ActiveProject: "work",
+		Projects: []GlobalProjectConfig{
+			{
+				ID:   "work",
+				Name: "Work Projects",
+				Storage: &StorageConfig{
+					Backend: "markdown-fs",
+					Path:    "~/work/.tasks",
 				},
 			},
 		},
-		Core: &OpentaskConfigCoreSchema{
-			Workflow: &WorkflowConfig{
-				Statuses: []string{"todo", "done"},
-				Initial:  "todo",
-			},
+		Workflow: &WorkflowConfig{
+			Statuses: []string{"todo", "done"},
+			Initial:  "todo",
 		},
 	}
 
-	if globalConfig.Global == nil {
-		t.Fatal("Global section is nil")
+	if globalConfig.ActiveProject != "work" {
+		t.Errorf("ActiveProject = %q, want %q", globalConfig.ActiveProject, "work")
 	}
 
-	if globalConfig.Core == nil {
-		t.Fatal("Core section is nil")
+	if len(globalConfig.Projects) != 1 {
+		t.Errorf("Projects count = %d, want 1", len(globalConfig.Projects))
 	}
 
-	if globalConfig.Global.ActiveProject != "work" {
-		t.Errorf("ActiveProject = %q, want %q", globalConfig.Global.ActiveProject, "work")
+	if globalConfig.Projects[0].ID != "work" {
+		t.Errorf("First project ID = %q, want %q", globalConfig.Projects[0].ID, "work")
 	}
 }
 
 // TestOpentaskProjectConfigFile tests the complete project config file type
 func TestOpentaskProjectConfigFile(t *testing.T) {
 	projectConfig := &OpentaskProjectConfigFile{
-		Project: &OpentaskConfigProjectSchema{
-			Project: &ProjectSection{
-				Name: "My Project",
-			},
-			Storage: &StorageConfig{
-				Backend: "markdown-fs",
-				Path:    "./.tasks",
-			},
-			ActiveProject: "my-project",
+		Project: &ProjectSection{
+			Name: "My Project",
 		},
+		Storage: &StorageConfig{
+			Backend: "markdown-fs",
+			Path:    "./.tasks",
+		},
+		ActiveProject: "my-project",
 		Core: &OpentaskConfigCoreSchema{
 			Workflow: &WorkflowConfig{
 				Statuses: []string{"todo", "in-progress", "done"},
@@ -164,8 +158,8 @@ func TestOpentaskProjectConfigFile(t *testing.T) {
 		t.Fatal("Core section is nil")
 	}
 
-	if projectConfig.Project.ActiveProject != "my-project" {
-		t.Errorf("ActiveProject = %q, want %q", projectConfig.Project.ActiveProject, "my-project")
+	if projectConfig.ActiveProject != "my-project" {
+		t.Errorf("ActiveProject = %q, want %q", projectConfig.ActiveProject, "my-project")
 	}
 }
 

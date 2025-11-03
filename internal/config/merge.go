@@ -48,21 +48,19 @@ func MergeGlobalConfig(resolved *OpentaskResolvedConfig, global *OpentaskGlobalC
 		return resolved
 	}
 
-	// Merge global schema if present
-	if global.Global != nil {
-		if global.Global.ActiveProject != "" {
-			resolved.ActiveProject = global.Global.ActiveProject
-		}
+	// Merge active project if set
+	if global.ActiveProject != "" {
+		resolved.ActiveProject = global.ActiveProject
 	}
 
-	// Merge core config - always apply if present (overrides built-in defaults)
-	if global.Core != nil {
-		if global.Core.Workflow != nil {
-			resolved.Workflow = global.Core.Workflow
-		}
-		if global.Core.Templates != nil {
-			resolved.Templates = global.Core.Templates
-		}
+	// Merge workflow if present (overrides built-in defaults)
+	if global.Workflow != nil {
+		resolved.Workflow = global.Workflow
+	}
+
+	// Merge templates if present (overrides built-in defaults)
+	if global.Templates != nil {
+		resolved.Templates = global.Templates
 	}
 
 	return resolved
@@ -70,43 +68,51 @@ func MergeGlobalConfig(resolved *OpentaskResolvedConfig, global *OpentaskGlobalC
 
 // MergeProjectConfig merges project config into the resolved config.
 // Project config has higher priority than global config.
+// Priority: project.Project > project.Core > global config > built-in defaults
 func MergeProjectConfig(resolved *OpentaskResolvedConfig, project *OpentaskProjectConfigFile) *OpentaskResolvedConfig {
 	if project == nil {
 		return resolved
 	}
 
-	// Merge project schema
+	// Merge top-level project fields (now flattened, no intermediate schema)
 	if project.Project != nil {
-		if project.Project.Project != nil {
-			resolved.Project = project.Project.Project
-		}
+		resolved.Project = project.Project
+	}
 
-		if project.Project.Storage != nil {
-			resolved.Storage = project.Project.Storage
+	// Merge storage field-by-field to preserve defaults
+	if project.Storage != nil {
+		if project.Storage.Backend != "" {
+			resolved.Storage.Backend = project.Storage.Backend
 		}
-
-		if project.Project.Workflow != nil {
-			resolved.Workflow = project.Project.Workflow
+		if project.Storage.Path != "" {
+			resolved.Storage.Path = project.Storage.Path
 		}
-
-		if project.Project.Templates != nil {
-			resolved.Templates = project.Project.Templates
-		}
-
-		if project.Project.ActiveProject != "" {
-			resolved.ActiveProject = project.Project.ActiveProject
+		if len(project.Storage.Options) > 0 {
+			resolved.Storage.Options = project.Storage.Options
 		}
 	}
 
-	// Merge project core config
-	// Priority: project.Project.X > project.Core.X > global.Core.X > built-in defaults
+	if project.Workflow != nil {
+		resolved.Workflow = project.Workflow
+	}
+
+	if project.Templates != nil {
+		resolved.Templates = project.Templates
+	}
+
+	if project.ActiveProject != "" {
+		resolved.ActiveProject = project.ActiveProject
+	}
+
+	// Merge project core config (fallback if top-level fields not set)
+	// Priority: project.X > project.Core.X > global.Core.X > built-in defaults
 	if project.Core != nil {
-		// If project.Project doesn't have workflow, use project.Core workflow
-		if (project.Project == nil || project.Project.Workflow == nil) && project.Core.Workflow != nil {
+		// If project doesn't have workflow, use project.Core workflow
+		if project.Workflow == nil && project.Core.Workflow != nil {
 			resolved.Workflow = project.Core.Workflow
 		}
-		// If project.Project doesn't have templates, use project.Core templates
-		if (project.Project == nil || project.Project.Templates == nil) && project.Core.Templates != nil {
+		// If project doesn't have templates, use project.Core templates
+		if project.Templates == nil && project.Core.Templates != nil {
 			resolved.Templates = project.Core.Templates
 		}
 	}
@@ -245,8 +251,8 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 	// Derive active_project if not set
 	if resolved.ActiveProject == "" {
 		var globalProjects []GlobalProjectConfig
-		if globalConfig != nil && globalConfig.Global != nil {
-			globalProjects = globalConfig.Global.Projects
+		if globalConfig != nil {
+			globalProjects = globalConfig.Projects
 		}
 
 		// Find the closest project config directory

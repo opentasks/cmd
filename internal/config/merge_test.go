@@ -13,26 +13,25 @@ func TestLoadGlobalConfigBasic(t *testing.T) {
 	configPath := filepath.Join(tmpDir, "global.toml")
 
 	globalConfig := `
-[global]
 active_project = "work"
 
 [workflow]
 statuses = ["todo", "done"]
 initial = "todo"
 
-[[global.projects]]
+[[projects]]
 id = "work"
 name = "Work Tasks"
 
-[global.projects.storage]
+[projects.storage]
 backend = "markdown-fs"
 path = "~/work/.tasks"
 
-[[global.projects]]
+[[projects]]
 id = "personal"
 name = "Personal Tasks"
 
-[global.projects.storage]
+[projects.storage]
 backend = "markdown-fs"
 path = "~/personal/.tasks"
 `
@@ -50,20 +49,16 @@ path = "~/personal/.tasks"
 		t.Fatal("LoadGlobalConfig returned nil")
 	}
 
-	if cfg.Global == nil {
-		t.Fatal("Global section is nil")
+	if cfg.ActiveProject != "work" {
+		t.Errorf("ActiveProject = %q, want %q", cfg.ActiveProject, "work")
 	}
 
-	if cfg.Global.ActiveProject != "work" {
-		t.Errorf("ActiveProject = %q, want %q", cfg.Global.ActiveProject, "work")
+	if len(cfg.Projects) != 2 {
+		t.Errorf("Projects count = %d, want 2", len(cfg.Projects))
 	}
 
-	if len(cfg.Global.Projects) != 2 {
-		t.Errorf("Projects count = %d, want 2", len(cfg.Global.Projects))
-	}
-
-	if cfg.Global.Projects[0].ID != "work" {
-		t.Errorf("First project ID = %q, want %q", cfg.Global.Projects[0].ID, "work")
+	if cfg.Projects[0].ID != "work" {
+		t.Errorf("First project ID = %q, want %q", cfg.Projects[0].ID, "work")
 	}
 }
 
@@ -73,19 +68,18 @@ func TestLoadProjectConfigBasic(t *testing.T) {
 	configPath := filepath.Join(tmpDir, ".opentask.toml")
 
 	projectConfig := `
-[project.project]
+active_project = "my-project"
+
+[project]
 name = "My Project"
 description = "A test project"
 owner = "me"
 
-[project]
-active_project = "my-project"
-
-[project.storage]
+[storage]
 backend = "markdown-fs"
 path = "./.tasks"
 
-[project.workflow]
+[workflow]
 statuses = ["todo", "in-progress", "done"]
 initial = "todo"
 `
@@ -107,16 +101,16 @@ initial = "todo"
 		t.Fatal("Project section is nil")
 	}
 
-	if cfg.Project.Project.Name != "My Project" {
-		t.Errorf("Project.Name = %q, want %q", cfg.Project.Project.Name, "My Project")
+	if cfg.Project.Name != "My Project" {
+		t.Errorf("Project.Name = %q, want %q", cfg.Project.Name, "My Project")
 	}
 
-	if cfg.Project.ActiveProject != "my-project" {
-		t.Errorf("ActiveProject = %q, want %q", cfg.Project.ActiveProject, "my-project")
+	if cfg.ActiveProject != "my-project" {
+		t.Errorf("ActiveProject = %q, want %q", cfg.ActiveProject, "my-project")
 	}
 
-	if cfg.Project.Storage.Path != "./.tasks" {
-		t.Errorf("Storage.Path = %q, want %q", cfg.Project.Storage.Path, "./.tasks")
+	if cfg.Storage.Path != "./.tasks" {
+		t.Errorf("Storage.Path = %q, want %q", cfg.Storage.Path, "./.tasks")
 	}
 }
 
@@ -130,7 +124,6 @@ func TestResolveProjectConfigSimpleGlobalOnly(t *testing.T) {
 	globalPath := filepath.Join(globalDir, "config.toml")
 
 	globalConfig := `
-[global]
 active_project = "test"
 
 [[projects]]
@@ -138,63 +131,6 @@ id = "test"
 name = "Test Project"
 
 [projects.storage]
-backend = "markdown-fs"
-path = "` + tmpDir + `/.tasks"
-
-[workflow]
-statuses = ["todo", "done"]
-initial = "todo"
-`
-
-	if err := os.WriteFile(globalPath, []byte(globalConfig), 0644); err != nil {
-		t.Fatalf("Failed to write global config: %v", err)
-	}
-
-	// Set HOME to tmpDir so global config is found
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
-
-	// Now resolve config at a project directory
-	projectDir := filepath.Join(tmpDir, "project")
-	os.MkdirAll(projectDir, 0755)
-
-	resolved, err := ResolveProjectConfig(projectDir)
-	if err != nil {
-		t.Fatalf("ResolveProjectConfig failed: %v", err)
-	}
-
-	if resolved == nil {
-		t.Fatal("ResolveProjectConfig returned nil")
-	}
-
-	if resolved.Workflow == nil {
-		t.Fatal("Workflow is nil")
-	}
-
-	if len(resolved.Workflow.Statuses) == 0 {
-		t.Fatal("Workflow.Statuses is empty")
-	}
-}
-
-// TestResolveProjectConfigProjectOverridesGlobal tests that project config overrides global
-func TestResolveProjectConfigProjectOverridesGlobal(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	// Create global config
-	globalDir := filepath.Join(tmpDir, ".config", "opentask")
-	os.MkdirAll(globalDir, 0755)
-	globalPath := filepath.Join(globalDir, "config.toml")
-
-	globalConfig := `
-[global]
-active_project = "test"
-
-[[global.projects]]
-id = "test"
-name = "Test Project"
-
-[global.projects.storage]
 backend = "markdown-fs"
 path = "` + filepath.Join(tmpDir, ".tasks") + `"
 
@@ -213,10 +149,10 @@ initial = "todo"
 	projectPath := filepath.Join(projectDir, ".opentask.toml")
 
 	projectConfig := `
-[project.project]
+[project]
 name = "Overridden Project"
 
-[project.workflow]
+[workflow]
 statuses = ["backlog", "todo", "in-progress", "done"]
 initial = "todo"
 `
@@ -258,14 +194,13 @@ func TestResolveProjectConfigActiveProjectDerivation(t *testing.T) {
 	projectStoragePath := filepath.Join(tmpDir, "work", ".tasks")
 
 	globalConfig := `
-[global]
 active_project = "work"
 
-[[global.projects]]
+[[projects]]
 id = "work"
 name = "Work"
 
-[global.projects.storage]
+[projects.storage]
 backend = "markdown-fs"
 path = "` + projectStoragePath + `"
 `
@@ -345,14 +280,10 @@ path = "./.tasks"
 // TestMergeConfigsSimple tests merging a single config
 func TestMergeConfigsSimple(t *testing.T) {
 	global := &OpentaskGlobalConfigFile{
-		Global: &OpentaskConfigGlobalSchema{
-			ActiveProject: "test",
-		},
-		Core: &OpentaskConfigCoreSchema{
-			Workflow: &WorkflowConfig{
-				Statuses: []string{"todo", "done"},
-				Initial:  "todo",
-			},
+		ActiveProject: "test",
+		Workflow: &WorkflowConfig{
+			Statuses: []string{"todo", "done"},
+			Initial:  "todo",
 		},
 	}
 
@@ -371,11 +302,9 @@ func TestMergeConfigsSimple(t *testing.T) {
 // TestMergeConfigsProjectOverridesGlobal tests correct override priority
 func TestMergeConfigsProjectOverridesGlobal(t *testing.T) {
 	global := &OpentaskGlobalConfigFile{
-		Core: &OpentaskConfigCoreSchema{
-			Workflow: &WorkflowConfig{
-				Statuses: []string{"todo", "done"},
-				Initial:  "todo",
-			},
+		Workflow: &WorkflowConfig{
+			Statuses: []string{"todo", "done"},
+			Initial:  "todo",
 		},
 	}
 

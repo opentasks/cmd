@@ -16,7 +16,6 @@ func TestIntegrationGlobalAndProjectConfigs(t *testing.T) {
 	globalPath := filepath.Join(globalDir, "config.toml")
 
 	globalConfig := `
-[global]
 active_project = "work"
 
 [workflow]
@@ -26,19 +25,19 @@ initial = "todo"
 [templates]
 epic = "~/.local/share/opentask/templates/epic.md"
 
-[[global.projects]]
+[[projects]]
 id = "work"
 name = "Work Tasks"
 
-[global.projects.storage]
+[projects.storage]
 backend = "markdown-fs"
 path = "` + filepath.Join(tmpDir, "work", ".tasks") + `"
 
-[[global.projects]]
+[[projects]]
 id = "personal"
 name = "Personal Tasks"
 
-[global.projects.storage]
+[projects.storage]
 backend = "markdown-fs"
 path = "` + filepath.Join(tmpDir, "personal", ".tasks") + `"
 `
@@ -53,15 +52,15 @@ path = "` + filepath.Join(tmpDir, "personal", ".tasks") + `"
 	workProjectPath := filepath.Join(workRoot, ".opentask.toml")
 
 	workProjectConfig := `
-[project.project]
+[project]
 name = "Work"
 owner = "team"
 
-[project.storage]
+[storage]
 backend = "markdown-fs"
 path = "` + filepath.Join(workRoot, ".tasks") + `"
 
-[project.workflow]
+[workflow]
 statuses = ["backlog", "todo", "in-progress", "done"]
 initial = "todo"
 `
@@ -76,11 +75,11 @@ initial = "todo"
 	subProjectPath := filepath.Join(subProjectDir, ".opentask.toml")
 
 	subProjectConfig := `
-[project.project]
+[project]
 name = "Sub Project"
 owner = "john"
 
-[project.templates]
+[templates]
 task = "templates/custom-task.md"
 `
 
@@ -173,15 +172,15 @@ func TestIntegrationProjectWithoutGlobalConfig(t *testing.T) {
 	projectPath := filepath.Join(projectDir, ".opentask.toml")
 
 	projectConfig := `
-[project.project]
+[project]
 name = "My Project"
 description = "Standalone project"
 
-[project.storage]
+[storage]
 backend = "markdown-fs"
 path = "./.tasks"
 
-[project.workflow]
+[workflow]
 statuses = ["todo", "in-progress", "done"]
 initial = "todo"
 `
@@ -225,10 +224,10 @@ func TestIntegrationMultipleProjectLevels(t *testing.T) {
 	level1Path := filepath.Join(level1Dir, ".opentask.toml")
 
 	level1Config := `
-[project.project]
+[project]
 name = "Root Project"
 
-[project.workflow]
+[workflow]
 statuses = ["todo", "in-progress", "review", "done"]
 initial = "todo"
 `
@@ -243,7 +242,7 @@ initial = "todo"
 	level2Path := filepath.Join(level2Dir, ".opentask.toml")
 
 	level2Config := `
-[project.project]
+[project]
 name = "Module A"
 owner = "team-a"
 `
@@ -258,7 +257,7 @@ owner = "team-a"
 	level3Path := filepath.Join(level3Dir, ".opentask.toml")
 
 	level3Config := `
-[project.project]
+[project]
 name = "Sub Module"
 `
 
@@ -277,7 +276,7 @@ name = "Sub Module"
 		t.Errorf("Project.Name = %q, want %q", resolved.Project.Name, "Sub Module")
 	}
 
-	// Note: Level 3 defines [project.project] which replaces the entire section,
+	// Note: Level 3 defines [project] which replaces the entire section,
 	// so owner is not inherited from level 2. This is correct behavior -
 	// sections replace rather than merge. If we want inheritance, level 3 would need to
 	// explicitly include owner or not define project section at all.
@@ -325,10 +324,10 @@ func TestIntegrationStoragePathResolution(t *testing.T) {
 			projectPath := filepath.Join(projectDir, ".opentask.toml")
 
 			projectConfig := `
-[project.project]
+[project]
 name = "Test"
 
-[project.storage]
+[storage]
 backend = "markdown-fs"
 path = "` + tt.configPath + `"
 `

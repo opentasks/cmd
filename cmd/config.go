@@ -381,7 +381,7 @@ var configProjectsCmd = &cobra.Command{
 			return fmt.Errorf("failed to load global config: %w", err)
 		}
 
-		if globalConfig == nil || globalConfig.Global == nil {
+		if globalConfig == nil {
 			fmt.Println("No global configuration found at " + globalPath)
 			fmt.Println("\nTo create global config:")
 			fmt.Println("  1. mkdir -p ~/.config/opentask")
@@ -393,7 +393,7 @@ var configProjectsCmd = &cobra.Command{
 		if activeFlag != "" {
 			// Validate project exists
 			found := false
-			for _, proj := range globalConfig.Global.Projects {
+			for _, proj := range globalConfig.Projects {
 				if proj.ID == activeFlag {
 					found = true
 					break
@@ -402,23 +402,23 @@ var configProjectsCmd = &cobra.Command{
 			if !found {
 				return fmt.Errorf("project %q not found in global config", activeFlag)
 			}
-			globalConfig.Global.ActiveProject = activeFlag
+			globalConfig.ActiveProject = activeFlag
 			fmt.Printf("Set active project to: %s\n", activeFlag)
 			// TODO: Persist change to global config file
 			return nil
 		}
 
 		// List projects (default)
-		if len(globalConfig.Global.Projects) == 0 {
+		if len(globalConfig.Projects) == 0 {
 			fmt.Println("No projects configured in global config")
 			return nil
 		}
 
 		fmt.Println("Configured projects:")
 		fmt.Println()
-		for _, proj := range globalConfig.Global.Projects {
+		for _, proj := range globalConfig.Projects {
 			prefix := "  "
-			if proj.ID == globalConfig.Global.ActiveProject {
+			if proj.ID == globalConfig.ActiveProject {
 				prefix = "* "
 			}
 			fmt.Printf("%s%s (%s)\n", prefix, proj.Name, proj.ID)
@@ -427,8 +427,8 @@ var configProjectsCmd = &cobra.Command{
 			}
 		}
 
-		if globalConfig.Global.ActiveProject != "" {
-			fmt.Printf("\nActive project: %s\n", globalConfig.Global.ActiveProject)
+		if globalConfig.ActiveProject != "" {
+			fmt.Printf("\nActive project: %s\n", globalConfig.ActiveProject)
 		}
 
 		return nil
