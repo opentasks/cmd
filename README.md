@@ -11,7 +11,7 @@ Markdown-based tasks that live anywhere—in your projects, user directories, or
 - 🤖 **AI-ready** ⏳ – Built for agent collaboration via MCP (Phase 3 roadmap)
 - 📝 **Markdown native** – Edit in VS Code, Vim, or any editor
 - ⚡ **Zero setup** – Works with sensible defaults, optional TOML configuration
-- 🔌 **Pluggable storage** ⏳ – Swap backends (file → SQLite → cloud) without changing code
+- 🔌 **Pluggable storage** ⏳ – Swap backends (Phase 4: SQLite, DuckDB, PostgreSQL, cloud)
 
 ## Quick Start
 
@@ -80,9 +80,14 @@ For detailed usage, see [QUICKSTART.md](docs/QUICKSTART.md).
 
 - **MCP (Model Context Protocol)** – AI agents discover and manage tasks
 - Advanced query capabilities and saved filters
-- Additional storage backends (SQLite, DuckDB, cloud)
 - Interactive terminal UI (alongside CLI)
 - Task delegation and assignment tracking
+
+### 🌌 Future (Phase 4)
+
+- **Storage backend plugins** – Plugin system for SQLite, DuckDB, PostgreSQL, cloud providers
+- Custom storage implementations without core changes
+- Migration tools between backends
 
 ## Example Task File
 
@@ -208,8 +213,13 @@ See [AGENTS.md](AGENTS.md) for current collaboration patterns and the roadmap.
 - [ ] MCP (Model Context Protocol) server
 - [ ] Agent task discovery and delegation
 - [ ] Advanced query engine
-- [ ] Multiple storage backends (SQLite, DuckDB, etc.)
 - [ ] Collaboration features
+
+### 🌌 Phase 4: Extensibility
+- [ ] Storage backend plugins (SQLite, DuckDB, PostgreSQL)
+- [ ] Plugin system architecture
+- [ ] Migration tools between backends
+- [ ] Cloud provider integrations (S3, GCS, etc.)
 
 For detailed progress, check [SESSION_SUMMARY.md](SESSION_SUMMARY.md).
 
@@ -242,4 +252,5 @@ For development: see [MISE.md](docs/MISE.md) for task automation.
 
 **Status**: MVP Complete (Phase 1 ✅)  
 **Next**: Phase 2 (Polish & Features) – Estimated Q4 2025  
-**Future**: Phase 3 (AI Integration) – Estimated Q1 2026
+**Then**: Phase 3 (AI Integration) – Estimated Q1 2026  
+**Future**: Phase 4 (Storage Plugins) – Estimated Q2 2026
