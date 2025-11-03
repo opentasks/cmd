@@ -7,7 +7,7 @@ golang = "1.21"
 
 [tasks.build]
 description = "Build the OpenTask CLI"
-run = "go build -o opentask ./cmd/opentask"
+run = "go build -o bin/opentask ./cmd/opentask"
 
 [tasks.test]
 description = "Run all tests"
