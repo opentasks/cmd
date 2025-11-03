@@ -24,22 +24,31 @@ func buildConfigFileTree(files []string) string {
 	for i, file := range files {
 		// Get path relative to current directory for most readable display
 		cwd, err := os.Getwd()
-		var relPath string
-		if err == nil {
-			relPath, err = filepath.Rel(cwd, file)
-		}
-		if err != nil || relPath == "" {
-			relPath = file
-		}
+		var displayPath string
 
-		// Handle special case for user config path (expand ~)
-		if strings.HasPrefix(relPath, filepath.Join(os.Getenv("HOME"), ".config")) {
-			homeDir, _ := os.UserHomeDir()
-			if idx := strings.Index(relPath, filepath.Join(homeDir, ".config")); idx != -1 {
-				relPath = "~" + relPath[idx+len(homeDir):]
+		// First, try to show as relative path from cwd
+		if err == nil {
+			relPath, err := filepath.Rel(cwd, file)
+			if err == nil && !strings.HasPrefix(relPath, "..") {
+				// Only use relative path if it doesn't go up many directories
+				displayPath = relPath
 			}
 		}
-		allItems[i] = relPath
+
+		// If not a good relative path, try to use ~ for home directory
+		if displayPath == "" {
+			homeDir, err := os.UserHomeDir()
+			if err == nil && strings.HasPrefix(file, homeDir) {
+				displayPath = "~" + file[len(homeDir):]
+			}
+		}
+
+		// Fall back to absolute path if nothing else worked
+		if displayPath == "" {
+			displayPath = file
+		}
+
+		allItems[i] = displayPath
 	}
 	allItems[len(files)] = "(builtin) defaults"
 
