@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -244,6 +245,92 @@ var projectListCmd = &cobra.Command{
 	},
 }
 
+// projectRemoveCmd removes a project from the global config
+var projectRemoveCmd = &cobra.Command{
+	Use:   "remove [PROJECT_ID]",
+	Short: "Remove a project",
+	Long: `Remove a project from the global configuration.
+
+This will permanently delete the project configuration, though the storage
+directory itself will not be affected.
+
+Example:
+  opentask project remove myproject`,
+	Args: cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		projectID := args[0]
+
+		// Load global config
+		globalPath, err := getGlobalConfigPath()
+		if err != nil {
+			return err
+		}
+
+		globalConfig, err := config.LoadGlobalConfig(globalPath)
+		if err != nil {
+			return fmt.Errorf("failed to load global config: %w", err)
+		}
+
+		if globalConfig == nil {
+			return fmt.Errorf("global config not found at %s", globalPath)
+		}
+
+		// Find project by ID
+		projectIndex := -1
+		var project *config.GlobalProjectConfig
+		for i := range globalConfig.Projects {
+			if globalConfig.Projects[i].ID == projectID {
+				projectIndex = i
+				project = &globalConfig.Projects[i]
+				break
+			}
+		}
+
+		if project == nil {
+			return fmt.Errorf("project not found: %s", projectID)
+		}
+
+		// Display project info and ask for confirmation
+		fmt.Printf("About to remove project: %s\n", projectID)
+		if project.Name != "" {
+			fmt.Printf("Name: %s\n", project.Name)
+		}
+		if project.Storage != nil && project.Storage.Path != "" {
+			fmt.Printf("Storage path: %s\n", formatPath(project.Storage.Path))
+		}
+		fmt.Println()
+		fmt.Print("Are you sure you want to remove this project? (yes/no): ")
+
+		// Read user input
+		scanner := bufio.NewScanner(os.Stdin)
+		if !scanner.Scan() {
+			return fmt.Errorf("failed to read confirmation")
+		}
+
+		response := strings.TrimSpace(strings.ToLower(scanner.Text()))
+		if response != "yes" && response != "y" {
+			fmt.Println("Cancelled.")
+			return nil
+		}
+
+		// Remove project from slice
+		globalConfig.Projects = append(globalConfig.Projects[:projectIndex], globalConfig.Projects[projectIndex+1:]...)
+
+		// Clear active project if it was the removed project
+		if globalConfig.ActiveProject == projectID {
+			globalConfig.ActiveProject = ""
+		}
+
+		// Save global config
+		if err := saveGlobalConfig(globalPath, globalConfig); err != nil {
+			return err
+		}
+
+		fmt.Printf("✓ Removed project %s\n", projectID)
+		return nil
+	},
+}
+
 // Helper functions
 
 // getGlobalConfigPath returns the path to the global config file
@@ -312,6 +399,7 @@ func init() {
 	projectCmd.AddCommand(projectAttachCmd)
 	projectCmd.AddCommand(projectDetachCmd)
 	projectCmd.AddCommand(projectListCmd)
+	projectCmd.AddCommand(projectRemoveCmd)
 
 	// Add flags for attach and detach
 	projectAttachCmd.Flags().StringP("project", "p", "", "Project ID (required)")

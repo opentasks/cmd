@@ -71,12 +71,12 @@ Run any task with `mise run <task>`:
 ### Utility Tasks
 
 **`mise run clean`** - Clean build artifacts
-- Removes `opentask` binary
-- Removes `test_project/` and `demo_project/` directories
+- Removes `bin/opentask` binary
+- Removes `demo/` directories
 - Cleans up temporary test files
 
 **`mise run demo`** - Run an interactive demo
-- Creates `demo_project/` directory
+- Creates `./demo/` directory
 - Creates a sample task hierarchy:
   - Epic: "Design Phase"
   - Plan: "Plan architecture" (parent: epic)

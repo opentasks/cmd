@@ -44,20 +44,20 @@ run = "gofmt -w ."
 
 [tasks.clean]
 description = "Clean build artifacts"
-run = "rm -f opentask test_project && find . -name '*.md' -path './test*' -delete"
+run = "rm -f opentask ./demo/ && find . -name '*.md' -path './test*' -delete"
 
 [tasks.demo]
 description = "Run demo workflow"
 run = """
-rm -rf demo_project
-mkdir -p demo_project
-./opentask --path demo_project task new "Design Phase" --type epic
-./opentask --path demo_project task new "Plan architecture" --type plan --parent 1
-./opentask --path demo_project task new "Research patterns" --type research --parent 1
-./opentask --path demo_project task new "Implement core" --type story --parent 1 --tag backend
-./opentask --path demo_project task list
+rm -rf ./demo
+mkdir -p ./demo
+./opentask --path ./demo task new "Design Phase" --type epic
+./opentask --path ./demo task new "Plan architecture" --type plan --parent 1
+./opentask --path ./demo task new "Research patterns" --type research --parent 1
+./opentask --path ./demo task new "Implement core" --type story --parent 1 --tag backend
+./opentask --path ./demo task list
 echo ""
-echo "Demo project created at: demo_project/"
+echo "Demo project created at: ./demo/"
 """
 
 [tasks.help]
