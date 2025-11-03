@@ -43,19 +43,29 @@ func TestDiscoverConfigFiles(t *testing.T) {
 		t.Errorf("DiscoverConfigFiles() error = %v", err)
 	}
 
-	if len(found) != 3 {
-		t.Errorf("DiscoverConfigFiles() found %d files, want 3", len(found))
+	// Filter to project-specific configs (not user global config)
+	home, _ := os.UserHomeDir()
+	globalConfigPath := filepath.Join(home, ".config", "opentask", "config.toml")
+	var projectConfigs []string
+	for _, f := range found {
+		if f != globalConfigPath {
+			projectConfigs = append(projectConfigs, f)
+		}
+	}
+
+	if len(projectConfigs) != 3 {
+		t.Errorf("DiscoverConfigFiles() found %d project configs, want 3 (may also find user global config)", len(projectConfigs))
 	}
 
 	// Verify order: should be [leaf, mid, root] (closest first)
-	if len(found) >= 1 && found[0] != leafConfig {
-		t.Errorf("First file = %s, want %s", found[0], leafConfig)
+	if len(projectConfigs) >= 1 && projectConfigs[0] != leafConfig {
+		t.Errorf("First file = %s, want %s", projectConfigs[0], leafConfig)
 	}
-	if len(found) >= 2 && found[1] != midConfig {
-		t.Errorf("Second file = %s, want %s", found[1], midConfig)
+	if len(projectConfigs) >= 2 && projectConfigs[1] != midConfig {
+		t.Errorf("Second file = %s, want %s", projectConfigs[1], midConfig)
 	}
-	if len(found) >= 3 && found[2] != rootConfig {
-		t.Errorf("Third file = %s, want %s", found[2], rootConfig)
+	if len(projectConfigs) >= 3 && projectConfigs[2] != rootConfig {
+		t.Errorf("Third file = %s, want %s", projectConfigs[2], rootConfig)
 	}
 }
 
@@ -99,17 +109,27 @@ func TestDiscoverConfigContinuesPastGitRoot(t *testing.T) {
 		t.Errorf("DiscoverConfigFiles() error = %v", err)
 	}
 
+	// Filter to project-specific configs (not user global config)
+	home, _ := os.UserHomeDir()
+	globalConfigPath := filepath.Join(home, ".config", "opentask", "config.toml")
+	var projectConfigs []string
+	for _, f := range found {
+		if f != globalConfigPath {
+			projectConfigs = append(projectConfigs, f)
+		}
+	}
+
 	// Should find all three configs even though .git is at subdir level
 	// (discovery should NOT stop at git root, it should continue walking up)
-	if len(found) != 3 {
-		t.Errorf("DiscoverConfigFiles() found %d files, want 3 (should continue past .git directory)", len(found))
+	if len(projectConfigs) != 3 {
+		t.Errorf("DiscoverConfigFiles() found %d project configs, want 3 (should continue past .git directory, may also find user global config)", len(projectConfigs))
 	}
 
 	// Verify we found all configs including the one above git root
 	hasRoot := false
 	hasSub := false
 	hasDeep := false
-	for _, f := range found {
+	for _, f := range projectConfigs {
 		if f == rootConfig {
 			hasRoot = true
 		}
@@ -328,9 +348,19 @@ description = "Sub Description"
 		t.Errorf("LoadConfigHierarchical() error = %v", err)
 	}
 
+	// Filter to project-specific configs (not user global config)
+	home, _ := os.UserHomeDir()
+	globalConfigPath := filepath.Join(home, ".config", "opentask", "config.toml")
+	var projectPaths []string
+	for _, f := range foundPaths {
+		if f != globalConfigPath {
+			projectPaths = append(projectPaths, f)
+		}
+	}
+
 	// Should find both configs (subConfig should override rootConfig)
-	if len(foundPaths) != 2 {
-		t.Errorf("LoadConfigHierarchical() found %d configs, want 2", len(foundPaths))
+	if len(projectPaths) != 2 {
+		t.Errorf("LoadConfigHierarchical() found %d project configs, want 2 (may also find user global config)", len(projectPaths))
 	}
 
 	// Name should come from subConfig (closer, should override)
