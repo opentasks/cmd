@@ -8,7 +8,7 @@ import (
 
 // DiscoverConfigFiles walks up from the given file path to find all .opentask.toml files
 // Also checks for user global config at ~/.config/opentask/config.toml
-// Stops at filesystem root
+// Stops at filesystem root OR git repository root (whichever is reached first)
 // Returns files in order from closest to furthest (leaf to root), with user config last
 func DiscoverConfigFiles(startPath string) ([]string, error) {
 	var found []string
@@ -33,6 +33,14 @@ func DiscoverConfigFiles(startPath string) ([]string, error) {
 		configPath := filepath.Join(currentDir, ".opentask.toml")
 		if _, err := os.Stat(configPath); err == nil {
 			found = append(found, configPath)
+		}
+
+		// Check if we're at git repository root BEFORE moving to parent
+		gitDir := filepath.Join(currentDir, ".git")
+		if _, err := os.Stat(gitDir); err == nil {
+			// Found .git directory, this is the git repository root
+			// We've already checked for config in this directory, now stop
+			break
 		}
 
 		// Check if we're at filesystem root

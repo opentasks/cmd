@@ -69,16 +69,16 @@ func TestDiscoverConfigFiles(t *testing.T) {
 	}
 }
 
-// TestDiscoverConfigContinuesPastGitRoot tests that discovery does NOT stop at .git directory
-func TestDiscoverConfigContinuesPastGitRoot(t *testing.T) {
+// TestDiscoverConfigStopsAtGitRoot tests that discovery stops at .git directory
+func TestDiscoverConfigStopsAtGitRoot(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Create structure:
 	// tmpDir/
-	//   .opentask.toml (further up the tree)
+	//   .opentask.toml (further up the tree - should NOT be found)
 	//   subdir/
 	//     .git/
-	//     .opentask.toml (git repo root)
+	//     .opentask.toml (git repo root - SHOULD be found, then stop)
 	//     deep/
 	//       .opentask.toml (discovery starts here)
 
@@ -119,13 +119,13 @@ func TestDiscoverConfigContinuesPastGitRoot(t *testing.T) {
 		}
 	}
 
-	// Should find all three configs even though .git is at subdir level
-	// (discovery should NOT stop at git root, it should continue walking up)
-	if len(projectConfigs) != 3 {
-		t.Errorf("DiscoverConfigFiles() found %d project configs, want 3 (should continue past .git directory, may also find user global config)", len(projectConfigs))
+	// Should find only two configs (deepConfig and subConfig)
+	// Should NOT find rootConfig because .git is at subdir level and discovery stops there
+	if len(projectConfigs) != 2 {
+		t.Errorf("DiscoverConfigFiles() found %d project configs, want 2 (should stop at git root and not find configs above it)", len(projectConfigs))
 	}
 
-	// Verify we found all configs including the one above git root
+	// Verify we found the right configs
 	hasRoot := false
 	hasSub := false
 	hasDeep := false
@@ -140,8 +140,11 @@ func TestDiscoverConfigContinuesPastGitRoot(t *testing.T) {
 			hasDeep = true
 		}
 	}
-	if !hasRoot || !hasSub || !hasDeep {
-		t.Errorf("Missing expected config files. hasRoot=%v, hasSub=%v, hasDeep=%v (should find configs above git root)", hasRoot, hasSub, hasDeep)
+	if hasRoot {
+		t.Errorf("Found config above git root, should have stopped at .git directory. hasRoot=%v, hasSub=%v, hasDeep=%v", hasRoot, hasSub, hasDeep)
+	}
+	if !hasSub || !hasDeep {
+		t.Errorf("Missing expected config files. hasSub=%v, hasDeep=%v (should find configs at and below git root)", hasSub, hasDeep)
 	}
 }
 

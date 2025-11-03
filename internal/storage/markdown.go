@@ -217,6 +217,18 @@ func (s *MarkdownFileStorage) SaveTask(ctx context.Context, task *model.Task) er
 		return err
 	}
 
+	// Find old file path and delete if it exists and differs from new path
+	oldTask, err := s.LoadTask(ctx, task.ID)
+	if err == nil && oldTask != nil {
+		// Loaded existing task, compute its old path
+		oldPath, err := s.taskToPath(ctx, oldTask)
+		if err == nil && oldPath != path {
+			// Path has changed (e.g., due to title update), remove old file
+			os.Remove(oldPath) // Ignore error if file doesn't exist
+		}
+	}
+	// If LoadTask fails (task doesn't exist yet), that's fine, just continue
+
 	// Ensure directory exists
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0755); err != nil {

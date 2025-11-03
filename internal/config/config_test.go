@@ -17,8 +17,8 @@ func TestDefaultWorkflow(t *testing.T) {
 		t.Error("DefaultWorkflow() returned empty initial status")
 	}
 
-	if wf.Initial != "todo" {
-		t.Errorf("DefaultWorkflow() initial = %q, want 'todo'", wf.Initial)
+	if wf.Initial != "backlog" {
+		t.Errorf("DefaultWorkflow() initial = %q, want 'backlog'", wf.Initial)
 	}
 
 	if len(wf.Transitions) == 0 {
@@ -29,7 +29,7 @@ func TestDefaultWorkflow(t *testing.T) {
 func TestDefaultWorkflowStatuses(t *testing.T) {
 	wf := DefaultWorkflow()
 
-	expectedStatuses := []string{"todo", "in-progress", "reviewing", "done", "archived"}
+	expectedStatuses := []string{"backlog", "todo", "in-progress", "reviewing", "done", "archived"}
 	if len(wf.Statuses) != len(expectedStatuses) {
 		t.Errorf("DefaultWorkflow() has %d statuses, want %d", len(wf.Statuses), len(expectedStatuses))
 	}
@@ -48,6 +48,11 @@ func TestDefaultWorkflowTransitions(t *testing.T) {
 	transitions := make(map[string][]string)
 	for _, t := range wf.Transitions {
 		transitions[t.From] = t.To
+	}
+
+	// Should have transitions from "backlog"
+	if _, exists := transitions["backlog"]; !exists {
+		t.Error("DefaultWorkflow() missing transition from 'backlog'")
 	}
 
 	// Should have transitions from "todo"
@@ -104,8 +109,8 @@ func TestLoadConfigNonexistent(t *testing.T) {
 		t.Error("LoadConfig() returned nil config")
 	}
 
-	if config.Workflow.Initial != "todo" {
-		t.Errorf("LoadConfig() default workflow initial = %q, want 'todo'", config.Workflow.Initial)
+	if config.Workflow.Initial != "backlog" {
+		t.Errorf("LoadConfig() default workflow initial = %q, want 'backlog'", config.Workflow.Initial)
 	}
 }
 

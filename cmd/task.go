@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -9,6 +11,48 @@ import (
 	"github.com/zenobi-us/opentask/internal/model"
 	"github.com/zenobi-us/opentask/internal/query"
 )
+
+// editInEditor opens the content in the user's editor
+func editInEditor(initialContent string) (string, error) {
+	// Get the editor from environment variable
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "vi" // Fallback to vi if EDITOR is not set
+	}
+
+	// Create a temporary file
+	tmpFile, err := os.CreateTemp("", "opentask-*.md")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp file: %w", err)
+	}
+	tmpFilePath := tmpFile.Name()
+	defer os.Remove(tmpFilePath)
+
+	// Write initial content to the temp file
+	if _, err := tmpFile.WriteString(initialContent); err != nil {
+		tmpFile.Close()
+		return "", fmt.Errorf("failed to write temp file: %w", err)
+	}
+	tmpFile.Close()
+
+	// Launch the editor
+	cmd := exec.Command(editor, tmpFilePath)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("editor command failed: %w", err)
+	}
+
+	// Read the updated content
+	updatedContent, err := os.ReadFile(tmpFilePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read updated content: %w", err)
+	}
+
+	return string(updatedContent), nil
+}
 
 // taskCmd represents the task command group
 var taskCmd = &cobra.Command{
@@ -27,6 +71,7 @@ var taskNewCmd = &cobra.Command{
 		title := args[0]
 		taskType, _ := cmd.Flags().GetString("type")
 		status, _ := cmd.Flags().GetString("status")
+		description, _ := cmd.Flags().GetString("description")
 		parentID, _ := cmd.Flags().GetInt("parent")
 		tags, _ := cmd.Flags().GetStringSlice("tag")
 
@@ -43,14 +88,34 @@ var taskNewCmd = &cobra.Command{
 			return fmt.Errorf("failed to generate task ID: %w", err)
 		}
 
+		// Determine status: use backlog for high-level tasks without description (unless explicitly set)
+		finalStatus := status
+		if finalStatus == "" { // Only auto-assign if not explicitly set
+			highLevelTypes := []string{"epic", "plan", "research", "story", "decision"}
+			isHighLevel := false
+			for _, t := range highLevelTypes {
+				if t == taskType {
+					isHighLevel = true
+					break
+				}
+			}
+
+			// High-level tasks without description start in backlog
+			if isHighLevel && description == "" {
+				finalStatus = "backlog"
+			} else {
+				finalStatus = "todo"
+			}
+		}
+
 		// Create task
 		task := &model.Task{
 			ID:          nextID,
 			Title:       title,
 			Type:        taskType,
-			Status:      status,
+			Status:      finalStatus,
 			Tags:        tags,
-			Description: "",
+			Description: description,
 			CreatedAt:   time.Now().UTC(),
 			UpdatedAt:   time.Now().UTC(),
 		}
@@ -242,6 +307,62 @@ var taskUpdateCmd = &cobra.Command{
 			task.Status = status
 		}
 
+		if cmd.Flags().Changed("title") {
+			title, _ := cmd.Flags().GetString("title")
+			task.Title = title
+		}
+
+		if cmd.Flags().Changed("description") {
+			description, _ := cmd.Flags().GetString("description")
+			task.Description = description
+		}
+
+		if cmd.Flags().Changed("tag") {
+			tags, _ := cmd.Flags().GetStringSlice("tag")
+			// Add tags to existing tags (union)
+			tagMap := make(map[string]bool)
+			for _, t := range task.Tags {
+				tagMap[t] = true
+			}
+			for _, t := range tags {
+				tagMap[t] = true
+			}
+			// Rebuild tags list
+			task.Tags = []string{}
+			for t := range tagMap {
+				task.Tags = append(task.Tags, t)
+			}
+		}
+
+		if cmd.Flags().Changed("remove-tag") {
+			removeTags, _ := cmd.Flags().GetStringSlice("remove-tag")
+			// Remove tags from existing tags
+			removeTagMap := make(map[string]bool)
+			for _, t := range removeTags {
+				removeTagMap[t] = true
+			}
+			// Rebuild tags list without removed tags
+			newTags := []string{}
+			for _, t := range task.Tags {
+				if !removeTagMap[t] {
+					newTags = append(newTags, t)
+				}
+			}
+			task.Tags = newTags
+		}
+
+		// Handle editor flag
+		if cmd.Flags().Changed("editor") {
+			editor, _ := cmd.Flags().GetBool("editor")
+			if editor {
+				updatedDescription, err := editInEditor(task.Description)
+				if err != nil {
+					return fmt.Errorf("failed to edit content: %w", err)
+				}
+				task.Description = updatedDescription
+			}
+		}
+
 		task.UpdatedAt = time.Now().UTC()
 
 		// Save task
@@ -265,7 +386,8 @@ func truncate(s string, maxLen int) string {
 func init() {
 	// task new flags
 	taskNewCmd.Flags().StringP("type", "t", "task", "Task type (epic, plan, research, story, decision, task)")
-	taskNewCmd.Flags().StringP("status", "s", "todo", "Task status")
+	taskNewCmd.Flags().StringP("status", "s", "", "Task status (auto-assigned if not specified)")
+	taskNewCmd.Flags().StringP("description", "d", "", "Task description")
 	taskNewCmd.Flags().IntP("parent", "p", 0, "Parent task ID (for creating subtasks)")
 	taskNewCmd.Flags().StringSliceP("tag", "g", []string{}, "Tags to add to the task")
 
@@ -277,6 +399,11 @@ func init() {
 
 	// task update flags
 	taskUpdateCmd.Flags().StringP("status", "s", "", "New status")
+	taskUpdateCmd.Flags().StringP("title", "t", "", "New title")
+	taskUpdateCmd.Flags().StringP("description", "d", "", "New description")
+	taskUpdateCmd.Flags().StringSliceP("tag", "g", []string{}, "Tags to add to the task")
+	taskUpdateCmd.Flags().StringSliceP("remove-tag", "r", []string{}, "Tags to remove from the task")
+	taskUpdateCmd.Flags().BoolP("editor", "e", false, "Open task content in $EDITOR for editing")
 
 	// Add subcommands to task command
 	taskCmd.AddCommand(taskNewCmd)

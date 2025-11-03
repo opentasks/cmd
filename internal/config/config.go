@@ -129,9 +129,10 @@ type StorageConfig struct {
 // DefaultWorkflow returns the default workflow configuration
 func DefaultWorkflow() WorkflowConfig {
 	return WorkflowConfig{
-		Statuses: []string{"todo", "in-progress", "reviewing", "done", "archived"},
-		Initial:  "todo",
+		Statuses: []string{"backlog", "todo", "in-progress", "reviewing", "done", "archived"},
+		Initial:  "backlog",
 		Transitions: []TransitionConfig{
+			{From: "backlog", To: []string{"todo", "archived"}},
 			{From: "todo", To: []string{"in-progress", "archived"}},
 			{From: "in-progress", To: []string{"reviewing", "todo", "archived"}},
 			{From: "reviewing", To: []string{"done", "in-progress", "archived"}},
@@ -160,9 +161,10 @@ func NewResolvedConfig() *OpentaskResolvedConfig {
 	return &OpentaskResolvedConfig{
 		Project: &ProjectSection{},
 		Workflow: &WorkflowConfig{
-			Statuses: []string{"todo", "in-progress", "reviewing", "done", "archived"},
-			Initial:  "todo",
+			Statuses: []string{"backlog", "todo", "in-progress", "reviewing", "done", "archived"},
+			Initial:  "backlog",
 			Transitions: []TransitionConfig{
+				{From: "backlog", To: []string{"todo", "archived"}},
 				{From: "todo", To: []string{"in-progress", "archived"}},
 				{From: "in-progress", To: []string{"reviewing", "todo", "archived"}},
 				{From: "reviewing", To: []string{"done", "in-progress", "archived"}},

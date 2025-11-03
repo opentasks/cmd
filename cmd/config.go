@@ -248,45 +248,45 @@ var configInitCmd = &cobra.Command{
 			projectName = filepath.Base(cwd)
 		}
 
-		// Create config content using new schema structure
+		// Create config content using correct schema structure
 		// Note: active_project will be auto-derived if not set
 		configContent := fmt.Sprintf(`# opentask project configuration for %s
 # This file defines project-specific settings
 
 # Project metadata
-[project.project]
+[project]
 name = %q
 description = ""
 owner = ""
 
 # Storage configuration (project-specific)
-[project.storage]
+[storage]
 backend = "markdown-fs"
 path = %q
 
 # Project-specific workflow (optional - comment out to use global defaults)
-# [project.workflow]
+# [workflow]
 # statuses = ["todo", "in-progress", "reviewing", "done", "archived"]
 # initial = "todo"
 
-# [[project.workflow.transitions]]
+# [[workflow.transitions]]
 # from = "todo"
 # to = ["in-progress", "archived"]
 
-# [[project.workflow.transitions]]
+# [[workflow.transitions]]
 # from = "in-progress"
 # to = ["reviewing", "todo", "archived"]
 
-# [[project.workflow.transitions]]
+# [[workflow.transitions]]
 # from = "reviewing"
 # to = ["done", "in-progress", "archived"]
 
-# [[project.workflow.transitions]]
+# [[workflow.transitions]]
 # from = "done"
 # to = ["archived"]
 
 # Project-specific templates (optional - comment out to use global templates)
-# [project.templates]
+# [templates]
 # epic = "templates/epic.md"
 # plan = "templates/plan.md"
 # research = "templates/research.md"

@@ -347,3 +347,225 @@ path = "` + tt.configPath + `"
 		})
 	}
 }
+
+// TestIntegrationConfigInitWithTaskCreation tests the config init workflow:
+// 1. Initialize a new project with config init
+// 2. Resolve the config
+// 3. Verify the storage path is correct
+func TestIntegrationConfigInitWithTaskCreation(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Setup: Create a git repository
+	projectDir := filepath.Join(tmpDir, "test-project")
+	gitDir := filepath.Join(projectDir, ".git")
+	os.MkdirAll(gitDir, 0755)
+
+	// Simulate config init by creating a project config file
+	configPath := filepath.Join(projectDir, ".opentask.toml")
+	configContent := `# opentask project configuration for test-project
+# This file defines project-specific settings
+
+# Project metadata
+[project]
+name = "test-project"
+description = ""
+owner = ""
+
+# Storage configuration (project-specific)
+[storage]
+backend = "markdown-fs"
+path = "./.tasks"
+`
+
+	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		t.Fatalf("Failed to write config: %v", err)
+	}
+
+	// Test 1: Verify config can be resolved
+	resolved, err := ResolveProjectConfig(projectDir)
+	if err != nil {
+		t.Fatalf("ResolveProjectConfig failed: %v", err)
+	}
+
+	// Test 2: Verify storage path is absolute and correct
+	expectedPath := filepath.Join(projectDir, ".tasks")
+	if resolved.Storage.Path != expectedPath {
+		t.Errorf("Storage.Path = %q, want %q", resolved.Storage.Path, expectedPath)
+	}
+
+	// Test 3: Verify discovered files include only local config and global config
+	if len(resolved.DiscoveredFiles) < 1 {
+		t.Errorf("DiscoveredFiles is empty, should have at least local config")
+	}
+
+	// First file should be the local config
+	if resolved.DiscoveredFiles[0] != configPath {
+		t.Errorf("First discovered file = %q, want %q", resolved.DiscoveredFiles[0], configPath)
+	}
+
+	// Test 4: Verify project metadata
+	if resolved.Project.Name != "test-project" {
+		t.Errorf("Project.Name = %q, want 'test-project'", resolved.Project.Name)
+	}
+}
+
+// TestIntegrationConfigStopsAtGitRoot tests that config discovery stops at git root
+// When .git is found at a directory level, that directory's config is included,
+// but we don't walk up further past the git root.
+func TestIntegrationConfigStopsAtGitRoot(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create structure:
+	// tmpDir/
+	//   .opentask.toml (root - SHOULD be discovered and then stop)
+	//   .git/
+	//   subdir/
+	//     .opentask.toml (should be discovered - below git root)
+	//     deep/
+	//       (no config here - discovery starts here)
+
+	rootConfig := filepath.Join(tmpDir, ".opentask.toml")
+	gitDir := filepath.Join(tmpDir, ".git")
+	subdir := filepath.Join(tmpDir, "subdir")
+	subConfig := filepath.Join(subdir, ".opentask.toml")
+	deepdir := filepath.Join(subdir, "deep")
+
+	// Create directories
+	os.MkdirAll(gitDir, 0755)
+	os.MkdirAll(deepdir, 0755)
+
+	// Create config files
+	for _, path := range []string{rootConfig, subConfig} {
+		content := `[project]
+name = "test"
+
+[storage]
+path = "./.tasks"
+`
+		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+			t.Fatalf("Failed to write config: %v", err)
+		}
+	}
+
+	// Resolve config from deepdir
+	resolved, err := ResolveProjectConfig(deepdir)
+	if err != nil {
+		t.Fatalf("ResolveProjectConfig failed: %v", err)
+	}
+
+	// Filter to project configs (not global config)
+	home, _ := os.UserHomeDir()
+	globalPath := filepath.Join(home, ".config", "opentask", "config.toml")
+	var projectConfigs []string
+	for _, f := range resolved.DiscoveredFiles {
+		if f != globalPath {
+			projectConfigs = append(projectConfigs, f)
+		}
+	}
+
+	// Should find exactly 2 configs (subConfig and rootConfig)
+	// Because discovery walks from deepdir -> subdir -> tmpdir (finds git) and includes tmpdir's config
+	if len(projectConfigs) != 2 {
+		t.Errorf("Found %d project configs, want 2", len(projectConfigs))
+		for _, f := range projectConfigs {
+			t.Logf("  - %s", f)
+		}
+	}
+
+	// Verify both configs are found
+	hasSubConfig := false
+	hasRootConfig := false
+	for _, f := range projectConfigs {
+		if f == subConfig {
+			hasSubConfig = true
+		}
+		if f == rootConfig {
+			hasRootConfig = true
+		}
+	}
+	if !hasSubConfig {
+		t.Errorf("subConfig not found in discovered files")
+	}
+	if !hasRootConfig {
+		t.Errorf("rootConfig not found in discovered files (should find config at git root)")
+	}
+}
+
+// TestIntegrationConfigDoesntWalkPastGitRoot tests that discovery doesn't walk PAST git root
+func TestIntegrationConfigDoesntWalkPastGitRoot(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create structure:
+	// tmpDir/
+	//   .opentask.toml (above git root - should NOT be discovered)
+	//   subdir/
+	//     .git/
+	//     .opentask.toml (at git root - SHOULD be discovered)
+	//     deep/
+	//       (no config - discovery starts here)
+
+	rootConfig := filepath.Join(tmpDir, ".opentask.toml")
+	subdir := filepath.Join(tmpDir, "subdir")
+	gitDir := filepath.Join(subdir, ".git")
+	subConfig := filepath.Join(subdir, ".opentask.toml")
+	deepdir := filepath.Join(subdir, "deep")
+
+	// Create directories
+	os.MkdirAll(gitDir, 0755)
+	os.MkdirAll(deepdir, 0755)
+
+	// Create config files
+	for _, path := range []string{rootConfig, subConfig} {
+		content := `[project]
+name = "test"
+
+[storage]
+path = "./.tasks"
+`
+		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+			t.Fatalf("Failed to write config: %v", err)
+		}
+	}
+
+	// Resolve config from deepdir
+	resolved, err := ResolveProjectConfig(deepdir)
+	if err != nil {
+		t.Fatalf("ResolveProjectConfig failed: %v", err)
+	}
+
+	// Filter to project configs (not global config)
+	home, _ := os.UserHomeDir()
+	globalPath := filepath.Join(home, ".config", "opentask", "config.toml")
+	var projectConfigs []string
+	for _, f := range resolved.DiscoveredFiles {
+		if f != globalPath {
+			projectConfigs = append(projectConfigs, f)
+		}
+	}
+
+	// Should find only 1 config (subConfig) - NOT rootConfig because discovery stops at git root
+	if len(projectConfigs) != 1 {
+		t.Errorf("Found %d project configs, want 1 (should not walk past git root)", len(projectConfigs))
+		for _, f := range projectConfigs {
+			t.Logf("  - %s", f)
+		}
+	}
+
+	// Verify only subConfig is found
+	hasSubConfig := false
+	hasRootConfig := false
+	for _, f := range projectConfigs {
+		if f == subConfig {
+			hasSubConfig = true
+		}
+		if f == rootConfig {
+			hasRootConfig = true
+		}
+	}
+	if !hasSubConfig {
+		t.Errorf("subConfig not found in discovered files")
+	}
+	if hasRootConfig {
+		t.Errorf("rootConfig should NOT be discovered (discovery should stop at git root)")
+	}
+}
