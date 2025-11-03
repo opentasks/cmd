@@ -76,9 +76,10 @@ var configCmd = &cobra.Command{
 
 // configViewCmd views the resolved configuration with discovery details
 var configViewCmd = &cobra.Command{
-	Use:   "view",
-	Short: "View resolved configuration",
-	Long:  "Display the resolved project configuration after discovering and merging all config files",
+	Use:     "view",
+	Short:   "View resolved configuration",
+	Long:    "Display the resolved project configuration after discovering and merging all config files",
+	Aliases: []string{"show"},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		pathFlag, _ := cmd.Flags().GetBool("path")
 		jsonFlag, _ := cmd.Flags().GetBool("json")
@@ -320,18 +321,6 @@ path = %q
 	},
 }
 
-// configShowCmd shows the current configuration
-var configShowCmd = &cobra.Command{
-	Use:   "show",
-	Short: "Show configuration",
-	Long:  "Display the current project configuration",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("Current configuration...")
-		// TODO: Implement config display
-		return nil
-	},
-}
-
 // configGetCmd gets a config value
 var configGetCmd = &cobra.Command{
 	Use:   "get [key]",
@@ -438,7 +427,6 @@ var configProjectsCmd = &cobra.Command{
 func init() {
 	configCmd.AddCommand(configInitCmd)
 	configCmd.AddCommand(configViewCmd)
-	configCmd.AddCommand(configShowCmd)
 	configCmd.AddCommand(configGetCmd)
 	configCmd.AddCommand(configSetCmd)
 	configCmd.AddCommand(configProjectsCmd)
