@@ -149,11 +149,66 @@ backend = "markdown-fs"
 path = "."
 ```
 
+## Multi-Project Setup with Project Contexts
+
+For teams with multiple projects, use project contexts to avoid needing `--path` on every command:
+
+### Setup (One-time)
+
+```bash
+# Create global config
+mkdir -p ~/.config/opentask
+cat > ~/.config/opentask/config.toml << 'TOML'
+active_project = "personal"
+
+[[projects]]
+id = "personal"
+name = "Personal Notes"
+[projects.storage]
+path = "/home/user/Notes/.tasks"
+
+[[projects]]
+id = "work"
+name = "Work Tasks"
+[projects.storage]
+path = "/home/user/work-notes/.tasks"
+TOML
+
+# Attach your project directories
+cd /path/to/work/project
+opentask project attach --project work
+
+# Attach worktrees
+cd /path/to/work/project.worktrees/feature-branch
+opentask project attach --project work
+```
+
+### Daily Usage
+
+```bash
+# From any directory within your attached project:
+cd /path/to/work/project/src/api
+opentask task list      # Automatically finds work project
+opentask task new "Bug" # Creates in work project's storage
+
+# Switch projects
+opentask config projects --set-active personal
+opentask task list  # Now shows personal tasks
+
+# View all projects and contexts
+opentask project list
+```
+
+See `ProjectContexts.md` for detailed project context documentation.
+
 ## Command Line Options
 
 ```bash
-# Specify project path
+# Specify project path (legacy, use project contexts instead)
 opentask --path /path/to/project task list
+
+# Specify project by ID (when using project contexts)
+opentask --project work task list
 
 # Specify config file
 opentask --config /path/to/config.toml task list
