@@ -1,9 +1,0 @@
-[templates]
-task = "_templates/task.md"
-project = "_templates/project.md"
-research = "_templates/research.md"
-decision = "_templates/decision.md"
-epic = "_templates/epic.md"
-plan = "_templates/plan.md"
-story = "_templates/story.md"
-bug = "_templates/bug.md"
