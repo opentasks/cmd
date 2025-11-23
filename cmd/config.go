@@ -6,66 +6,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/template"
 
 	"github.com/charmbracelet/glamour"
 	"github.com/spf13/cobra"
 	"github.com/zenobi-us/opentask/internal/config"
+	"github.com/zenobi-us/opentask/internal/display"
 )
-
-// buildConfigFileTree creates a list of resolved config files with merge flow indicators
-// Files are shown in priority order (highest first)
-func buildConfigFileTree(files []string) string {
-	var result strings.Builder
-
-	// Build list with all items (config files + defaults)
-	allItems := make([]string, len(files)+1)
-	for i, file := range files {
-		// Get path relative to current directory for most readable display
-		cwd, err := os.Getwd()
-		var displayPath string
-
-		// First, try to show as relative path from cwd
-		if err == nil {
-			relPath, err := filepath.Rel(cwd, file)
-			if err == nil && !strings.HasPrefix(relPath, "..") {
-				// Only use relative path if it doesn't go up many directories
-				displayPath = relPath
-			}
-		}
-
-		// If not a good relative path, try to use ~ for home directory
-		if displayPath == "" {
-			homeDir, err := os.UserHomeDir()
-			if err == nil && strings.HasPrefix(file, homeDir) {
-				displayPath = "~" + file[len(homeDir):]
-			}
-		}
-
-		// Fall back to absolute path if nothing else worked
-		if displayPath == "" {
-			displayPath = file
-		}
-
-		allItems[i] = displayPath
-	}
-	allItems[len(files)] = "(builtin) defaults"
-
-	// Render as vertical list
-	for i, item := range allItems {
-		if i == len(allItems)-1 {
-			// Last item
-			result.WriteString(fmt.Sprintf("└── %s\n", item))
-		} else {
-			// Not last item
-			result.WriteString(fmt.Sprintf("├── %s\n", item))
-			result.WriteString("│   ↓\n")
-		}
-	}
-
-	return result.String()
-}
 
 // configCmd represents the config command group
 var configCmd = &cobra.Command{
@@ -118,7 +65,7 @@ var configViewCmd = &cobra.Command{
 		}
 
 		// Build file tree
-		fileTree := buildConfigFileTree(resolved.DiscoveredFiles)
+		fileTree := display.ConfigFileTree(resolved.DiscoveredFiles)
 
 		// Convert resolved config to legacy ProjectConfig format for display
 		displayConfig := &config.ProjectConfig{

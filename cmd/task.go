@@ -2,57 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/zenobi-us/opentask/internal/display"
+	"github.com/zenobi-us/opentask/internal/editor"
 	"github.com/zenobi-us/opentask/internal/model"
 	"github.com/zenobi-us/opentask/internal/query"
+	"github.com/zenobi-us/opentask/internal/task"
 )
-
-// editInEditor opens the content in the user's editor
-func editInEditor(initialContent string) (string, error) {
-	// Get the editor from environment variable
-	editor := os.Getenv("EDITOR")
-	if editor == "" {
-		editor = "vi" // Fallback to vi if EDITOR is not set
-	}
-
-	// Create a temporary file
-	tmpFile, err := os.CreateTemp("", "opentask-*.md")
-	if err != nil {
-		return "", fmt.Errorf("failed to create temp file: %w", err)
-	}
-	tmpFilePath := tmpFile.Name()
-	defer os.Remove(tmpFilePath)
-
-	// Write initial content to the temp file
-	if _, err := tmpFile.WriteString(initialContent); err != nil {
-		tmpFile.Close()
-		return "", fmt.Errorf("failed to write temp file: %w", err)
-	}
-	tmpFile.Close()
-
-	// Launch the editor
-	cmd := exec.Command(editor, tmpFilePath)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("editor command failed: %w", err)
-	}
-
-	// Read the updated content
-	updatedContent, err := os.ReadFile(tmpFilePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read updated content: %w", err)
-	}
-
-	return string(updatedContent), nil
-}
 
 // taskCmd represents the task command group
 var taskCmd = &cobra.Command{
@@ -88,54 +46,22 @@ var taskNewCmd = &cobra.Command{
 			return fmt.Errorf("failed to generate task ID: %w", err)
 		}
 
-		// Determine status: use backlog for high-level tasks without description (unless explicitly set)
+		// Determine status using task manager
+		taskManager := task.NewManager()
 		finalStatus := status
-		if finalStatus == "" { // Only auto-assign if not explicitly set
-			highLevelTypes := []string{"epic", "plan", "research", "story", "decision"}
-			isHighLevel := false
-			for _, t := range highLevelTypes {
-				if t == taskType {
-					isHighLevel = true
-					break
-				}
-			}
-
-			// High-level tasks without description start in backlog
-			if isHighLevel && description == "" {
-				finalStatus = "backlog"
-			} else {
-				finalStatus = "todo"
-			}
+		if finalStatus == "" {
+			finalStatus = taskManager.DetermineInitialStatus(taskType, description)
 		}
 
-		// Create task
-		task := &model.Task{
-			ID:          nextID,
-			Title:       title,
-			Type:        taskType,
-			Status:      finalStatus,
-			Tags:        tags,
-			Description: description,
-			CreatedAt:   time.Now().UTC(),
-			UpdatedAt:   time.Now().UTC(),
-		}
-
-		// Add parent relationship if specified
-		if parentID > 0 {
-			task.Relationships = []model.Relationship{
-				{
-					Type:   model.RelParent,
-					TaskID: parentID,
-				},
-			}
-		}
+		// Create task using task manager
+		newTask := taskManager.CreateTask(nextID, title, taskType, finalStatus, description, tags, parentID)
 
 		// Save task
-		if err := Store.SaveTask(ctx, task); err != nil {
+		if err := Store.SaveTask(ctx, newTask); err != nil {
 			return fmt.Errorf("failed to save task: %w", err)
 		}
 
-		fmt.Printf("Created task %d: %s\n", task.ID, task.Title)
+		fmt.Printf("Created task %d: %s\n", newTask.ID, newTask.Title)
 		return nil
 	},
 }
@@ -182,19 +108,8 @@ var taskListCmd = &cobra.Command{
 			return nil
 		}
 
-		// Print table header
-		fmt.Printf("%-5s %-10s %-30s %-15s %-15s\n", "ID", "Type", "Title", "Status", "Created")
-		fmt.Println(strings.Repeat("-", 75))
-
-		// Print tasks
-		for _, task := range tasks {
-			fmt.Printf("%-5d %-10s %-30s %-15s %-15s\n",
-				task.ID,
-				task.Type,
-				truncate(task.Title, 30),
-				task.Status,
-				task.CreatedAt.Format("2006-01-02"))
-		}
+		// Use display package for formatting
+		fmt.Print(display.TaskTable(tasks))
 
 		return nil
 	},
@@ -218,34 +133,13 @@ var taskShowCmd = &cobra.Command{
 		}
 
 		// Load task
-		task, err := Engine.FindByID(ctx, taskID)
+		taskItem, err := Engine.FindByID(ctx, taskID)
 		if err != nil {
 			return fmt.Errorf("failed to load task: %w", err)
 		}
 
-		// Display task
-		fmt.Printf("ID: %d\n", task.ID)
-		fmt.Printf("Title: %s\n", task.Title)
-		fmt.Printf("Type: %s\n", task.Type)
-		fmt.Printf("Status: %s\n", task.Status)
-		fmt.Printf("Created: %s\n", task.CreatedAt.Format(time.RFC3339))
-		fmt.Printf("Updated: %s\n", task.UpdatedAt.Format(time.RFC3339))
-
-		if len(task.Tags) > 0 {
-			fmt.Printf("Tags: %s\n", strings.Join(task.Tags, ", "))
-		}
-
-		if len(task.Relationships) > 0 {
-			fmt.Println("Relationships:")
-			for _, rel := range task.Relationships {
-				fmt.Printf("  - %s: %d\n", rel.Type, rel.TaskID)
-			}
-		}
-
-		if task.Description != "" {
-			fmt.Println("\nDescription:")
-			fmt.Println(task.Description)
-		}
+		// Use display package for formatting
+		fmt.Print(display.TaskDetails(taskItem))
 
 		return nil
 	},
@@ -296,7 +190,7 @@ var taskUpdateCmd = &cobra.Command{
 		}
 
 		// Load task
-		task, err := Engine.FindByID(ctx, taskID)
+		taskItem, err := Engine.FindByID(ctx, taskID)
 		if err != nil {
 			return fmt.Errorf("failed to load task: %w", err)
 		}
@@ -304,83 +198,54 @@ var taskUpdateCmd = &cobra.Command{
 		// Apply updates
 		if cmd.Flags().Changed("status") {
 			status, _ := cmd.Flags().GetString("status")
-			task.Status = status
+			taskItem.Status = status
 		}
 
 		if cmd.Flags().Changed("title") {
 			title, _ := cmd.Flags().GetString("title")
-			task.Title = title
+			taskItem.Title = title
 		}
 
 		if cmd.Flags().Changed("description") {
 			description, _ := cmd.Flags().GetString("description")
-			task.Description = description
+			taskItem.Description = description
 		}
 
+		// Use task manager for tag operations
+		taskManager := task.NewManager()
 		if cmd.Flags().Changed("tag") {
 			tags, _ := cmd.Flags().GetStringSlice("tag")
-			// Add tags to existing tags (union)
-			tagMap := make(map[string]bool)
-			for _, t := range task.Tags {
-				tagMap[t] = true
-			}
-			for _, t := range tags {
-				tagMap[t] = true
-			}
-			// Rebuild tags list
-			task.Tags = []string{}
-			for t := range tagMap {
-				task.Tags = append(task.Tags, t)
-			}
+			taskItem.Tags = taskManager.MergeTags(taskItem.Tags, tags)
 		}
 
 		if cmd.Flags().Changed("remove-tag") {
 			removeTags, _ := cmd.Flags().GetStringSlice("remove-tag")
-			// Remove tags from existing tags
-			removeTagMap := make(map[string]bool)
-			for _, t := range removeTags {
-				removeTagMap[t] = true
-			}
-			// Rebuild tags list without removed tags
-			newTags := []string{}
-			for _, t := range task.Tags {
-				if !removeTagMap[t] {
-					newTags = append(newTags, t)
-				}
-			}
-			task.Tags = newTags
+			taskItem.Tags = taskManager.RemoveTags(taskItem.Tags, removeTags)
 		}
 
 		// Handle editor flag
 		if cmd.Flags().Changed("editor") {
-			editor, _ := cmd.Flags().GetBool("editor")
-			if editor {
-				updatedDescription, err := editInEditor(task.Description)
+			editorFlag, _ := cmd.Flags().GetBool("editor")
+			if editorFlag {
+				updatedDescription, err := editor.EditFile(taskItem.Description)
 				if err != nil {
 					return fmt.Errorf("failed to edit content: %w", err)
 				}
-				task.Description = updatedDescription
+				taskItem.Description = updatedDescription
 			}
 		}
 
-		task.UpdatedAt = time.Now().UTC()
+		// Update timestamp
+		taskItem.UpdatedAt = time.Now().UTC()
 
 		// Save task
-		if err := Store.SaveTask(ctx, task); err != nil {
+		if err := Store.SaveTask(ctx, taskItem); err != nil {
 			return fmt.Errorf("failed to save task: %w", err)
 		}
 
-		fmt.Printf("Updated task %d\n", task.ID)
+		fmt.Printf("Updated task %d\n", taskItem.ID)
 		return nil
 	},
-}
-
-// Helper function to truncate strings
-func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen-3] + "..."
 }
 
 func init() {

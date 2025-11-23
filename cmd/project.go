@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
 	"github.com/zenobi-us/opentask/internal/config"
+	"github.com/zenobi-us/opentask/internal/project"
 )
 
 // projectCmd represents the project command group
@@ -49,14 +49,15 @@ Example:
 			targetPath = cwd
 		}
 
-		// Resolve path
-		resolvedPath, err := resolvePath(targetPath)
+		// Resolve path using project manager
+		pm := project.NewManager()
+		resolvedPath, err := pm.ResolvePath(targetPath)
 		if err != nil {
 			return err
 		}
 
 		// Load global config
-		globalPath, err := getGlobalConfigPath()
+		globalPath, err := pm.GlobalConfigPath()
 		if err != nil {
 			return err
 		}
@@ -73,20 +74,20 @@ Example:
 		}
 
 		// Find project by ID
-		var project *config.GlobalProjectConfig
+		var proj *config.GlobalProjectConfig
 		for i := range globalConfig.Projects {
 			if globalConfig.Projects[i].ID == projectID {
-				project = &globalConfig.Projects[i]
+				proj = &globalConfig.Projects[i]
 				break
 			}
 		}
 
-		if project == nil {
+		if proj == nil {
 			return fmt.Errorf("project not found: %s", projectID)
 		}
 
 		// Add context path
-		if err := project.AddContextPath(resolvedPath); err != nil {
+		if err := proj.AddContextPath(resolvedPath); err != nil {
 			return fmt.Errorf("failed to add context path: %w", err)
 		}
 
@@ -129,14 +130,15 @@ Example:
 			targetPath = cwd
 		}
 
-		// Resolve path
-		resolvedPath, err := resolvePath(targetPath)
+		// Resolve path using project manager
+		pm := project.NewManager()
+		resolvedPath, err := pm.ResolvePath(targetPath)
 		if err != nil {
 			return err
 		}
 
 		// Load global config
-		globalPath, err := getGlobalConfigPath()
+		globalPath, err := pm.GlobalConfigPath()
 		if err != nil {
 			return err
 		}
@@ -151,20 +153,20 @@ Example:
 		}
 
 		// Find project by ID
-		var project *config.GlobalProjectConfig
+		var proj *config.GlobalProjectConfig
 		for i := range globalConfig.Projects {
 			if globalConfig.Projects[i].ID == projectID {
-				project = &globalConfig.Projects[i]
+				proj = &globalConfig.Projects[i]
 				break
 			}
 		}
 
-		if project == nil {
+		if proj == nil {
 			return fmt.Errorf("project not found: %s", projectID)
 		}
 
 		// Remove context path
-		if err := project.RemoveContextPath(resolvedPath); err != nil {
+		if err := proj.RemoveContextPath(resolvedPath); err != nil {
 			return fmt.Errorf("failed to remove context path: %w", err)
 		}
 
@@ -185,7 +187,8 @@ var projectListCmd = &cobra.Command{
 	Long:  "Display all projects with their storage paths and working directory contexts",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Load global config
-		globalPath, err := getGlobalConfigPath()
+		pm := project.NewManager()
+		globalPath, err := pm.GlobalConfigPath()
 		if err != nil {
 			return err
 		}
@@ -203,31 +206,31 @@ var projectListCmd = &cobra.Command{
 		fmt.Println("Projects:")
 		fmt.Println()
 
-		for _, project := range globalConfig.Projects {
+		for _, proj := range globalConfig.Projects {
 			// Mark active project
 			activeMarker := ""
-			if globalConfig.ActiveProject == project.ID {
+			if globalConfig.ActiveProject == proj.ID {
 				activeMarker = " *"
 			}
 
-			projectName := project.Name
+			projectName := proj.Name
 			if projectName == "" {
-				projectName = project.ID
+				projectName = proj.ID
 			}
 
-			fmt.Printf("%s (%s)%s\n", project.ID, projectName, activeMarker)
+			fmt.Printf("%s (%s)%s\n", proj.ID, projectName, activeMarker)
 
 			// Storage path
-			if project.Storage != nil && project.Storage.Path != "" {
-				displayPath := formatPath(project.Storage.Path)
+			if proj.Storage != nil && proj.Storage.Path != "" {
+				displayPath := pm.FormatPathForDisplay(proj.Storage.Path)
 				fmt.Printf("  Storage: %s\n", displayPath)
 			}
 
 			// Contexts
-			if len(project.Context) > 0 {
+			if len(proj.Context) > 0 {
 				fmt.Println("  Contexts:")
-				for _, ctx := range project.Context {
-					displayPath := formatPath(ctx.Path)
+				for _, ctx := range proj.Context {
+					displayPath := pm.FormatPathForDisplay(ctx.Path)
 					fmt.Printf("    - %s\n", displayPath)
 				}
 			} else {
@@ -261,7 +264,8 @@ Example:
 		projectID := args[0]
 
 		// Load global config
-		globalPath, err := getGlobalConfigPath()
+		pm := project.NewManager()
+		globalPath, err := pm.GlobalConfigPath()
 		if err != nil {
 			return err
 		}
@@ -277,26 +281,26 @@ Example:
 
 		// Find project by ID
 		projectIndex := -1
-		var project *config.GlobalProjectConfig
+		var proj *config.GlobalProjectConfig
 		for i := range globalConfig.Projects {
 			if globalConfig.Projects[i].ID == projectID {
 				projectIndex = i
-				project = &globalConfig.Projects[i]
+				proj = &globalConfig.Projects[i]
 				break
 			}
 		}
 
-		if project == nil {
+		if proj == nil {
 			return fmt.Errorf("project not found: %s", projectID)
 		}
 
 		// Display project info and ask for confirmation
 		fmt.Printf("About to remove project: %s\n", projectID)
-		if project.Name != "" {
-			fmt.Printf("Name: %s\n", project.Name)
+		if proj.Name != "" {
+			fmt.Printf("Name: %s\n", proj.Name)
 		}
-		if project.Storage != nil && project.Storage.Path != "" {
-			fmt.Printf("Storage path: %s\n", formatPath(project.Storage.Path))
+		if proj.Storage != nil && proj.Storage.Path != "" {
+			fmt.Printf("Storage path: %s\n", pm.FormatPathForDisplay(proj.Storage.Path))
 		}
 		fmt.Println()
 		fmt.Print("Are you sure you want to remove this project? (yes/no): ")
@@ -329,55 +333,6 @@ Example:
 		fmt.Printf("✓ Removed project %s\n", projectID)
 		return nil
 	},
-}
-
-// Helper functions
-
-// getGlobalConfigPath returns the path to the global config file
-func getGlobalConfigPath() (string, error) {
-	configDir, err := os.UserConfigDir()
-	if err != nil {
-		return "", fmt.Errorf("failed to get config directory: %w", err)
-	}
-
-	opentaskDir := filepath.Join(configDir, "opentask")
-	configPath := filepath.Join(opentaskDir, "config.toml")
-
-	// Create directory if it doesn't exist
-	if err := os.MkdirAll(opentaskDir, 0755); err != nil {
-		return "", fmt.Errorf("failed to create config directory: %w", err)
-	}
-
-	return configPath, nil
-}
-
-// resolvePath resolves a path to an absolute path, expanding ~ if needed
-func resolvePath(path string) (string, error) {
-	// Expand ~ to home directory
-	if len(path) > 0 && path[0] == '~' {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return "", fmt.Errorf("failed to expand home directory: %w", err)
-		}
-		path = filepath.Join(home, path[1:])
-	}
-
-	// Convert to absolute
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return "", fmt.Errorf("failed to get absolute path: %w", err)
-	}
-
-	return filepath.Clean(absPath), nil
-}
-
-// formatPath formats a path for display, using ~ for home directory if applicable
-func formatPath(path string) string {
-	home, err := os.UserHomeDir()
-	if err == nil && strings.HasPrefix(path, home) {
-		return "~" + path[len(home):]
-	}
-	return path
 }
 
 // saveGlobalConfig saves the global config to file

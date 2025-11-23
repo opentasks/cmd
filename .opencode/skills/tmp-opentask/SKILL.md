@@ -3,37 +3,37 @@ name: tmp-opentask
 description: Use when needing to create temporary opentask documentation for agents.
 license: MIT
 ---
-# Task Management Guide for Agents
 
-> **NOTE**: This guide uses the opentask CLI. Use `go run cmd/opentask ...` to run commands instead of `./opentask`.
 
 ## ⚡ Quick Start
 
+task management is contextual to the user's project. Use these commands as a baseline for task operations:
+
 ```bash
 # START a task (mark in progress FIRST)
-go run cmd/opentask --path .tasks task update <id> --status in-progress
+opentask task update <id> --status in-progress
 
 # FINISH a task (mark done LAST)
-go run cmd/opentask --path .tasks task update <id> --status done
+opentask task update <id> --status done
 
 # See what's being worked on
-go run cmd/opentask --path .tasks task list --status in-progress
+opentask task list --status in-progress
 
 # See what's available
-go run cmd/opentask --path .tasks task list --status todo
+opentask task list --status todo
 
 # Create a new task
-go run cmd/opentask --path .tasks task new "Task title" --type story
+opentask task new "Task title" --type story
 
 # List all tasks
-go run cmd/opentask --path .tasks task list
+opentask task list
 ```
 
 **Key Rule**: Mark `in-progress` BEFORE work, mark `done` AFTER work. Track progress in todowrite within the session.
 
 ## Task Basics
 
-**Use `go run cmd/opentask ...` for all task operations.**
+**Use `opentask ...` for all task operations.**
 
 If any needed functionality is missing from the CLI, **ask the user what to do** instead of working around it.
 
@@ -41,23 +41,23 @@ If any needed functionality is missing from the CLI, **ask the user what to do**
 
 ```bash
 # View a specific task
-go run cmd/opentask --path .tasks task show <id>
+opentask task show <id>
 
 # Create a task with parent epic
-go run cmd/opentask --path .tasks task new "Title" --type story --parent <epic_id>
+opentask task new "Title" --type story --parent <epic_id>
 
 # Create a task with tags
-go run cmd/opentask --path .tasks task new "Title" --type story --tag feature --tag urgent
+opentask task new "Title" --type story --tag feature --tag urgent
 
 # Filter tasks by status
-go run cmd/opentask --path .tasks task list --status todo
-go run cmd/opentask --path .tasks task list --status done
+opentask task list --status todo
+opentask task list --status done
 
 # Filter by parent epic
-go run cmd/opentask --path .tasks task list --parent <epic_id>
+opentask task list --parent <epic_id>
 
 # Filter by type
-go run cmd/opentask --path .tasks task list --type story
+opentask task list --type story
 ```
 
 ### If CLI lacks needed functionality
@@ -89,26 +89,26 @@ Workflow: `todo` → `in-progress` → `done` → `archived`
 
 Use CLI to update:
 ```bash
-go run cmd/opentask --path .tasks task update <id> --status done
+opentask task update <id> --status done
 ```
 
 ## Session Workflow
 
 1. **Check current status**:
    ```bash
-   go run cmd/opentask --path .tasks task list --status in-progress
+   opentask task list --status in-progress
    ```
 
 2. **Start a task** (mark BEFORE working):
    ```bash
-   go run cmd/opentask --path .tasks task update <id> --status in-progress
+   opentask task update <id> --status in-progress
    ```
 
 3. **Track progress** with `todowrite` tool (within session)
 
 4. **Finish task** (mark AFTER completing):
    ```bash
-   go run cmd/opentask --path .tasks task update <id> --status done
+   opentask task update <id> --status done
    ```
 
 5. **Session handoff**: If task incomplete, leave as `in-progress` and document next steps in SESSION_SUMMARY.md
@@ -127,9 +127,9 @@ Use consistently: `feature`, `bug`, `testing`, `documentation`, `backend`, `fron
 
 Run:
 ```bash
-go run cmd/opentask --help
-go run cmd/opentask task --help
-go run cmd/opentask task list --help
+opentask --help
+opentask task --help
+opentask task list --help
 ```
 
 ---

@@ -1,18 +1,15 @@
 ---
-name: Opentask Agent
-description: Agent that is restricted to opentask operations and reading files.
+name: opentask-planner
+description: Use when needing to create temporary opentask documentation for agents.
+license: MIT
 tools:
-  opentask: true
-  skill_opentask: true
-  write: false
-  read: true
+  - basicmemory*: false
 ---
 
-# Opentask Agent
+# Opentask Planner Skill
 
-This agent is designed to perform operations related to the Opentask project, including creating, updating, and managing tasks. It has access to the Opentask API and can read files within the project directory.
 
-The agent never writes files, except to create/edit/delete task information through the Opentask API.
+Never writes planning files directly (epics, stories, ressearch, tasks, bugs, decisions), except to create/edit/delete task information through the Opentask API.
 
 use tmp-opentask skill.
 

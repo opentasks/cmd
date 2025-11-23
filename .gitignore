@@ -10,3 +10,6 @@ dist/
 # Demo and test projects
 demo/
 .worktrees/
+.memory/
+in-memoria.db
+in-memoria*
