@@ -182,89 +182,8 @@ var configInitCmd = &cobra.Command{
 			return fmt.Errorf("failed to get current working directory: %w", err)
 		}
 
-		configPath := filepath.Join(cwd, ".opentask.toml")
-
-		// Check if config already exists
-		if _, err := os.Stat(configPath); err == nil && !forceFlag {
-			return fmt.Errorf(".opentask.toml already exists in %s. Use --force to overwrite", cwd)
-		}
-
-		// Determine project name
-		projectName := nameFlag
-		if projectName == "" {
-			// Use directory name as default
-			projectName = filepath.Base(cwd)
-		}
-
-		// Create config content using correct schema structure
-		// Note: active_project will be auto-derived if not set
-		configContent := fmt.Sprintf(`# opentask project configuration for %s
-# This file defines project-specific settings
-
-# Project metadata
-[project]
-name = %q
-description = ""
-owner = ""
-
-# Storage configuration (project-specific)
-[storage]
-backend = "markdown-fs"
-path = %q
-
-# Project-specific workflow (optional - comment out to use global defaults)
-# [workflow]
-# statuses = ["todo", "in-progress", "reviewing", "done", "archived"]
-# initial = "todo"
-
-# [[workflow.transitions]]
-# from = "todo"
-# to = ["in-progress", "archived"]
-
-# [[workflow.transitions]]
-# from = "in-progress"
-# to = ["reviewing", "todo", "archived"]
-
-# [[workflow.transitions]]
-# from = "reviewing"
-# to = ["done", "in-progress", "archived"]
-
-# [[workflow.transitions]]
-# from = "done"
-# to = ["archived"]
-
-# Project-specific templates (optional - comment out to use global templates)
-# [templates]
-# epic = "templates/epic.md"
-# plan = "templates/plan.md"
-# research = "templates/research.md"
-# story = "templates/story.md"
-# decision = "templates/decision.md"
-# task = "templates/task.md"
-`, projectName, projectName, storagePath)
-
-		// Write config file
-		if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
-			return fmt.Errorf("failed to write config file: %w", err)
-		}
-
-		// Print success message
-		fmt.Printf("Initialized opentask project in %s\n", cwd)
-		fmt.Printf("Created: %s\n", configPath)
-		fmt.Printf("Storage: %s (local directory)\n\n", storagePath)
-		fmt.Println("Configuration:")
-		fmt.Printf("  - Project name: %s\n", projectName)
-		fmt.Printf("  - Active project ID will be auto-derived from directory name or global config\n\n")
-		fmt.Println("Next steps:")
-		fmt.Println("  1. Create a task: opentask task new \"Your task title\"")
-		fmt.Println("  2. List tasks: opentask task list")
-		fmt.Println("  3. View config: opentask config view")
-		fmt.Println("  4. Edit config: " + configPath)
-		fmt.Println("\nTo set up global configuration:")
-		fmt.Println("  1. Create ~/.config/opentask/config.toml with your global settings")
-		fmt.Println("  2. Define projects at the global level for multi-project support")
-
-		return nil
+		initializer := config.NewConfigInitializer(cwd)
+		return initializer.Initialize(nameFlag, storagePath, forceFlag)
 	},
 }
 
@@ -352,19 +271,13 @@ var configProjectsCmd = &cobra.Command{
 
 		fmt.Println("Configured projects:")
 		fmt.Println()
-		for _, proj := range globalConfig.Projects {
-			prefix := "  "
-			if proj.ID == globalConfig.ActiveProject {
-				prefix = "* "
-			}
-			fmt.Printf("%s%s (%s)\n", prefix, proj.Name, proj.ID)
-			if proj.Storage != nil && proj.Storage.Path != "" {
-				fmt.Printf("     Path: %s\n", proj.Storage.Path)
-			}
-		}
+
+		lister := config.NewProjectLister(globalConfig)
+		fmt.Print(lister.List())
+		fmt.Println()
 
 		if globalConfig.ActiveProject != "" {
-			fmt.Printf("\nActive project: %s\n", globalConfig.ActiveProject)
+			fmt.Printf("* = active_project (%s)\n", globalConfig.ActiveProject)
 		}
 
 		return nil
