@@ -206,39 +206,9 @@ var projectListCmd = &cobra.Command{
 		fmt.Println("Projects:")
 		fmt.Println()
 
-		for _, proj := range globalConfig.Projects {
-			// Mark active project
-			activeMarker := ""
-			if globalConfig.ActiveProject == proj.ID {
-				activeMarker = " *"
-			}
-
-			projectName := proj.Name
-			if projectName == "" {
-				projectName = proj.ID
-			}
-
-			fmt.Printf("%s (%s)%s\n", proj.ID, projectName, activeMarker)
-
-			// Storage path
-			if proj.Storage != nil && proj.Storage.Path != "" {
-				displayPath := pm.FormatPathForDisplay(proj.Storage.Path)
-				fmt.Printf("  Storage: %s\n", displayPath)
-			}
-
-			// Contexts
-			if len(proj.Context) > 0 {
-				fmt.Println("  Contexts:")
-				for _, ctx := range proj.Context {
-					displayPath := pm.FormatPathForDisplay(ctx.Path)
-					fmt.Printf("    - %s\n", displayPath)
-				}
-			} else {
-				fmt.Println("  Contexts: (none)")
-			}
-
-			fmt.Println()
-		}
+		lister := config.NewProjectLister(globalConfig)
+		fmt.Print(lister.List())
+		fmt.Println()
 
 		if globalConfig.ActiveProject != "" {
 			fmt.Printf("* = active_project (%s)\n", globalConfig.ActiveProject)
