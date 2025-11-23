@@ -1,0 +1,43 @@
+# opentask project configuration for {{.ProjectName}}
+# This file defines project-specific settings
+
+# Project metadata
+[project]
+name = {{quote .ProjectName}}
+description = ""
+owner = ""
+
+# Storage configuration (project-specific)
+[storage]
+backend = "markdown-fs"
+path = {{quote .StoragePath}}
+
+# Project-specific workflow (optional - comment out to use global defaults)
+# [workflow]
+# statuses = ["todo", "in-progress", "reviewing", "done", "archived"]
+# initial = "todo"
+
+# [[workflow.transitions]]
+# from = "todo"
+# to = ["in-progress", "archived"]
+
+# [[workflow.transitions]]
+# from = "in-progress"
+# to = ["reviewing", "todo", "archived"]
+
+# [[workflow.transitions]]
+# from = "reviewing"
+# to = ["done", "in-progress", "archived"]
+
+# [[workflow.transitions]]
+# from = "done"
+# to = ["archived"]
+
+# Project-specific templates (optional - comment out to use global templates)
+# [templates]
+# epic = "templates/epic.md"
+# plan = "templates/plan.md"
+# research = "templates/research.md"
+# story = "templates/story.md"
+# decision = "templates/decision.md"
+# task = "templates/task.md"
