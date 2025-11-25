@@ -77,3 +77,11 @@ run = "goreleaser release --clean"
 [tasks.release-dry-run]
 description = "Test release-please dry run locally"
 run = "release-please release-pr --dry-run --repo-url https://github.com/opentasks/cmd --token=$(gh auth token)"
+
+[tasks.release-debug-config]
+description = "Debug release-please configuration"
+run = "release-please debug-config --repo-url https://github.com/opentasks/cmd --token=$(gh auth token) --debug"
+
+[tasks.release-debug-trace]
+description = "Debug release-please with full trace output"
+run = "release-please release-pr --dry-run --repo-url https://github.com/opentasks/cmd --token=$(gh auth token) --trace"
