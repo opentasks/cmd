@@ -1,0 +1,63 @@
+name: publish
+
+on:
+  repository_dispatch:
+    types: [publish-release]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Git tag to publish (e.g., v0.1.0)'
+        required: false
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 #v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine tag
+        id: tag
+        run: |
+          if [ -z "${{ github.event.client_payload.tag }}" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${{ github.event.client_payload.tag }}"
+          fi
+          
+          if [ -z "$TAG" ]; then
+            echo "ERROR: No tag provided via workflow_dispatch or repository_dispatch"
+            exit 1
+          fi
+          
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Publishing tag: $TAG"
+
+      - name: Setup environment
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 #v3
+        with:
+          cache: true
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a #v6
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts to release
+        if: success()
+        run: |
+          echo "Release published successfully for tag: ${{ steps.tag.outputs.tag }}"

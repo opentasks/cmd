@@ -64,3 +64,15 @@ echo "Demo project created at: ./demo/"
 [tasks.help]
 description = "Show available mise tasks"
 run = "mise tasks"
+
+[tasks.goreleaser-snapshot]
+description = "Build snapshot release (no publish)"
+run = "goreleaser build --snapshot --clean"
+
+[tasks.goreleaser-release]
+description = "Build and publish release to GitHub"
+run = "goreleaser release --clean"
+
+[tasks.release-dry-run]
+description = "Test release process without publishing"
+run = "goreleaser release --skip=publish --clean"

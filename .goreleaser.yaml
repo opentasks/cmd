@@ -1,0 +1,114 @@
+version: 2
+
+project_name: opentask
+
+env:
+  # Use Go 1.24 (from go.mod)
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+
+before:
+  hooks:
+    - go mod download
+    - go mod tidy
+
+builds:
+  - id: default
+    main: ./cmd/opentask
+    binary: opentask
+    
+    # Build for multiple platforms
+    goos:
+      - linux
+      - darwin
+      - windows
+    
+    goarch:
+      - amd64
+      - arm64
+      - arm
+    
+    goarm:
+      - "6"
+      - "7"
+    
+    ldflags:
+      - -s -w
+      - -X github.com/zenobi-us/opentask/cmd.Version={{.Version}}
+      - -X github.com/zenobi-us/opentask/cmd.Commit={{.Commit}}
+      - -X github.com/zenobi-us/opentask/cmd.Date={{.Date}}
+    
+    # Build matrix - skip some combinations
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
+      - goos: darwin
+        goarch: arm
+
+archives:
+  - id: default
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    
+    files:
+      - README.md
+      - LICENSE
+      - docs/**/*
+
+changelog:
+  use: github-native
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - Merge pull request
+      - Merge branch
+
+release:
+  # Publish to GitHub Releases
+  github:
+    owner: zenobi-us
+    name: opentask
+  
+  # Use GitHub native changelog
+  draft: false
+  footer: |
+    ## SHA256 Checksum
+    
+    ```
+    {{ .SHA256 }}
+    ```
+    
+    **Installation:**
+    
+    - **macOS (ARM64)**: `curl -sSL https://github.com/zenobi-us/opentask/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Darwin_arm64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
+    - **macOS (Intel)**: `curl -sSL https://github.com/zenobi-us/opentask/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Darwin_x86_64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
+    - **Linux (x86_64)**: `curl -sSL https://github.com/zenobi-us/opentask/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Linux_x86_64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
+    - **Linux (ARM64)**: `curl -sSL https://github.com/zenobi-us/opentask/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Linux_arm64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
+    - **Windows**: Download the `.zip` file from the release page
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+# Homebrew tap (optional - configure if you want homebrew distribution)
+# brews:
+#   - name: opentask
+#     repository:
+#       owner: zenobi-us
+#       name: homebrew-tap
+#       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
