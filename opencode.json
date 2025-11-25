@@ -1,7 +1,3 @@
 {
-  "plugin": [
-    "opencode-skills",
-    "opencode-sessions"
-  ],
   "$schema": "https://opencode.ai/config.json"
 }
