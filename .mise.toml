@@ -2,6 +2,7 @@
 # Specifies development environment requirements
 
 [tools]
+go = "latest"
 # Go version - pinned for consistency
 golang = "1.21"
 

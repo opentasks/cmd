@@ -1,0 +1,35 @@
+{
+  "version": "0.6.0",
+  "project": {
+    "name": "opentasks",
+    "languages": [
+      "go"
+    ]
+  },
+  "intelligence": {
+    "enableRealTimeAnalysis": true,
+    "enablePatternLearning": true,
+    "vectorEmbeddings": true
+  },
+  "watching": {
+    "patterns": [
+      "**/*.go"
+    ],
+    "ignored": [
+      "**/node_modules/**",
+      "**/.git/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/target/**"
+    ],
+    "debounceMs": 500
+  },
+  "mcp": {
+    "serverPort": 3000,
+    "enableAllTools": true
+  },
+  "setup": {
+    "createdAt": "2025-11-23T21:56:42.137Z",
+    "setupVersion": "interactive-v1"
+  }
+}
