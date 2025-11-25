@@ -5,6 +5,7 @@
 go = "latest"
 # Go version - pinned for consistency
 golang = "1.21"
+"npm:release-please" = "17.1.3"
 
 [tasks.build]
 description = "Build the OpenTask CLI"
@@ -74,5 +75,5 @@ description = "Build and publish release to GitHub"
 run = "goreleaser release --clean"
 
 [tasks.release-dry-run]
-description = "Test release process without publishing"
-run = "goreleaser release --skip=publish --clean"
+description = "Test release-please dry run locally"
+run = "release-please release-pr --dry-run --repo-url https://github.com/opentasks/cmd --token=$(gh auth token)"
