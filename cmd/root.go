@@ -15,6 +15,11 @@ import (
 )
 
 var (
+	// Build info - injected via ldflags at build time
+	Version = "dev"
+	Commit  = "none"
+	Date    = "unknown"
+
 	// Global flags
 	projectPath string
 	configPath  string
@@ -32,6 +37,7 @@ var rootCmd = &cobra.Command{
 	Long: `opentask is a task management system that stores tasks as markdown files
 with YAML frontmatter. It provides a command-line interface for managing tasks,
 organizing them hierarchically, and tracking relationships.`,
+	Version:            Version,
 	PersistentPreRunE:  initializeStorage,
 	PersistentPostRunE: cleanupStorage,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -146,7 +152,14 @@ func init() {
 	defaultHelp := rootCmd.HelpFunc()
 	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		if cmd == rootCmd {
-			brand.PrintBannerWithVersion(cmd.OutOrStdout())
+			b := brand.NewBanner(
+				brand.WithText("opentask"),
+				brand.WithRandomTheme(),
+				brand.WithRandomFont(),
+				brand.WithTagline("Task management with markdown files"),
+				brand.WithVersion(Version),
+			)
+			b.PrintWithTagline(cmd.OutOrStdout())
 		}
 		defaultHelp(cmd, args)
 	})

@@ -16,7 +16,6 @@ import (
 var fontsFS embed.FS
 
 // Version can be set at build time
-var Version = "dev"
 
 // figletRenderer is the shared figlet renderer with embedded fonts loaded
 var figletRenderer *figlet4go.AsciiRender
@@ -115,7 +114,7 @@ func NewBanner(opts ...Option) *Banner {
 		text:    "banner",
 		theme:   Themes[0], // Default to first curated theme
 		font:    "slant",
-		version: Version,
+		version: "",
 	}
 
 	for _, opt := range opts {
@@ -236,28 +235,4 @@ func (b *Banner) Print(w io.Writer) {
 // PrintWithTagline writes the banner with tagline to the given writer
 func (b *Banner) PrintWithTagline(w io.Writer) {
 	fmt.Fprint(w, b.RenderWithTagline())
-}
-
-// --- Convenience functions for backward compatibility ---
-
-// PrintBanner writes a random banner to the given writer
-func PrintBanner(w io.Writer) {
-	b := NewBanner(
-		WithText("opentask"),
-		WithRandomTheme(),
-		WithRandomFont(),
-	)
-	b.Print(w)
-}
-
-// PrintBannerWithVersion writes a random banner with version to the given writer
-func PrintBannerWithVersion(w io.Writer) {
-	b := NewBanner(
-		WithText("opentask"),
-		WithRandomTheme(),
-		WithRandomFont(),
-		WithTagline("Task management with markdown files"),
-		WithVersion(Version),
-	)
-	b.PrintWithTagline(w)
 }
