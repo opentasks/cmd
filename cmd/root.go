@@ -8,12 +8,18 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/zenobi-us/opentask/internal/brand"
 	"github.com/zenobi-us/opentask/internal/config"
 	"github.com/zenobi-us/opentask/internal/query"
 	"github.com/zenobi-us/opentask/internal/storage"
 )
 
 var (
+	// Build info - injected via ldflags at build time
+	Version = "dev"
+	Commit  = "none"
+	Date    = "unknown"
+
 	// Global flags
 	projectPath string
 	configPath  string
@@ -31,8 +37,13 @@ var rootCmd = &cobra.Command{
 	Long: `opentask is a task management system that stores tasks as markdown files
 with YAML frontmatter. It provides a command-line interface for managing tasks,
 organizing them hierarchically, and tracking relationships.`,
+	Version:            Version,
 	PersistentPreRunE:  initializeStorage,
 	PersistentPostRunE: cleanupStorage,
+	Run: func(cmd *cobra.Command, args []string) {
+		// Show help (which includes banner) when called with no subcommand
+		cmd.Help()
+	},
 }
 
 // Execute runs the root command
@@ -129,6 +140,9 @@ func GetContext() context.Context {
 }
 
 func init() {
+	// Set version template to include commit and date
+	rootCmd.SetVersionTemplate(fmt.Sprintf("{{.Name}} version {{.Version}} (commit: %s, built: %s)\n", Commit, Date))
+
 	rootCmd.PersistentFlags().StringVar(&projectPath, "path", "", "Project path (default: current directory)")
 	rootCmd.PersistentFlags().StringVar(&configPath, "config", "", "Config file path")
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose output")
@@ -136,6 +150,22 @@ func init() {
 	// Bind flags to viper
 	viper.BindPFlag("project.path", rootCmd.PersistentFlags().Lookup("path"))
 	viper.BindPFlag("config.path", rootCmd.PersistentFlags().Lookup("config"))
+
+	// Custom help template with banner for root command only
+	defaultHelp := rootCmd.HelpFunc()
+	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		if cmd == rootCmd {
+			b := brand.NewBanner(
+				brand.WithText("opentask"),
+				brand.WithRandomTheme(),
+				brand.WithRandomFont(),
+				brand.WithTagline("Task management with markdown files"),
+				brand.WithVersion(Version),
+			)
+			b.PrintWithTagline(cmd.OutOrStdout())
+		}
+		defaultHelp(cmd, args)
+	})
 
 	// Add subcommands
 	rootCmd.AddCommand(taskCmd)

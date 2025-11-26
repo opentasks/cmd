@@ -2,4 +2,17 @@
 #MISE description="Build the OpenTask CLI"
 set -euo pipefail
 
-go build -o bin/opentask ./cmd/opentask
+# Get version info
+VERSION="${VERSION:-$(git describe --tags --always --dirty 2>/dev/null || echo "dev")}"
+COMMIT="${COMMIT:-$(git rev-parse --short HEAD 2>/dev/null || echo "none")}"
+DATE="${DATE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
+
+# Build with ldflags
+go build -ldflags "\
+  -s -w \
+  -X github.com/zenobi-us/opentask/cmd.Version=${VERSION} \
+  -X github.com/zenobi-us/opentask/cmd.Commit=${COMMIT} \
+  -X github.com/zenobi-us/opentask/cmd.Date=${DATE}" \
+  -o bin/opentask ./cmd/opentask
+
+echo "Built bin/opentask (${VERSION}, ${COMMIT}, ${DATE})"
