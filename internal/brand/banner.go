@@ -229,10 +229,10 @@ func (b *Banner) RenderWithTagline() string {
 
 // Print writes the banner to the given writer
 func (b *Banner) Print(w io.Writer) {
-	fmt.Fprint(w, b.Render())
+	_, _ = fmt.Fprint(w, b.Render())
 }
 
 // PrintWithTagline writes the banner with tagline to the given writer
 func (b *Banner) PrintWithTagline(w io.Writer) {
-	fmt.Fprint(w, b.RenderWithTagline())
+	_, _ = fmt.Fprint(w, b.RenderWithTagline())
 }

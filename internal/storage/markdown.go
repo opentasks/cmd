@@ -147,12 +147,9 @@ func (s *MarkdownFileStorage) parseTaskFile(filePath string) (*model.Task, error
 		}
 	}
 
-	// Initialize empty tags and relationships if nil
+	// Initialize empty tags if nil
 	if frontmatter.Tags == nil {
 		frontmatter.Tags = []string{}
-	}
-	if relationships == nil {
-		relationships = []model.Relationship{}
 	}
 
 	task := &model.Task{
@@ -224,7 +221,7 @@ func (s *MarkdownFileStorage) SaveTask(ctx context.Context, task *model.Task) er
 		oldPath, err := s.taskToPath(ctx, oldTask)
 		if err == nil && oldPath != path {
 			// Path has changed (e.g., due to title update), remove old file
-			os.Remove(oldPath) // Ignore error if file doesn't exist
+			_ = os.Remove(oldPath) // Ignore error if file doesn't exist
 		}
 	}
 	// If LoadTask fails (task doesn't exist yet), that's fine, just continue

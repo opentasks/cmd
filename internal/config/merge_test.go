@@ -120,7 +120,7 @@ func TestResolveProjectConfigSimpleGlobalOnly(t *testing.T) {
 
 	// Create global config
 	globalDir := filepath.Join(tmpDir, "config")
-	os.MkdirAll(globalDir, 0755)
+	_ = os.MkdirAll(globalDir, 0755)
 	globalPath := filepath.Join(globalDir, "config.toml")
 
 	globalConfig := `
@@ -145,7 +145,7 @@ initial = "todo"
 
 	// Create project config
 	projectDir := filepath.Join(tmpDir, ".tasks")
-	os.MkdirAll(projectDir, 0755)
+	_ = os.MkdirAll(projectDir, 0755)
 	projectPath := filepath.Join(projectDir, ".opentask.toml")
 
 	projectConfig := `
@@ -163,8 +163,8 @@ initial = "todo"
 
 	// Set HOME to tmpDir so global config is found
 	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	_ = os.Setenv("HOME", tmpDir)
+	defer func() { _ = os.Setenv("HOME", oldHome) }()
 
 	resolved, err := ResolveProjectConfig(projectDir)
 	if err != nil {
@@ -188,7 +188,7 @@ func TestResolveProjectConfigActiveProjectDerivation(t *testing.T) {
 
 	// Create global config
 	globalDir := filepath.Join(tmpDir, ".config", "opentask")
-	os.MkdirAll(globalDir, 0755)
+	_ = os.MkdirAll(globalDir, 0755)
 	globalPath := filepath.Join(globalDir, "config.toml")
 
 	projectStoragePath := filepath.Join(tmpDir, "work", ".tasks")
@@ -211,7 +211,7 @@ path = "` + projectStoragePath + `"
 
 	// Create project config WITHOUT active_project field
 	projectDir := projectStoragePath
-	os.MkdirAll(projectDir, 0755)
+	_ = os.MkdirAll(projectDir, 0755)
 	projectPath := filepath.Join(projectDir, ".opentask.toml")
 
 	projectConfig := `
@@ -225,8 +225,8 @@ name = "Work Project"
 
 	// Set HOME to tmpDir so global config is found
 	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	_ = os.Setenv("HOME", tmpDir)
+	defer func() { _ = os.Setenv("HOME", oldHome) }()
 
 	resolved, err := ResolveProjectConfig(projectDir)
 	if err != nil {
@@ -245,7 +245,7 @@ func TestResolveProjectConfigFallbackToDirectoryName(t *testing.T) {
 
 	// Create project config WITHOUT active_project and NO global config match
 	projectDir := filepath.Join(tmpDir, "my-project")
-	os.MkdirAll(projectDir, 0755)
+	_ = os.MkdirAll(projectDir, 0755)
 	projectPath := filepath.Join(projectDir, ".opentask.toml")
 
 	projectConfig := `
@@ -263,8 +263,8 @@ path = "./.tasks"
 
 	// Set HOME to tmpDir (no global config)
 	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	_ = os.Setenv("HOME", tmpDir)
+	defer func() { _ = os.Setenv("HOME", oldHome) }()
 
 	resolved, err := ResolveProjectConfig(projectDir)
 	if err != nil {

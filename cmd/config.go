@@ -60,13 +60,11 @@ var configViewCmd = &cobra.Command{
 			return nil
 		}
 
-		config.Renderer(
+		return config.Renderer(
 			config.WithCwd(cwd),
 			config.WithVerbose(verboseFlag),
 			config.WithResolvedConfig(resolved),
 		)
-
-		return nil
 	},
 }
 

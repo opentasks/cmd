@@ -12,7 +12,7 @@ func TestIntegrationGlobalAndProjectConfigs(t *testing.T) {
 
 	// Setup: Create global config
 	globalDir := filepath.Join(tmpDir, ".config", "opentask")
-	os.MkdirAll(globalDir, 0755)
+	_ = os.MkdirAll(globalDir, 0755)
 	globalPath := filepath.Join(globalDir, "config.toml")
 
 	globalConfig := `
@@ -48,7 +48,7 @@ path = "` + filepath.Join(tmpDir, "personal", ".tasks") + `"
 
 	// Setup: Create work project structure with nested configs
 	workRoot := filepath.Join(tmpDir, "work")
-	os.MkdirAll(workRoot, 0755)
+	_ = os.MkdirAll(workRoot, 0755)
 	workProjectPath := filepath.Join(workRoot, ".opentask.toml")
 
 	workProjectConfig := `
@@ -71,7 +71,7 @@ initial = "todo"
 
 	// Setup: Create nested sub-project
 	subProjectDir := filepath.Join(workRoot, "sub-project")
-	os.MkdirAll(subProjectDir, 0755)
+	_ = os.MkdirAll(subProjectDir, 0755)
 	subProjectPath := filepath.Join(subProjectDir, ".opentask.toml")
 
 	subProjectConfig := `
@@ -89,8 +89,8 @@ task = "templates/custom-task.md"
 
 	// Set HOME to tmpDir so global config is found
 	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	_ = os.Setenv("HOME", tmpDir)
+	defer func() { _ = os.Setenv("HOME", oldHome) }()
 
 	// Test Case 1: Resolve at work root - should get work project config + global defaults
 	t.Run("resolve at work root", func(t *testing.T) {
@@ -168,7 +168,7 @@ func TestIntegrationProjectWithoutGlobalConfig(t *testing.T) {
 
 	// Create a simple project without global config
 	projectDir := filepath.Join(tmpDir, "my-project")
-	os.MkdirAll(projectDir, 0755)
+	_ = os.MkdirAll(projectDir, 0755)
 	projectPath := filepath.Join(projectDir, ".opentask.toml")
 
 	projectConfig := `
@@ -191,8 +191,8 @@ initial = "todo"
 
 	// Set HOME to ensure no global config exists
 	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpDir)
-	defer os.Setenv("HOME", oldHome)
+	_ = os.Setenv("HOME", tmpDir)
+	defer func() { _ = os.Setenv("HOME", oldHome) }()
 
 	resolved, err := ResolveProjectConfig(projectDir)
 	if err != nil {
@@ -220,7 +220,7 @@ func TestIntegrationMultipleProjectLevels(t *testing.T) {
 
 	// Level 1: Root project
 	level1Dir := filepath.Join(tmpDir, "root-project")
-	os.MkdirAll(level1Dir, 0755)
+	_ = os.MkdirAll(level1Dir, 0755)
 	level1Path := filepath.Join(level1Dir, ".opentask.toml")
 
 	level1Config := `
@@ -238,7 +238,7 @@ initial = "todo"
 
 	// Level 2: Sub-project under root
 	level2Dir := filepath.Join(level1Dir, "module-a")
-	os.MkdirAll(level2Dir, 0755)
+	_ = os.MkdirAll(level2Dir, 0755)
 	level2Path := filepath.Join(level2Dir, ".opentask.toml")
 
 	level2Config := `
@@ -253,7 +253,7 @@ owner = "team-a"
 
 	// Level 3: Nested project
 	level3Dir := filepath.Join(level2Dir, "sub-module")
-	os.MkdirAll(level3Dir, 0755)
+	_ = os.MkdirAll(level3Dir, 0755)
 	level3Path := filepath.Join(level3Dir, ".opentask.toml")
 
 	level3Config := `
@@ -320,7 +320,7 @@ func TestIntegrationStoragePathResolution(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			projectDir := filepath.Join(tmpDir, "proj-"+tt.name)
-			os.MkdirAll(projectDir, 0755)
+			_ = os.MkdirAll(projectDir, 0755)
 			projectPath := filepath.Join(projectDir, ".opentask.toml")
 
 			projectConfig := `
@@ -358,7 +358,7 @@ func TestIntegrationConfigInitWithTaskCreation(t *testing.T) {
 	// Setup: Create a git repository
 	projectDir := filepath.Join(tmpDir, "test-project")
 	gitDir := filepath.Join(projectDir, ".git")
-	os.MkdirAll(gitDir, 0755)
+	_ = os.MkdirAll(gitDir, 0755)
 
 	// Simulate config init by creating a project config file
 	configPath := filepath.Join(projectDir, ".opentask.toml")
@@ -431,8 +431,8 @@ func TestIntegrationConfigStopsAtGitRoot(t *testing.T) {
 	deepdir := filepath.Join(subdir, "deep")
 
 	// Create directories
-	os.MkdirAll(gitDir, 0755)
-	os.MkdirAll(deepdir, 0755)
+	_ = os.MkdirAll(gitDir, 0755)
+	_ = os.MkdirAll(deepdir, 0755)
 
 	// Create config files
 	for _, path := range []string{rootConfig, subConfig} {
@@ -511,8 +511,8 @@ func TestIntegrationConfigDoesntWalkPastGitRoot(t *testing.T) {
 	deepdir := filepath.Join(subdir, "deep")
 
 	// Create directories
-	os.MkdirAll(gitDir, 0755)
-	os.MkdirAll(deepdir, 0755)
+	_ = os.MkdirAll(gitDir, 0755)
+	_ = os.MkdirAll(deepdir, 0755)
 
 	// Create config files
 	for _, path := range []string{rootConfig, subConfig} {
