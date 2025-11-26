@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Test release-please dry run locally"
+set -euo pipefail
+
+release-please release-pr --dry-run --repo-url https://github.com/opentasks/cmd --token=$(gh auth token)

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Format code with gofmt"
+set -euo pipefail
+
+gofmt -w .

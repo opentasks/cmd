@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Run query package tests"
+set -euo pipefail
+
+go test -v ./internal/query/...

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#MISE description="Run demo workflow"
+set -euo pipefail
+
+rm -rf ./demo
+mkdir -p ./demo
+./opentask --path ./demo task new "Design Phase" --type epic
+./opentask --path ./demo task new "Plan architecture" --type plan --parent 1
+./opentask --path ./demo task new "Research patterns" --type research --parent 1
+./opentask --path ./demo task new "Implement core" --type story --parent 1 --tag backend
+./opentask --path ./demo task list
+echo ""
+echo "Demo project created at: ./demo/"

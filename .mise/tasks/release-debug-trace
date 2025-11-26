@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Debug release-please with full trace output"
+set -euo pipefail
+
+release-please release-pr --dry-run --repo-url https://github.com/opentasks/cmd --token=$(gh auth token) --trace 2>&1 | grep -E 'Set\(|Would open|commits|version'

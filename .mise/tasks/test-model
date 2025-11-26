@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Run model package tests"
+set -euo pipefail
+
+go test -v ./internal/model/...
