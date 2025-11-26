@@ -140,6 +140,9 @@ func GetContext() context.Context {
 }
 
 func init() {
+	// Set version template to include commit and date
+	rootCmd.SetVersionTemplate(fmt.Sprintf("{{.Name}} version {{.Version}} (commit: %s, built: %s)\n", Commit, Date))
+
 	rootCmd.PersistentFlags().StringVar(&projectPath, "path", "", "Project path (default: current directory)")
 	rootCmd.PersistentFlags().StringVar(&configPath, "config", "", "Config file path")
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose output")
