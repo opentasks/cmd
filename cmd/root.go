@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/zenobi-us/opentask/internal/brand"
-	"github.com/zenobi-us/opentask/internal/config"
-	"github.com/zenobi-us/opentask/internal/query"
-	"github.com/zenobi-us/opentask/internal/storage"
+	"github.com/opentasks/cmd/internal/brand"
+	"github.com/opentasks/cmd/internal/config"
+	"github.com/opentasks/cmd/internal/query"
+	"github.com/opentasks/cmd/internal/storage"
 )
 
 var (

@@ -8,8 +8,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
-	"github.com/zenobi-us/opentask/internal/config"
-	"github.com/zenobi-us/opentask/internal/project"
+	"github.com/opentasks/cmd/internal/config"
+	"github.com/opentasks/cmd/internal/project"
 )
 
 // projectCmd represents the project command group

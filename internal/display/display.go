@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zenobi-us/opentask/internal/model"
+	"github.com/opentasks/cmd/internal/model"
 )
 
 // Truncate truncates a string to maxLen characters, adding "..." if truncated

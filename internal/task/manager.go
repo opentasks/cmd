@@ -3,7 +3,7 @@ package task
 import (
 	"time"
 
-	"github.com/zenobi-us/opentask/internal/model"
+	"github.com/opentasks/cmd/internal/model"
 )
 
 // Manager provides pure business logic for task operations

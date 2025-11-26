@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/zenobi-us/opentask/internal/model"
+	"github.com/opentasks/cmd/internal/model"
 )
 
 // TaskFilter is a functional option for filtering tasks

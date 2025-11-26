@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/zenobi-us/opentask/internal/project"
+	"github.com/opentasks/cmd/internal/project"
 )
 
 // ProjectLister handles formatting and display of project listings

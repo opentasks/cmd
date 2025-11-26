@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/zenobi-us/opentask/cmd"
+	"github.com/opentasks/cmd/cmd"
 )
 
 func main() {

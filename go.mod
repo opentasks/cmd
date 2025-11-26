@@ -1,4 +1,4 @@
-module github.com/zenobi-us/opentask
+module github.com/opentasks/cmd
 
 go 1.25.3
 

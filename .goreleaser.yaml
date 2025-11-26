@@ -34,9 +34,9 @@ builds:
     
     ldflags:
       - -s -w
-      - -X github.com/zenobi-us/opentask/cmd.Version={{.Version}}
-      - -X github.com/zenobi-us/opentask/cmd.Commit={{.Commit}}
-      - -X github.com/zenobi-us/opentask/cmd.Date={{.Date}}
+      - -X github.com/opentasks/cmd/cmd.Version={{.Version}}
+      - -X github.com/opentasks/cmd/cmd.Commit={{.Commit}}
+      - -X github.com/opentasks/cmd/cmd.Date={{.Date}}
     
     # Build matrix - skip some combinations
     ignore:
@@ -82,8 +82,8 @@ changelog:
 release:
   # Publish to GitHub Releases
   github:
-    owner: zenobi-us
-    name: opentask
+    owner: opentasks
+    name: cmd
 
   mode: keep-existing  # Don't overwrite existing
   draft: false
@@ -96,10 +96,10 @@ release:
     
     **Installation:**
     
-    - **macOS (ARM64)**: `curl -sSL https://github.com/zenobi-us/opentask/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Darwin_arm64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
-    - **macOS (Intel)**: `curl -sSL https://github.com/zenobi-us/opentask/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Darwin_x86_64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
-    - **Linux (x86_64)**: `curl -sSL https://github.com/zenobi-us/opentask/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Linux_x86_64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
-    - **Linux (ARM64)**: `curl -sSL https://github.com/zenobi-us/opentask/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Linux_arm64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
+    - **macOS (ARM64)**: `curl -sSL https://github.com/opentasks/cmd/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Darwin_arm64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
+    - **macOS (Intel)**: `curl -sSL https://github.com/opentasks/cmd/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Darwin_x86_64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
+    - **Linux (x86_64)**: `curl -sSL https://github.com/opentasks/cmd/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Linux_x86_64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
+    - **Linux (ARM64)**: `curl -sSL https://github.com/opentasks/cmd/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Linux_arm64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
     - **Windows**: Download the `.zip` file from the release page
 
 checksum:
