@@ -83,8 +83,8 @@ release:
   github:
     owner: zenobi-us
     name: opentask
-  
-  # Use GitHub native changelog
+
+  mode: keep-existing  # Don't overwrite existing
   draft: false
   footer: |
     ## SHA256 Checksum
@@ -104,11 +104,3 @@ release:
 checksum:
   name_template: 'checksums.txt'
   algorithm: sha256
-
-# Homebrew tap (optional - configure if you want homebrew distribution)
-# brews:
-#   - name: opentask
-#     repository:
-#       owner: zenobi-us
-#       name: homebrew-tap
-#       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
