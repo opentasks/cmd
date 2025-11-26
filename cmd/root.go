@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/zenobi-us/opentask/internal/brand"
 	"github.com/zenobi-us/opentask/internal/config"
 	"github.com/zenobi-us/opentask/internal/query"
 	"github.com/zenobi-us/opentask/internal/storage"
@@ -33,6 +34,10 @@ with YAML frontmatter. It provides a command-line interface for managing tasks,
 organizing them hierarchically, and tracking relationships.`,
 	PersistentPreRunE:  initializeStorage,
 	PersistentPostRunE: cleanupStorage,
+	Run: func(cmd *cobra.Command, args []string) {
+		// Show help (which includes banner) when called with no subcommand
+		cmd.Help()
+	},
 }
 
 // Execute runs the root command
@@ -136,6 +141,15 @@ func init() {
 	// Bind flags to viper
 	viper.BindPFlag("project.path", rootCmd.PersistentFlags().Lookup("path"))
 	viper.BindPFlag("config.path", rootCmd.PersistentFlags().Lookup("config"))
+
+	// Custom help template with banner for root command only
+	defaultHelp := rootCmd.HelpFunc()
+	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		if cmd == rootCmd {
+			brand.PrintBannerWithVersion(cmd.OutOrStdout())
+		}
+		defaultHelp(cmd, args)
+	})
 
 	// Add subcommands
 	rootCmd.AddCommand(taskCmd)
