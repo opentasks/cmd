@@ -2,15 +2,20 @@
 package brand
 
 import (
+	"embed"
 	"fmt"
 	"io"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mbndr/figlet4go"
 )
+
+//go:embed fonts/*.flf
+var fontsFS embed.FS
 
 // Version can be set at build time
 var Version = "dev"
@@ -18,8 +23,17 @@ var Version = "dev"
 // AppName is the name rendered in the banner
 const AppName = "opentask"
 
-// FontName is the figlet font to use
-const FontName = "larry3d"
+// availableFonts lists fonts that work well for the banner
+var availableFonts = []string{
+	"slant",
+	"small",
+	"smslant",
+	"doom",
+	"big",
+	"shadow",
+	"mini",
+	"script",
+}
 
 // Theme represents a color theme for the banner
 type Theme struct {
@@ -49,12 +63,45 @@ var themes = []Theme{
 // renderer is the lipgloss renderer for stdout (for tagline)
 var renderer = lipgloss.NewRenderer(os.Stdout)
 
-// figletRenderer is the shared figlet renderer
-var figletRenderer = figlet4go.NewAsciiRender()
+// figletRenderer is the shared figlet renderer with embedded fonts loaded
+var figletRenderer *figlet4go.AsciiRender
+
+func init() {
+	figletRenderer = figlet4go.NewAsciiRender()
+	loadEmbeddedFonts()
+}
+
+// loadEmbeddedFonts loads all .flf fonts from the embedded filesystem
+func loadEmbeddedFonts() {
+	entries, err := fontsFS.ReadDir("fonts")
+	if err != nil {
+		return
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".flf") {
+			continue
+		}
+
+		data, err := fontsFS.ReadFile(filepath.Join("fonts", entry.Name()))
+		if err != nil {
+			continue
+		}
+
+		// Extract font name without extension
+		fontName := strings.TrimSuffix(entry.Name(), ".flf")
+		_ = figletRenderer.LoadBindataFont(data, fontName)
+	}
+}
 
 // randomTheme returns a random theme
 func randomTheme() Theme {
 	return themes[rand.Intn(len(themes))]
+}
+
+// randomFont returns a random font name
+func randomFont() string {
+	return availableFonts[rand.Intn(len(availableFonts))]
 }
 
 // hexToColor converts a hex color string to figlet4go.Color
@@ -85,10 +132,10 @@ func buildColorSlice(theme Theme, textLen int) []figlet4go.Color {
 	return colors
 }
 
-// renderBanner generates the ASCII art banner with theme colors
-func renderBanner(theme Theme) string {
+// renderBanner generates the ASCII art banner with theme colors and random font
+func renderBanner(theme Theme, font string) string {
 	options := figlet4go.NewRenderOptions()
-	options.FontName = FontName
+	options.FontName = font
 	options.FontColor = buildColorSlice(theme, len(AppName))
 
 	result, err := figletRenderer.RenderOpts(AppName, options)
@@ -102,13 +149,15 @@ func renderBanner(theme Theme) string {
 // PrintBanner writes the banner to the given writer
 func PrintBanner(w io.Writer) {
 	theme := randomTheme()
-	fmt.Fprint(w, renderBanner(theme))
+	font := randomFont()
+	fmt.Fprint(w, renderBanner(theme, font))
 }
 
 // PrintBannerWithVersion writes the banner with version info to the given writer
 func PrintBannerWithVersion(w io.Writer) {
 	theme := randomTheme()
-	fmt.Fprint(w, renderBanner(theme))
+	font := randomFont()
+	fmt.Fprint(w, renderBanner(theme, font))
 
 	// Style the tagline with the accent color
 	taglineStyle := renderer.NewStyle().
