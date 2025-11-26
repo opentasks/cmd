@@ -113,14 +113,28 @@ func GetTheme(name string) (Theme, bool) {
 	return ThemeFromGogh(name), true
 }
 
-// Fonts lists available FIGlet fonts
-var Fonts = []string{
-	"slant",
-	"small",
-	"smslant",
-	"doom",
-	"big",
-	"shadow",
-	"mini",
-	"script",
+// Font represents an available FIGlet font
+type Font string
+
+const (
+	FontSlant   Font = "slant"
+	FontSmall   Font = "small"
+	FontSmSlant Font = "smslant"
+	FontDoom    Font = "doom"
+	FontBig     Font = "big"
+	FontShadow  Font = "shadow"
+	FontMini    Font = "mini"
+	FontScript  Font = "script"
+)
+
+// Fonts lists all available fonts
+var Fonts = []Font{
+	FontSlant,
+	FontSmall,
+	FontSmSlant,
+	FontDoom,
+	FontBig,
+	FontShadow,
+	FontMini,
+	FontScript,
 }

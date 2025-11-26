@@ -74,9 +74,9 @@ func WithTheme(theme Theme) Option {
 }
 
 // WithFont sets the FIGlet font
-func WithFont(font string) Option {
+func WithFont(font Font) Option {
 	return func(b *Banner) {
-		b.font = font
+		b.font = string(font)
 	}
 }
 
@@ -104,7 +104,7 @@ func WithRandomTheme() Option {
 // WithRandomFont selects a random font
 func WithRandomFont() Option {
 	return func(b *Banner) {
-		b.font = Fonts[rand.Intn(len(Fonts))]
+		b.font = string(Fonts[rand.Intn(len(Fonts))])
 	}
 }
 
