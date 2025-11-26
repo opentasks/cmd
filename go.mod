@@ -1,8 +1,6 @@
 module github.com/zenobi-us/opentask
 
-go 1.24.2
-
-toolchain go1.24.9
+go 1.25.3
 
 require (
 	github.com/BurntSushi/toml v1.5.0
@@ -11,6 +9,7 @@ require (
 	github.com/mbndr/figlet4go v0.0.0-20190224160619-d6cef5b186ea
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
+	github.com/willyv3/gogh-themes v1.2.0
 	golang.org/x/tools/gopls v0.20.0
 	gopkg.in/yaml.v3 v3.0.1
 )

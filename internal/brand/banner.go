@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
 	"github.com/mbndr/figlet4go"
 )
 
@@ -19,49 +17,6 @@ var fontsFS embed.FS
 
 // Version can be set at build time
 var Version = "dev"
-
-// AppName is the name rendered in the banner
-const AppName = "opentask"
-
-// availableFonts lists fonts that work well for the banner
-var availableFonts = []string{
-	"slant",
-	"small",
-	"smslant",
-	"doom",
-	"big",
-	"shadow",
-	"mini",
-	"script",
-}
-
-// Theme represents a color theme for the banner
-type Theme struct {
-	Name   string
-	Accent string // first letter color
-	Base   string // remaining letters color
-}
-
-// themes is the collection of available banner themes
-var themes = []Theme{
-	{Name: "electric", Accent: "#06b6d4", Base: "#94a3b8"},   // cyan accent, slate base
-	{Name: "ember", Accent: "#f97316", Base: "#fafaf9"},      // orange accent, warm white
-	{Name: "grape", Accent: "#a855f7", Base: "#e2e8f0"},      // purple accent, light slate
-	{Name: "mint", Accent: "#10b981", Base: "#f0fdf4"},       // emerald accent, green-white
-	{Name: "rose", Accent: "#f43f5e", Base: "#fafafa"},       // rose accent, white
-	{Name: "gold", Accent: "#eab308", Base: "#fefce8"},       // yellow accent, cream
-	{Name: "midnight", Accent: "#3b82f6", Base: "#94a3b8"},   // blue accent, slate
-	{Name: "neon", Accent: "#22d3ee", Base: "#334155"},       // bright cyan, dark slate
-	{Name: "blood", Accent: "#dc2626", Base: "#d6d3d1"},      // red accent, stone
-	{Name: "hacker", Accent: "#22c55e", Base: "#166534"},     // bright green, dark green
-	{Name: "sunset", Accent: "#fb923c", Base: "#fef3c7"},     // orange, amber-white
-	{Name: "ocean", Accent: "#0ea5e9", Base: "#e0f2fe"},      // sky blue, light blue
-	{Name: "synthwave", Accent: "#e879f9", Base: "#c084fc"},  // fuchsia, purple
-	{Name: "monochrome", Accent: "#f8fafc", Base: "#64748b"}, // white accent, slate base
-}
-
-// renderer is the lipgloss renderer for stdout (for tagline)
-var renderer = lipgloss.NewRenderer(os.Stdout)
 
 // figletRenderer is the shared figlet renderer with embedded fonts loaded
 var figletRenderer *figlet4go.AsciiRender
@@ -88,80 +43,221 @@ func loadEmbeddedFonts() {
 			continue
 		}
 
-		// Extract font name without extension
 		fontName := strings.TrimSuffix(entry.Name(), ".flf")
 		_ = figletRenderer.LoadBindataFont(data, fontName)
 	}
 }
 
-// randomTheme returns a random theme
-func randomTheme() Theme {
-	return themes[rand.Intn(len(themes))]
+// Banner renders ASCII art text with configurable themes and fonts
+type Banner struct {
+	text    string
+	theme   Theme
+	font    string
+	tagline string
+	version string
 }
 
-// randomFont returns a random font name
-func randomFont() string {
-	return availableFonts[rand.Intn(len(availableFonts))]
-}
+// Option is a functional option for configuring a Banner
+type Option func(*Banner)
 
-// hexToColor converts a hex color string to figlet4go.Color
-func hexToColor(hex string) figlet4go.Color {
-	// Strip # prefix if present
-	hex = strings.TrimPrefix(hex, "#")
-	color, err := figlet4go.NewTrueColorFromHexString(hex)
-	if err != nil {
-		// Fallback to white on error
-		color, _ = figlet4go.NewTrueColorFromHexString("ffffff")
+// WithText sets the text to render
+func WithText(text string) Option {
+	return func(b *Banner) {
+		b.text = text
 	}
-	return color
 }
 
-// buildColorSlice creates a color slice for figlet4go with accent on first char
-func buildColorSlice(theme Theme, textLen int) []figlet4go.Color {
-	colors := make([]figlet4go.Color, textLen)
-	accent := hexToColor(theme.Accent)
-	base := hexToColor(theme.Base)
+// WithTheme sets the color theme
+func WithTheme(theme Theme) Option {
+	return func(b *Banner) {
+		b.theme = theme
+	}
+}
 
-	for i := 0; i < textLen; i++ {
-		if i == 0 {
-			colors[i] = accent
-		} else {
-			colors[i] = base
+// WithFont sets the FIGlet font
+func WithFont(font string) Option {
+	return func(b *Banner) {
+		b.font = font
+	}
+}
+
+// WithTagline sets the tagline displayed below the banner
+func WithTagline(tagline string) Option {
+	return func(b *Banner) {
+		b.tagline = tagline
+	}
+}
+
+// WithVersion sets the version displayed in the tagline
+func WithVersion(version string) Option {
+	return func(b *Banner) {
+		b.version = version
+	}
+}
+
+// WithRandomTheme selects a random theme
+func WithRandomTheme() Option {
+	return func(b *Banner) {
+		b.theme = Themes[rand.Intn(len(Themes))]
+	}
+}
+
+// WithRandomFont selects a random font
+func WithRandomFont() Option {
+	return func(b *Banner) {
+		b.font = Fonts[rand.Intn(len(Fonts))]
+	}
+}
+
+// NewBanner creates a new Banner with the given options
+func NewBanner(opts ...Option) *Banner {
+	b := &Banner{
+		text:    "banner",
+		theme:   Themes[0], // Default to first curated theme
+		font:    "slant",
+		version: Version,
+	}
+
+	for _, opt := range opts {
+		opt(b)
+	}
+
+	return b
+}
+
+// renderFiglet generates plain ASCII art without colors
+func (b *Banner) renderFiglet() ([]string, error) {
+	options := figlet4go.NewRenderOptions()
+	options.FontName = b.font
+
+	result, err := figletRenderer.RenderOpts(b.text, options)
+	if err != nil {
+		return nil, err
+	}
+
+	// Split into lines, removing trailing empty lines
+	lines := strings.Split(strings.TrimRight(result, "\n"), "\n")
+	return lines, nil
+}
+
+// applyTheme applies lipgloss styles to figlet output
+// First character column gets accent style, rest gets base style
+func (b *Banner) applyTheme(lines []string) string {
+	if len(lines) == 0 {
+		return ""
+	}
+
+	// Find character column boundaries by analyzing the figlet output
+	// Each character in the input text corresponds to a "column" in the output
+	charWidths := b.findCharWidths(lines)
+
+	var result strings.Builder
+	for _, line := range lines {
+		styledLine := b.styleLineByColumns(line, charWidths)
+		result.WriteString(styledLine)
+		result.WriteString("\n")
+	}
+
+	return result.String()
+}
+
+// findCharWidths analyzes figlet output to find width of each character column
+func (b *Banner) findCharWidths(lines []string) []int {
+	if len(lines) == 0 || len(b.text) == 0 {
+		return nil
+	}
+
+	// Render each character individually to find its width
+	widths := make([]int, len(b.text))
+	for i, char := range b.text {
+		options := figlet4go.NewRenderOptions()
+		options.FontName = b.font
+		charResult, err := figletRenderer.RenderOpts(string(char), options)
+		if err != nil {
+			widths[i] = 1
+			continue
+		}
+		charLines := strings.Split(charResult, "\n")
+		if len(charLines) > 0 {
+			widths[i] = len(charLines[0])
 		}
 	}
-	return colors
+
+	return widths
 }
 
-// renderBanner generates the ASCII art banner with theme colors and random font
-func renderBanner(theme Theme, font string) string {
-	options := figlet4go.NewRenderOptions()
-	options.FontName = font
-	options.FontColor = buildColorSlice(theme, len(AppName))
-
-	result, err := figletRenderer.RenderOpts(AppName, options)
-	if err != nil {
-		// Fallback to plain text on error
-		return AppName + "\n"
+// styleLineByColumns applies accent to first char column, base to rest
+func (b *Banner) styleLineByColumns(line string, charWidths []int) string {
+	if len(charWidths) == 0 || len(line) == 0 {
+		return b.theme.Base.Render(line)
 	}
+
+	firstCharWidth := charWidths[0]
+	if firstCharWidth >= len(line) {
+		return b.theme.Accent.Render(line)
+	}
+
+	accent := line[:firstCharWidth]
+	base := line[firstCharWidth:]
+
+	return b.theme.Accent.Render(accent) + b.theme.Base.Render(base)
+}
+
+// Render generates the ASCII art banner string with theme applied
+func (b *Banner) Render() string {
+	lines, err := b.renderFiglet()
+	if err != nil {
+		return b.theme.Accent.Render(b.text) + "\n"
+	}
+
+	return b.applyTheme(lines)
+}
+
+// RenderWithTagline generates the banner with a styled tagline
+func (b *Banner) RenderWithTagline() string {
+	result := b.Render()
+
+	if b.tagline != "" {
+		taglineText := b.tagline
+		if b.version != "" {
+			taglineText = fmt.Sprintf("%s (v%s)", b.tagline, b.version)
+		}
+		result += fmt.Sprintf("  %s\n\n", b.theme.Tagline.Render(taglineText))
+	}
+
 	return result
 }
 
-// PrintBanner writes the banner to the given writer
-func PrintBanner(w io.Writer) {
-	theme := randomTheme()
-	font := randomFont()
-	fmt.Fprint(w, renderBanner(theme, font))
+// Print writes the banner to the given writer
+func (b *Banner) Print(w io.Writer) {
+	fmt.Fprint(w, b.Render())
 }
 
-// PrintBannerWithVersion writes the banner with version info to the given writer
-func PrintBannerWithVersion(w io.Writer) {
-	theme := randomTheme()
-	font := randomFont()
-	fmt.Fprint(w, renderBanner(theme, font))
+// PrintWithTagline writes the banner with tagline to the given writer
+func (b *Banner) PrintWithTagline(w io.Writer) {
+	fmt.Fprint(w, b.RenderWithTagline())
+}
 
-	// Style the tagline with the accent color
-	taglineStyle := renderer.NewStyle().
-		Foreground(lipgloss.Color(theme.Accent)).
-		Faint(true)
-	fmt.Fprintf(w, "  %s\n\n", taglineStyle.Render(fmt.Sprintf("Task management with markdown files (v%s)", Version)))
+// --- Convenience functions for backward compatibility ---
+
+// PrintBanner writes a random banner to the given writer
+func PrintBanner(w io.Writer) {
+	b := NewBanner(
+		WithText("opentask"),
+		WithRandomTheme(),
+		WithRandomFont(),
+	)
+	b.Print(w)
+}
+
+// PrintBannerWithVersion writes a random banner with version to the given writer
+func PrintBannerWithVersion(w io.Writer) {
+	b := NewBanner(
+		WithText("opentask"),
+		WithRandomTheme(),
+		WithRandomFont(),
+		WithTagline("Task management with markdown files"),
+		WithVersion(Version),
+	)
+	b.PrintWithTagline(w)
 }
