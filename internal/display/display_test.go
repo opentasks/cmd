@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zenobi-us/opentask/internal/model"
+	"github.com/opentasks/cmd/internal/model"
 )
 
 func TestTruncate(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/charmbracelet/glamour"
-	"github.com/zenobi-us/opentask/internal/display"
+	"github.com/opentasks/cmd/internal/display"
 )
 
 //go:embed view.go.tmpl

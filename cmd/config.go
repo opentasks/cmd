@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/zenobi-us/opentask/internal/config"
+	"github.com/opentasks/cmd/internal/config"
 )
 
 // configCmd represents the config command group

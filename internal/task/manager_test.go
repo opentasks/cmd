@@ -3,7 +3,7 @@ package task
 import (
 	"testing"
 
-	"github.com/zenobi-us/opentask/internal/model"
+	"github.com/opentasks/cmd/internal/model"
 )
 
 func TestDetermineInitialStatus(t *testing.T) {

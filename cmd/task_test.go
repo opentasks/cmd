@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zenobi-us/opentask/internal/model"
-	"github.com/zenobi-us/opentask/internal/query"
-	"github.com/zenobi-us/opentask/internal/storage"
+	"github.com/opentasks/cmd/internal/model"
+	"github.com/opentasks/cmd/internal/query"
+	"github.com/opentasks/cmd/internal/storage"
 )
 
 // setupTestEnvironment creates a test storage and engine with a sample task

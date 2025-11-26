@@ -11,7 +11,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/zenobi-us/opentask/internal/model"
+	"github.com/opentasks/cmd/internal/model"
 	"gopkg.in/yaml.v3"
 )
 
