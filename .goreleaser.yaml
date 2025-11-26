@@ -49,10 +49,12 @@ builds:
 
 archives:
   - id: default
-    format: tar.gz
+    formats:
+      - tar.gz
     format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
     name_template: >-
       {{ .ProjectName }}_
       {{- .Version }}_
@@ -65,7 +67,6 @@ archives:
     files:
       - README.md
       - LICENSE
-      - docs/**/*
 
 changelog:
   use: github-native
@@ -87,10 +88,10 @@ release:
   mode: keep-existing  # Don't overwrite existing
   draft: false
   footer: |
-    ## SHA256 Checksum
+    ## SHA256 Checksums
     
     ```
-    {{ .SHA256 }}
+    {{ .Checksums }}
     ```
     
     **Installation:**
