@@ -18,10 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 #v4
 
       - name: Setup environment
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac #v2
         with:
           experimental: true
           cache: true
@@ -30,7 +30,7 @@ jobs:
         run: go test -v -race -coverprofile=coverage.out ./...
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 #v4
         with:
           files: coverage.out
           fail_ci_if_error: false
@@ -40,10 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 #v4
 
       - name: Setup environment
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac #v2
         with:
           experimental: true
           cache: true
@@ -52,7 +52,7 @@ jobs:
         run: go vet ./...
 
       - name: Run staticcheck
-        uses: dominikh/staticcheck-action@v1
+        uses: dominikh/staticcheck-action@024238d2898c874f26d723e7d0ff4308c35589a2 #v1
         with:
           version: "latest"
           install-go: false
@@ -61,10 +61,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 #v4
 
       - name: Setup environment
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac #v2
         with:
           experimental: true
           cache: true
