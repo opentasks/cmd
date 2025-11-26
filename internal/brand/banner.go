@@ -9,206 +9,94 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mbndr/figlet4go"
 )
 
 // Version can be set at build time
 var Version = "dev"
 
-// ThemeType distinguishes between gradient and duotone themes
-type ThemeType int
+// AppName is the name rendered in the banner
+const AppName = "opentask"
 
-const (
-	ThemeGradient ThemeType = iota
-	ThemeDuotone
-)
+// FontName is the figlet font to use
+const FontName = "larry3d"
 
 // Theme represents a color theme for the banner
 type Theme struct {
 	Name   string
-	Type   ThemeType
-	Colors []string // gradient: top to bottom, duotone: [accent, base]
+	Accent string // first letter color
+	Base   string // remaining letters color
 }
 
 // themes is the collection of available banner themes
 var themes = []Theme{
-	// Gradient themes
-	{
-		Name:   "ocean",
-		Type:   ThemeGradient,
-		Colors: []string{"#0ea5e9", "#06b6d4", "#14b8a6", "#10b981", "#22c55e", "#84cc16"},
-	},
-	{
-		Name:   "sunset",
-		Type:   ThemeGradient,
-		Colors: []string{"#f97316", "#fb923c", "#f59e0b", "#eab308", "#facc15", "#fde047"},
-	},
-	{
-		Name:   "aurora",
-		Type:   ThemeGradient,
-		Colors: []string{"#a855f7", "#8b5cf6", "#6366f1", "#3b82f6", "#0ea5e9", "#06b6d4"},
-	},
-	{
-		Name:   "forest",
-		Type:   ThemeGradient,
-		Colors: []string{"#166534", "#15803d", "#16a34a", "#22c55e", "#4ade80", "#86efac"},
-	},
-	{
-		Name:   "fire",
-		Type:   ThemeGradient,
-		Colors: []string{"#dc2626", "#ef4444", "#f97316", "#fb923c", "#fbbf24", "#fde047"},
-	},
-	{
-		Name:   "synthwave",
-		Type:   ThemeGradient,
-		Colors: []string{"#f472b6", "#e879f9", "#c084fc", "#a78bfa", "#818cf8", "#60a5fa"},
-	},
-	{
-		Name:   "monochrome",
-		Type:   ThemeGradient,
-		Colors: []string{"#f8fafc", "#e2e8f0", "#cbd5e1", "#94a3b8", "#64748b", "#475569"},
-	},
-	{
-		Name:   "candy",
-		Type:   ThemeGradient,
-		Colors: []string{"#fb7185", "#f472b6", "#e879f9", "#c084fc", "#a78bfa", "#818cf8"},
-	},
-	{
-		Name:   "matrix",
-		Type:   ThemeGradient,
-		Colors: []string{"#4ade80", "#22c55e", "#16a34a", "#15803d", "#166534", "#14532d"},
-	},
-	{
-		Name:   "ice",
-		Type:   ThemeGradient,
-		Colors: []string{"#e0f2fe", "#bae6fd", "#7dd3fc", "#38bdf8", "#0ea5e9", "#0284c7"},
-	},
-	// Duotone themes [accent, base]
-	{
-		Name:   "duotone-ember",
-		Type:   ThemeDuotone,
-		Colors: []string{"#f97316", "#fafaf9"}, // orange accent, warm white base
-	},
-	{
-		Name:   "duotone-electric",
-		Type:   ThemeDuotone,
-		Colors: []string{"#06b6d4", "#f1f5f9"}, // cyan accent, cool white base
-	},
-	{
-		Name:   "duotone-grape",
-		Type:   ThemeDuotone,
-		Colors: []string{"#a855f7", "#e2e8f0"}, // purple accent, slate base
-	},
-	{
-		Name:   "duotone-mint",
-		Type:   ThemeDuotone,
-		Colors: []string{"#10b981", "#f0fdf4"}, // emerald accent, green-tinted white
-	},
-	{
-		Name:   "duotone-rose",
-		Type:   ThemeDuotone,
-		Colors: []string{"#f43f5e", "#fafafa"}, // rose accent, neutral white
-	},
-	{
-		Name:   "duotone-gold",
-		Type:   ThemeDuotone,
-		Colors: []string{"#eab308", "#fefce8"}, // yellow accent, warm cream base
-	},
-	{
-		Name:   "duotone-midnight",
-		Type:   ThemeDuotone,
-		Colors: []string{"#3b82f6", "#94a3b8"}, // blue accent, slate base
-	},
-	{
-		Name:   "duotone-neon",
-		Type:   ThemeDuotone,
-		Colors: []string{"#22d3ee", "#0f172a"}, // bright cyan accent, dark slate base
-	},
-	{
-		Name:   "duotone-blood",
-		Type:   ThemeDuotone,
-		Colors: []string{"#dc2626", "#1c1917"}, // red accent, dark stone base
-	},
-	{
-		Name:   "duotone-hacker",
-		Type:   ThemeDuotone,
-		Colors: []string{"#22c55e", "#052e16"}, // green accent, dark green base
-	},
+	{Name: "electric", Accent: "#06b6d4", Base: "#94a3b8"},   // cyan accent, slate base
+	{Name: "ember", Accent: "#f97316", Base: "#fafaf9"},      // orange accent, warm white
+	{Name: "grape", Accent: "#a855f7", Base: "#e2e8f0"},      // purple accent, light slate
+	{Name: "mint", Accent: "#10b981", Base: "#f0fdf4"},       // emerald accent, green-white
+	{Name: "rose", Accent: "#f43f5e", Base: "#fafafa"},       // rose accent, white
+	{Name: "gold", Accent: "#eab308", Base: "#fefce8"},       // yellow accent, cream
+	{Name: "midnight", Accent: "#3b82f6", Base: "#94a3b8"},   // blue accent, slate
+	{Name: "neon", Accent: "#22d3ee", Base: "#334155"},       // bright cyan, dark slate
+	{Name: "blood", Accent: "#dc2626", Base: "#d6d3d1"},      // red accent, stone
+	{Name: "hacker", Accent: "#22c55e", Base: "#166534"},     // bright green, dark green
+	{Name: "sunset", Accent: "#fb923c", Base: "#fef3c7"},     // orange, amber-white
+	{Name: "ocean", Accent: "#0ea5e9", Base: "#e0f2fe"},      // sky blue, light blue
+	{Name: "synthwave", Accent: "#e879f9", Base: "#c084fc"},  // fuchsia, purple
+	{Name: "monochrome", Accent: "#f8fafc", Base: "#64748b"}, // white accent, slate base
 }
 
-// renderer is the lipgloss renderer for stdout
+// renderer is the lipgloss renderer for stdout (for tagline)
 var renderer = lipgloss.NewRenderer(os.Stdout)
+
+// figletRenderer is the shared figlet renderer
+var figletRenderer = figlet4go.NewAsciiRender()
 
 // randomTheme returns a random theme
 func randomTheme() Theme {
 	return themes[rand.Intn(len(themes))]
 }
 
-// bannerLines are the raw ASCII art lines
-var bannerLines = []string{
-	`                         __            __  `,
-	`  ____  ____  ___  ____  / /_____ ____ / /__`,
-	` / __ \/ __ \/ _ \/ __ \/ __/ __ '/ __/ //_/`,
-	`/ /_/ / /_/ /  __/ / / / /_/ /_/ (__  )  <  `,
-	`\____/ .___/\___/_/ /_/\__/\__,_/____/_/|_| `,
-	`    /_/                                     `,
+// hexToColor converts a hex color string to figlet4go.Color
+func hexToColor(hex string) figlet4go.Color {
+	// Strip # prefix if present
+	hex = strings.TrimPrefix(hex, "#")
+	color, err := figlet4go.NewTrueColorFromHexString(hex)
+	if err != nil {
+		// Fallback to white on error
+		color, _ = figlet4go.NewTrueColorFromHexString("ffffff")
+	}
+	return color
 }
 
-// firstCharIndex returns the index of the first non-space character
-func firstCharIndex(s string) int {
-	for i, r := range s {
-		if r != ' ' {
-			return i
+// buildColorSlice creates a color slice for figlet4go with accent on first char
+func buildColorSlice(theme Theme, textLen int) []figlet4go.Color {
+	colors := make([]figlet4go.Color, textLen)
+	accent := hexToColor(theme.Accent)
+	base := hexToColor(theme.Base)
+
+	for i := 0; i < textLen; i++ {
+		if i == 0 {
+			colors[i] = accent
+		} else {
+			colors[i] = base
 		}
 	}
-	return -1
+	return colors
 }
 
-// renderGradient renders the banner with gradient colors
-func renderGradient(theme Theme) string {
-	var result string
-	for i, line := range bannerLines {
-		colorIdx := i
-		if colorIdx >= len(theme.Colors) {
-			colorIdx = len(theme.Colors) - 1
-		}
-		style := renderer.NewStyle().Foreground(lipgloss.Color(theme.Colors[colorIdx]))
-		result += style.Render(line) + "\n"
-	}
-	return result
-}
-
-// renderDuotone renders the banner with first-char accent and rest in base color
-func renderDuotone(theme Theme) string {
-	accent := renderer.NewStyle().Foreground(lipgloss.Color(theme.Colors[0])).Bold(true)
-	base := renderer.NewStyle().Foreground(lipgloss.Color(theme.Colors[1]))
-
-	var result string
-	for _, line := range bannerLines {
-		idx := firstCharIndex(line)
-		if idx == -1 {
-			// All spaces
-			result += line + "\n"
-			continue
-		}
-
-		// Build: leading spaces + accent char + rest in base
-		var sb strings.Builder
-		sb.WriteString(line[:idx])                       // leading spaces
-		sb.WriteString(accent.Render(string(line[idx]))) // first char accented
-		sb.WriteString(base.Render(line[idx+1:]))        // rest in base
-		result += sb.String() + "\n"
-	}
-	return result
-}
-
-// renderBanner applies a theme to the banner text
+// renderBanner generates the ASCII art banner with theme colors
 func renderBanner(theme Theme) string {
-	switch theme.Type {
-	case ThemeDuotone:
-		return renderDuotone(theme)
-	default:
-		return renderGradient(theme)
+	options := figlet4go.NewRenderOptions()
+	options.FontName = FontName
+	options.FontColor = buildColorSlice(theme, len(AppName))
+
+	result, err := figletRenderer.RenderOpts(AppName, options)
+	if err != nil {
+		// Fallback to plain text on error
+		return AppName + "\n"
 	}
+	return result
 }
 
 // PrintBanner writes the banner to the given writer
@@ -222,15 +110,9 @@ func PrintBannerWithVersion(w io.Writer) {
 	theme := randomTheme()
 	fmt.Fprint(w, renderBanner(theme))
 
-	// Style the tagline
-	var taglineColor string
-	if theme.Type == ThemeDuotone {
-		taglineColor = theme.Colors[0] // use accent for tagline
-	} else {
-		taglineColor = theme.Colors[len(theme.Colors)-1]
-	}
+	// Style the tagline with the accent color
 	taglineStyle := renderer.NewStyle().
-		Foreground(lipgloss.Color(taglineColor)).
+		Foreground(lipgloss.Color(theme.Accent)).
 		Faint(true)
 	fmt.Fprintf(w, "  %s\n\n", taglineStyle.Render(fmt.Sprintf("Task management with markdown files (v%s)", Version)))
 }
