@@ -59,7 +59,7 @@ path = "tasks"
 		}
 
 		// Cleanup
-		Store.Close()
+		_ = Store.Close()
 		Store = nil
 		Engine = nil
 	})
@@ -86,7 +86,7 @@ path = "tasks"
 		// and it should find the parent config (not fail looking for local config)
 
 		// Cleanup
-		Store.Close()
+		_ = Store.Close()
 		Store = nil
 		Engine = nil
 	})
@@ -149,7 +149,7 @@ path = "config2-tasks"
 	// The key test: explicit config should be used instead of discovered config
 
 	// Cleanup
-	Store.Close()
+	_ = Store.Close()
 	Store = nil
 	Engine = nil
 }

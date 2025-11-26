@@ -31,7 +31,7 @@ func setupQueryEngine(ctx context.Context, t *testing.T) (*QueryEngine, storage.
 
 func TestNewQueryEngine(t *testing.T) {
 	store := storage.NewMemoryStorage()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	qe := NewQueryEngine(store)
 	if qe == nil {
@@ -42,7 +42,7 @@ func TestNewQueryEngine(t *testing.T) {
 func TestFindByID(t *testing.T) {
 	ctx := context.Background()
 	qe, store := setupQueryEngine(ctx, t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	task := newTestTask(1, "Test Task", model.TypeTask, "todo")
 	if err := store.SaveTask(ctx, task); err != nil {
@@ -62,7 +62,7 @@ func TestFindByID(t *testing.T) {
 func TestFindByIDNotFound(t *testing.T) {
 	ctx := context.Background()
 	qe, store := setupQueryEngine(ctx, t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	_, err := qe.FindByID(ctx, 999)
 	if err != storage.ErrTaskNotFound {
@@ -73,7 +73,7 @@ func TestFindByIDNotFound(t *testing.T) {
 func TestGetAllTasks(t *testing.T) {
 	ctx := context.Background()
 	qe, store := setupQueryEngine(ctx, t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Add test tasks
 	for i := 1; i <= 5; i++ {
@@ -96,7 +96,7 @@ func TestGetAllTasks(t *testing.T) {
 func TestGetTasksByType(t *testing.T) {
 	ctx := context.Background()
 	qe, store := setupQueryEngine(ctx, t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Add tasks of different types
 	epic := newTestTask(1, "Epic", model.TypeEpic, "todo")
@@ -130,7 +130,7 @@ func TestGetTasksByType(t *testing.T) {
 func TestGetTasksByStatus(t *testing.T) {
 	ctx := context.Background()
 	qe, store := setupQueryEngine(ctx, t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Add tasks with different statuses
 	task1 := newTestTask(1, "Task 1", model.TypeTask, "todo")
@@ -157,7 +157,7 @@ func TestGetTasksByStatus(t *testing.T) {
 func TestGetTasksByTag(t *testing.T) {
 	ctx := context.Background()
 	qe, store := setupQueryEngine(ctx, t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Add tasks with different tags
 	now := time.Now().UTC()
@@ -211,7 +211,7 @@ func TestGetTasksByTag(t *testing.T) {
 func TestListTasksWithMultipleFilters(t *testing.T) {
 	ctx := context.Background()
 	qe, store := setupQueryEngine(ctx, t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Add tasks
 	now := time.Now().UTC()
@@ -269,7 +269,7 @@ func TestListTasksWithMultipleFilters(t *testing.T) {
 func TestFindChildren(t *testing.T) {
 	ctx := context.Background()
 	qe, store := setupQueryEngine(ctx, t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Create parent and children
 	epic := newTestTask(1, "Epic", model.TypeEpic, "todo")
@@ -303,7 +303,7 @@ func TestFindChildren(t *testing.T) {
 func TestFindBlocking(t *testing.T) {
 	ctx := context.Background()
 	qe, store := setupQueryEngine(ctx, t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Create epic task
 	blocker := newTestTask(1, "Blocker", model.TypeTask, "todo")
@@ -345,7 +345,7 @@ func TestFindBlocking(t *testing.T) {
 func TestFindBlockedBy(t *testing.T) {
 	ctx := context.Background()
 	qe, store := setupQueryEngine(ctx, t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Create blocking relationships
 	blocker1 := newTestTask(1, "Blocker 1", model.TypeTask, "todo")
@@ -376,7 +376,7 @@ func TestFindBlockedBy(t *testing.T) {
 func TestFindRelated(t *testing.T) {
 	ctx := context.Background()
 	qe, store := setupQueryEngine(ctx, t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	// Create related tasks
 	task1 := newTestTask(1, "Task 1", model.TypeTask, "todo")

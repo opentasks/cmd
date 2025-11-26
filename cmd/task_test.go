@@ -50,7 +50,7 @@ func setupTestEnvironment(t *testing.T) (storage.BaseStorage, *query.QueryEngine
 // TestTaskUpdateTitleChangesFilename verifies that updating a title creates a new file
 func TestTaskUpdateTitleChangesFilename(t *testing.T) {
 	store, _, tmpDir := setupTestEnvironment(t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 
@@ -89,7 +89,7 @@ func TestTaskUpdateTitleChangesFilename(t *testing.T) {
 // TestTaskLoadAfterTitleUpdate verifies data persists correctly after title update
 func TestTaskLoadAfterTitleUpdate(t *testing.T) {
 	store, _, _ := setupTestEnvironment(t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 
@@ -126,7 +126,7 @@ func TestTaskLoadAfterTitleUpdate(t *testing.T) {
 // TestTaskAddTagsPreservesExisting verifies that adding tags doesn't lose existing ones
 func TestTaskAddTagsPreservesExisting(t *testing.T) {
 	store, _, _ := setupTestEnvironment(t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 
@@ -163,7 +163,7 @@ func TestTaskAddTagsPreservesExisting(t *testing.T) {
 // TestTaskRemoveTagsUpdatesCorrectly verifies tag removal works
 func TestTaskRemoveTagsUpdatesCorrectly(t *testing.T) {
 	store, _, _ := setupTestEnvironment(t)
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 

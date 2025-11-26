@@ -24,7 +24,7 @@ func newTestTask(id int, title, taskType string) *model.Task {
 
 func TestMemoryStorageSaveAndLoad(t *testing.T) {
 	store := NewMemoryStorage()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 	task := newTestTask(1, "Test Task", model.TypeTask)
@@ -47,7 +47,7 @@ func TestMemoryStorageSaveAndLoad(t *testing.T) {
 
 func TestMemoryStorageLoadNonexistent(t *testing.T) {
 	store := NewMemoryStorage()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 	_, err := store.LoadTask(ctx, 999)
@@ -59,7 +59,7 @@ func TestMemoryStorageLoadNonexistent(t *testing.T) {
 
 func TestMemoryStorageDelete(t *testing.T) {
 	store := NewMemoryStorage()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 	task := newTestTask(1, "Test Task", model.TypeTask)
@@ -83,7 +83,7 @@ func TestMemoryStorageDelete(t *testing.T) {
 
 func TestMemoryStorageDeleteNonexistent(t *testing.T) {
 	store := NewMemoryStorage()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 	err := store.DeleteTask(ctx, 999)
@@ -95,7 +95,7 @@ func TestMemoryStorageDeleteNonexistent(t *testing.T) {
 
 func TestMemoryStorageListTasks(t *testing.T) {
 	store := NewMemoryStorage()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 
@@ -125,7 +125,7 @@ func TestMemoryStorageListTasks(t *testing.T) {
 
 func TestMemoryStorageListTasksWithFilter(t *testing.T) {
 	store := NewMemoryStorage()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 
@@ -161,7 +161,7 @@ func TestMemoryStorageListTasksWithFilter(t *testing.T) {
 
 func TestMemoryStorageNextID(t *testing.T) {
 	store := NewMemoryStorage()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 
@@ -186,7 +186,7 @@ func TestMemoryStorageNextID(t *testing.T) {
 
 func TestMemoryStorageUpdate(t *testing.T) {
 	store := NewMemoryStorage()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 	task := newTestTask(1, "Original Title", model.TypeTask)
@@ -220,7 +220,7 @@ func TestMemoryStorageUpdate(t *testing.T) {
 
 func TestMemoryStorageGetRelated(t *testing.T) {
 	store := NewMemoryStorage()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 
@@ -271,7 +271,7 @@ func TestMemoryStorageGetRelated(t *testing.T) {
 
 func TestMemoryStorageEmptyListTasks(t *testing.T) {
 	store := NewMemoryStorage()
-	defer store.Close()
+	defer func() { _ = store.Close() }()
 
 	ctx := context.Background()
 

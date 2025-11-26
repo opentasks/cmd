@@ -106,7 +106,7 @@ func TestLoadConfigNonexistent(t *testing.T) {
 	}
 
 	if config == nil {
-		t.Error("LoadConfig() returned nil config")
+		t.Fatal("LoadConfig() returned nil config")
 	}
 
 	if config.Workflow.Initial != "backlog" {

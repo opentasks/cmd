@@ -227,7 +227,7 @@ func TestMergeConfigsEmpty(t *testing.T) {
 	}
 
 	if merged == nil {
-		t.Error("MergeConfigs(empty) returned nil")
+		t.Fatal("MergeConfigs(empty) returned nil")
 	}
 
 	// Should have defaults

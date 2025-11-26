@@ -20,14 +20,14 @@ func EditFile(initialContent string) (string, error) {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
 	}
 	tmpFilePath := tmpFile.Name()
-	defer os.Remove(tmpFilePath)
+	defer func() { _ = os.Remove(tmpFilePath) }()
 
 	// Write initial content to the temp file
 	if _, err := tmpFile.WriteString(initialContent); err != nil {
-		tmpFile.Close()
+		_ = tmpFile.Close()
 		return "", fmt.Errorf("failed to write temp file: %w", err)
 	}
-	tmpFile.Close()
+	_ = tmpFile.Close()
 
 	// Launch the editor
 	cmd := exec.Command(editor, tmpFilePath)

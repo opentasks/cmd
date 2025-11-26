@@ -42,7 +42,7 @@ organizing them hierarchically, and tracking relationships.`,
 	PersistentPostRunE: cleanupStorage,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Show help (which includes banner) when called with no subcommand
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 
@@ -148,8 +148,8 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "Enable verbose output")
 
 	// Bind flags to viper
-	viper.BindPFlag("project.path", rootCmd.PersistentFlags().Lookup("path"))
-	viper.BindPFlag("config.path", rootCmd.PersistentFlags().Lookup("config"))
+	_ = viper.BindPFlag("project.path", rootCmd.PersistentFlags().Lookup("path"))
+	_ = viper.BindPFlag("config.path", rootCmd.PersistentFlags().Lookup("config"))
 
 	// Custom help template with banner for root command only
 	defaultHelp := rootCmd.HelpFunc()
