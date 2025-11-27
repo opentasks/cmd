@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+mise install
+hk install
+go mod tidy

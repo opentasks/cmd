@@ -1,0 +1,105 @@
+amends "package://github.com/jdx/hk/releases/download/v1.25.0/hk@1.25.0#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v1.25.0/hk@1.25.0#/Builtins.pkl"
+
+// ===============================================
+// Security-Focused Git Hooks for OpenTasks
+// ===============================================
+//
+// Configured checks:
+// - Secret detection (gitleaks)
+// - Go security scanning (gosec)
+// - Vulnerability checks (govulncheck)
+// - Code quality (merge conflicts, private keys, trailing whitespace)
+// - Go formatting (gofmt, goimports)
+//
+// To activate: uncomment the hooks sections below
+// Then run: mise exec -- hk install
+//
+// See .memory/guide-002-hk-security-setup.md for full instructions
+// ===============================================
+
+local security_linters = new Mapping<String, Step> {
+    // Secret detection - blocks commits with API keys, tokens, passwords
+    ["gitleaks"] {
+        glob = "*"
+        check = "gitleaks detect --source . --no-git --exit-code 1"
+    }
+
+    // Go security scanning - uses builtin
+    ["gosec"] = Builtins.go_sec
+
+    // Go vulnerability checking - uses builtin
+    ["govulncheck"] = Builtins.go_vuln_check
+}
+
+local go_formatters = new Mapping<String, Step> {
+    // Go formatting - uses builtin
+    ["gofmt"] = Builtins.go_fmt
+
+    // Go imports - uses builtin
+    ["goimports"] = Builtins.go_imports
+}
+
+local quality_checks = new Mapping<String, Step> {
+    // Trailing whitespace - uses builtin
+    ["trailing-whitespace"] = Builtins.trailing_whitespace
+
+    // Merge conflict markers - uses builtin
+    ["check-merge-conflict"] = Builtins.check_merge_conflict
+
+    // Private key detection - uses builtin
+    ["detect-private-key"] = Builtins.detect_private_key
+}
+
+// ===============================================
+// HOOKS CONFIGURATION (All commented out by default)
+// ===============================================
+//
+// Uncomment the sections below to activate hooks.
+// Then run: mise exec -- hk install
+//
+// ===============================================
+
+// Pre-commit hook: Fast checks on staged files only
+// Runs: secret detection, Go security, formatting, quality checks
+//
+hooks {
+    ["pre-commit"] {
+        fix = true    // Auto-fix formatting issues
+        stash = "git" // Stash unstaged changes during fixes
+        steps {
+            ...security_linters
+            ...go_formatters
+            ...quality_checks
+        }
+    }
+    ["fix"] {
+        fix = true
+        steps {
+            ...go_formatters
+        }
+    }
+    ["check"] {
+        steps {
+            ...security_linters
+            ...quality_checks
+        }
+    }
+}
+
+// Pre-push hook: Slower, more thorough checks
+// Runs: full test suite, full git history scan for secrets
+
+// hooks {
+//     ["pre-push"] {
+//         steps {
+//             ["test"] {
+//                 check = "mise run test"
+//                 exclusive = true
+//             }
+//             ["gitleaks-history"] {
+//                 check = "gitleaks detect --source . -v --exit-code 1"
+//             }
+//         }
+//     }
+// }
