@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/opentasks/cmd/internal/brand"
 	"github.com/opentasks/cmd/internal/config"
 	"github.com/opentasks/cmd/internal/query"
 	"github.com/opentasks/cmd/internal/storage"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -158,7 +158,7 @@ func init() {
 			b := brand.NewBanner(
 				brand.WithText("opentask"),
 				brand.WithRandomTheme(),
-				brand.WithRandomFont(),
+				brand.WithFont(brand.FontSlant),
 				brand.WithTagline("Task management with markdown files"),
 				brand.WithVersion(Version),
 			)
