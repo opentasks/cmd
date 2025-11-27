@@ -34,6 +34,39 @@
 - use `grep -r "<search-term>" .memory/` to find relevant notes
 - use `grep -r "TODO" TODO.md` to find outstanding tasks
 
+## In-Memoria Intelligence (Codebase Navigation)
+
+**When to use In-Memoria** (prefer over manual grep/glob):
+- [ALWAYS] When asked "where should I..." or "what files..." → Use `memoria_predict_coding_approach`
+- [ALWAYS] When searching for patterns across codebase → Use `memoria_search_codebase`
+- [START OF SESSION] Get project overview → Use `memoria_get_project_blueprint`
+- [BEFORE REFACTORING] Check existing patterns → Use `memoria_get_pattern_recommendations`
+
+**Quick commands:**
+```bash
+# Project overview (run once per session)
+memoria_get_project_blueprint(path="/mnt/Store/Projects/Mine/Github/opentasks")
+
+# Find files for a task
+memoria_predict_coding_approach(problemDescription="add task filtering by assignee")
+
+# Search for pattern usage
+memoria_search_codebase(query="ProjectService", type="text")
+
+# Get recommended patterns for new code
+memoria_get_pattern_recommendations(problemDescription="create new service class")
+```
+
+**Benefits:**
+- ✅ 10-100x faster than manual grep/find
+- ✅ Learns project patterns (Factory, Builder, Service patterns)
+- ✅ No more "exploring to understand" - instant routing
+- ✅ Confidence scores guide decisions
+
+**When NOT to use:**
+- Reading specific known files → Use `read` tool directly
+- Exact file path operations → Use bash/filesystem tools
+
 ## Execution Steps
 
 1. always read `.memory/summary.md` first to understand successful outcomes so far.
@@ -52,10 +85,10 @@
 
 ## Current Work Status
 
-**Phase**: Ready for Phase 3 Planning
-**Status**: ✅ Phase 2 COMPLETE & ARCHIVED
-**Worker**: (awaiting Phase 3 assignment)
-**Last Updated**: 2025-11-23
+**Phase**: Phase 3 COMPLETE
+**Status**: ✅ Project subcommand refactored
+**Worker**: OpenCode Agent
+**Last Updated**: 2025-11-27
 
 ### Completed Phases
 
@@ -72,6 +105,20 @@
 - 5 atomic commits with conventional messages
 - See `.memory/summary.md` for complete details
 
+**Phase 3: Project Subcommand Refactoring** ✅
+- ProjectService: 94 LOC, 11 tests (stateful design)
+- GlobalConfigSaver: 30 LOC, 4 tests
+- cmd/project.go reduced: 332 → 285 LOC (47 line reduction)
+- 362 new test LOC (100% coverage)
+- Commits: `2f01fe1`, `2c241a4`
+- Pattern: Stateful services (instantiated with config)
+
 ### Next Phase
 
-Phase 3 planning available in TODO.md with future opportunities.
+**Phase 4 Options:**
+1. Task command refactoring (cmd/task.go - 279 LOC)
+2. API layer for programmatic access
+3. Fix gosec hook configuration
+4. Additional domain extractions
+
+See TODO.md for detailed opportunities.
