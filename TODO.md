@@ -6,13 +6,22 @@
 
 All tasks implemented, tested, and committed. See `.memory/summary.md` for full completion details.
 
-## Phase 3: Future Opportunities
+## Phase 4: Security Fixes & Task Refactoring
 
-The following opportunities exist for future phases:
+### Completed
+- [x] Fix gosec hook configuration (2025-11-27)
+- [x] Install govulncheck via mise (2025-11-27)
 
-- [ ] Refactor remaining command handlers following same pattern
+### Security Issues (gosec findings)
+- [ ] Address 3x HIGH severity: Weak random in banner.go (lines 94, 100, 107) - use crypto/rand
+- [ ] Address 9x MEDIUM severity: File permissions too open
+  - [ ] MkdirAll should use 0750 not 0755 (3 locations)
+  - [ ] WriteFile should use 0600 not 0644 (3 locations)
+  - [ ] File inclusion via variable (3 locations - may be false positive)
+
+### Future Opportunities
+- [ ] Refactor cmd/task.go (279 LOC) - Extract TaskCreator, TaskUpdater services
 - [ ] Extract more complex command logic to internal packages
-- [ ] Continue reducing cmd/ file sizes while maintaining readability
 - [ ] Consider API layer for programmatic access to domain logic
 - [ ] Add support for more template types
 - [ ] Implement configuration hot-reload capability
