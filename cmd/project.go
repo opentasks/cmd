@@ -6,10 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/BurntSushi/toml"
-	"github.com/spf13/cobra"
 	"github.com/opentasks/cmd/internal/config"
 	"github.com/opentasks/cmd/internal/project"
+	"github.com/spf13/cobra"
 )
 
 // projectCmd represents the project command group
@@ -49,7 +48,7 @@ Example:
 			targetPath = cwd
 		}
 
-		// Resolve path using project manager
+		// Resolve path
 		pm := project.NewManager()
 		resolvedPath, err := pm.ResolvePath(targetPath)
 		if err != nil {
@@ -73,26 +72,15 @@ Example:
 			}
 		}
 
-		// Find project by ID
-		var proj *config.GlobalProjectConfig
-		for i := range globalConfig.Projects {
-			if globalConfig.Projects[i].ID == projectID {
-				proj = &globalConfig.Projects[i]
-				break
-			}
-		}
-
-		if proj == nil {
-			return fmt.Errorf("project not found: %s", projectID)
-		}
-
-		// Add context path
-		if err := proj.AddContextPath(resolvedPath); err != nil {
+		// Use service to attach context
+		svc := config.NewProjectService(globalConfig)
+		if err := svc.AttachContext(projectID, resolvedPath); err != nil {
 			return fmt.Errorf("failed to add context path: %w", err)
 		}
 
 		// Save global config
-		if err := saveGlobalConfig(globalPath, globalConfig); err != nil {
+		saver := config.NewGlobalConfigSaver()
+		if err := saver.Save(globalPath, globalConfig); err != nil {
 			return err
 		}
 
@@ -130,7 +118,7 @@ Example:
 			targetPath = cwd
 		}
 
-		// Resolve path using project manager
+		// Resolve path
 		pm := project.NewManager()
 		resolvedPath, err := pm.ResolvePath(targetPath)
 		if err != nil {
@@ -152,26 +140,15 @@ Example:
 			return fmt.Errorf("global config not found at %s", globalPath)
 		}
 
-		// Find project by ID
-		var proj *config.GlobalProjectConfig
-		for i := range globalConfig.Projects {
-			if globalConfig.Projects[i].ID == projectID {
-				proj = &globalConfig.Projects[i]
-				break
-			}
-		}
-
-		if proj == nil {
-			return fmt.Errorf("project not found: %s", projectID)
-		}
-
-		// Remove context path
-		if err := proj.RemoveContextPath(resolvedPath); err != nil {
+		// Use service to detach context
+		svc := config.NewProjectService(globalConfig)
+		if err := svc.DetachContext(projectID, resolvedPath); err != nil {
 			return fmt.Errorf("failed to remove context path: %w", err)
 		}
 
 		// Save global config
-		if err := saveGlobalConfig(globalPath, globalConfig); err != nil {
+		saver := config.NewGlobalConfigSaver()
+		if err := saver.Save(globalPath, globalConfig); err != nil {
 			return err
 		}
 
@@ -249,17 +226,9 @@ Example:
 			return fmt.Errorf("global config not found at %s", globalPath)
 		}
 
-		// Find project by ID
-		projectIndex := -1
-		var proj *config.GlobalProjectConfig
-		for i := range globalConfig.Projects {
-			if globalConfig.Projects[i].ID == projectID {
-				projectIndex = i
-				proj = &globalConfig.Projects[i]
-				break
-			}
-		}
-
+		// Use service to get project for confirmation
+		svc := config.NewProjectService(globalConfig)
+		proj := svc.GetProject(projectID)
 		if proj == nil {
 			return fmt.Errorf("project not found: %s", projectID)
 		}
@@ -287,36 +256,20 @@ Example:
 			return nil
 		}
 
-		// Remove project from slice
-		globalConfig.Projects = append(globalConfig.Projects[:projectIndex], globalConfig.Projects[projectIndex+1:]...)
-
-		// Clear active project if it was the removed project
-		if globalConfig.ActiveProject == projectID {
-			globalConfig.ActiveProject = ""
+		// Use service to remove project
+		if err := svc.RemoveProject(projectID); err != nil {
+			return err
 		}
 
 		// Save global config
-		if err := saveGlobalConfig(globalPath, globalConfig); err != nil {
+		saver := config.NewGlobalConfigSaver()
+		if err := saver.Save(globalPath, globalConfig); err != nil {
 			return err
 		}
 
 		fmt.Printf("✓ Removed project %s\n", projectID)
 		return nil
 	},
-}
-
-// saveGlobalConfig saves the global config to file
-func saveGlobalConfig(path string, cfg *config.OpentaskGlobalConfigFile) error {
-	data, err := toml.Marshal(cfg)
-	if err != nil {
-		return fmt.Errorf("failed to marshal config: %w", err)
-	}
-
-	if err := os.WriteFile(path, data, 0644); err != nil {
-		return fmt.Errorf("failed to write config file: %w", err)
-	}
-
-	return nil
 }
 
 func init() {
