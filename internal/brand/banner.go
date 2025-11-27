@@ -2,10 +2,11 @@
 package brand
 
 import (
+	"crypto/rand"
 	"embed"
+	"encoding/binary"
 	"fmt"
 	"io"
-	"math/rand"
 	"path/filepath"
 	"strings"
 
@@ -97,15 +98,27 @@ func WithVersion(version string) Option {
 // WithRandomTheme selects a random theme
 func WithRandomTheme() Option {
 	return func(b *Banner) {
-		b.theme = Themes[rand.Intn(len(Themes))]
+		b.theme = Themes[secureRandInt(len(Themes))]
 	}
 }
 
 // WithRandomFont selects a random font
 func WithRandomFont() Option {
 	return func(b *Banner) {
-		b.font = string(Fonts[rand.Intn(len(Fonts))])
+		b.font = string(Fonts[secureRandInt(len(Fonts))])
 	}
+}
+
+// secureRandInt returns a cryptographically secure random int in [0, max)
+func secureRandInt(max int) int {
+	if max <= 0 {
+		return 0
+	}
+	var n uint32
+	if err := binary.Read(rand.Reader, binary.BigEndian, &n); err != nil {
+		return 0 // Fallback on error
+	}
+	return int(n) % max
 }
 
 // NewBanner creates a new Banner with the given options

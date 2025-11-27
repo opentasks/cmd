@@ -8,16 +8,15 @@ All tasks implemented, tested, and committed. See `.memory/summary.md` for full 
 
 ## Phase 4: Security Fixes & Task Refactoring
 
-### Completed
-- [x] Fix gosec hook configuration (2025-11-27)
-- [x] Install govulncheck via mise (2025-11-27)
-
-### Security Issues (gosec findings)
-- [ ] Address 3x HIGH severity: Weak random in banner.go (lines 94, 100, 107) - use crypto/rand
-- [ ] Address 9x MEDIUM severity: File permissions too open
-  - [ ] MkdirAll should use 0750 not 0755 (3 locations)
-  - [ ] WriteFile should use 0600 not 0644 (3 locations)
-  - [ ] File inclusion via variable (3 locations - may be false positive)
+### Completed Security Fixes (2025-11-27)
+- [x] Fix gosec hook configuration
+- [x] Install govulncheck via mise
+- [x] Fix 3x HIGH: Weak random in banner.go → use crypto/rand (12 → 3 issues)
+- [x] Fix 3x MkdirAll permissions: 0755 → 0750
+- [x] Fix 3x WriteFile permissions: 0644 → 0600
+- [x] Review remaining 3x MEDIUM issues → acceptable for CLI tool
+  - G204: $EDITOR subprocess launch (legitimate use case)
+  - G304: File operations (bounded by basePath, safe for CLI)
 
 ### Future Opportunities
 - [ ] Refactor cmd/task.go (279 LOC) - Extract TaskCreator, TaskUpdater services

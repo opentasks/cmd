@@ -1,8 +1,6 @@
 package brand
 
 import (
-	"math/rand"
-
 	"github.com/charmbracelet/lipgloss"
 	goghthemes "github.com/willyv3/gogh-themes/lipgloss"
 )
@@ -91,7 +89,7 @@ func init() {
 
 // RandomTheme returns a random theme from the curated list
 func RandomTheme() Theme {
-	return Themes[rand.Intn(len(Themes))]
+	return Themes[secureRandInt(len(Themes))]
 }
 
 // AllGoghThemes returns all 361 gogh themes as banner Themes
