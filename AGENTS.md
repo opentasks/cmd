@@ -29,6 +29,11 @@
 - [git] when committing changes, follow conventional commit guidelines.
 - [git] Use clear commit messages referencing relevant files for changes.
 
+## Searching Memory
+
+- use `grep -r "<search-term>" .memory/` to find relevant notes
+- use `grep -r "TODO" TODO.md` to find outstanding tasks
+
 ## Execution Steps
 
 1. always read `.memory/summary.md` first to understand successful outcomes so far.
@@ -47,9 +52,9 @@
 
 ## Current Work Status
 
-**Phase**: Ready for Phase 3 Planning  
-**Status**: ✅ Phase 2 COMPLETE & ARCHIVED  
-**Worker**: (awaiting Phase 3 assignment)  
+**Phase**: Ready for Phase 3 Planning
+**Status**: ✅ Phase 2 COMPLETE & ARCHIVED
+**Worker**: (awaiting Phase 3 assignment)
 **Last Updated**: 2025-11-23
 
 ### Completed Phases
