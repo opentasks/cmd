@@ -85,10 +85,10 @@ memoria_get_pattern_recommendations(problemDescription="create new service class
 
 ## Current Work Status
 
-**Phase**: Phase 3 COMPLETE
-**Status**: ✅ Project subcommand refactored
+**Phase**: 5 - Task Command Refactoring (IN PROGRESS)
+**Status**: 🔄 Service layer complete, cmd integration pending
 **Worker**: OpenCode Agent
-**Last Updated**: 2025-11-27
+**Last Updated**: 2025-11-28
 
 ### Completed Phases
 
@@ -113,12 +113,25 @@ memoria_get_pattern_recommendations(problemDescription="create new service class
 - Commits: `2f01fe1`, `2c241a4`
 - Pattern: Stateful services (instantiated with config)
 
+**Phase 5: Task Command Refactoring** 🔄 (2025-11-28)
+- ✅ Research complete: 480-line analysis (`.memory/research-phase5-task-refactoring.md`)
+- ✅ ID Parser: 15 LOC + 56 test LOC (commit: `9d0a014`)
+- ✅ TaskService: 157 LOC + 210 test LOC (commit: `372771a`)
+  - 5 CRUD methods with interface-based DI
+  - Pattern: TaskEngine interface for testability
+- ⏳ **PENDING**: Refactor cmd/task.go (5 commands, ~120 LOC reduction)
+
 ### Next Phase
 
-**Phase 4 Options:**
-1. Task command refactoring (cmd/task.go - 279 LOC)
-2. API layer for programmatic access
-3. Fix gosec hook configuration
-4. Additional domain extractions
+**Phase 5 Completion** (Next session - 1-2 hours):
+1. Refactor cmd/task.go to use TaskService
+2. Run full test suite and verify coverage
+3. Final commit
+4. Update completion metrics
+
+**Phase 6 Options**:
+1. API layer for programmatic access (builds on TaskService)
+2. Additional command extractions
+3. Performance optimizations
 
 See TODO.md for detailed opportunities.
