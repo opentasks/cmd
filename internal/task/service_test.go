@@ -96,11 +96,6 @@ var (
 	errMockDelete = errors.New("mock DeleteTask error")
 )
 
-// Helper to create string pointer
-func strPtr(s string) *string {
-	return &s
-}
-
 // Simplified tests - focus on critical paths given time constraints
 func TestService_Create_Success(t *testing.T) {
 	mockEngine := &MockEngine{
