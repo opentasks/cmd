@@ -4,7 +4,6 @@ package brand
 import (
 	"crypto/rand"
 	"embed"
-	"encoding/binary"
 	"fmt"
 	"io"
 	"math/big"
