@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math/big"
 	"path/filepath"
 	"strings"
 
@@ -114,11 +115,11 @@ func secureRandInt(max int) int {
 	if max <= 0 {
 		return 0
 	}
-	var n uint32
-	if err := binary.Read(rand.Reader, binary.BigEndian, &n); err != nil {
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	if err != nil {
 		return 0 // Fallback on error
 	}
-	return int(n) % max
+	return int(n.Int64())
 }
 
 // NewBanner creates a new Banner with the given options
