@@ -5,50 +5,43 @@ Welcome to the OpenTask documentation. This folder contains comprehensive guides
 ## Getting Started
 
 **New to OpenTask?** Start here:
-- **[QUICKSTART.md](QUICKSTART.md)** - Learn the basics in 5 minutes
+- **[quickstart.md](quickstart.md)** - Learn the basics in 5 minutes
 
 ## Core Concepts
 
 Understand how OpenTask works:
-- **[DESIGN_SUMMARY.md](DESIGN_SUMMARY.md)** - Architecture and design philosophy
-- **[Config.md](Config.md)** - Configuration files and options
-- **[GlobalConfig.md](GlobalConfig.md)** - Global configuration reference
+- **[design-summary.md](design-summary.md)** - Architecture and design philosophy
+- **[config.md](config.md)** - Configuration files and options
+- **[global-config.md](global-config.md)** - Global configuration reference
 
 ## Features
 
 ### Task Management
-- [QUICKSTART.md](QUICKSTART.md) - Creating and managing tasks
+- [quickstart.md](quickstart.md) - Creating and managing tasks
 
 ### Project Contexts (New!)
 Multiple projects? Use project contexts to avoid `--path` on every command:
-- **[ProjectContexts.md](ProjectContexts.md)** - Complete guide to project contexts
+- **[project-contexts.md](project-contexts.md)** - Complete guide to project contexts
   - Multi-project setup
   - Git worktree support
   - Usage examples
-  - See also: Multi-Project Setup section in [QUICKSTART.md](QUICKSTART.md)
-
-### Recent Fixes & Features
-- **[TaskConfigFixes.md](TaskConfigFixes.md)** - Task 21 bug fixes
-  - Task creation location fixes
-  - Config discovery improvements
-  - Verification procedures
+  - See also: Multi-Project Setup section in [quickstart.md](quickstart.md)
 
 ## Testing & Verification
 
 Verify OpenTask is working correctly:
-- **[VerificationGuide.md](VerificationGuide.md)** - Quick verification steps
-- **[TESTING.md](TESTING.md)** - Comprehensive testing guide
+- **[testing.md](testing.md)** - Comprehensive testing guide
 
 ## Implementation & Development
 
 Understanding the codebase:
-- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)** - Implementation details
-- **[PHASE4_ROADMAP.md](PHASE4_ROADMAP.md)** - Future roadmap
+- **[implementation-summary.md](implementation-summary.md)** - Implementation details
+- **[phase4-roadmap.md](phase4-roadmap.md)** - Future roadmap
 
 ## Setup & Installation
 
 Environment setup:
-- **[MISE.md](MISE.md)** - Using Mise for environment management
+- **[mise.md](mise.md)** - Using Mise for environment management
 
 ## Quick Reference
 
@@ -80,22 +73,20 @@ bash scripts/verify_task21.sh
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
-| QUICKSTART.md | Get started quickly | Everyone |
-| ProjectContexts.md | Multi-project setup | Multi-project teams |
-| TaskConfigFixes.md | Understand recent fixes | Developers |
-| VerificationGuide.md | Verify installation | Users & QA |
-| Config.md | Configuration details | Advanced users |
-| GlobalConfig.md | Global config reference | Advanced users |
-| DESIGN_SUMMARY.md | Architecture overview | Developers |
-| IMPLEMENTATION_SUMMARY.md | Code details | Contributors |
-| TESTING.md | Running tests | Developers |
-| PHASE4_ROADMAP.md | Future plans | Everyone |
-| MISE.md | Development setup | Contributors |
+| quickstart.md | Get started quickly | Everyone |
+| project-contexts.md | Multi-project setup | Multi-project teams |
+| config.md | Configuration details | Advanced users |
+| global-config.md | Global config reference | Advanced users |
+| design-summary.md | Architecture overview | Developers |
+| implementation-summary.md | Code details | Contributors |
+| testing.md | Running tests | Developers |
+| phase4-roadmap.md | Future plans | Everyone |
+| mise.md | Development setup | Contributors |
 
 ## Key Features
 
 ✅ **Hierarchical task organization** - Epics, plans, stories, and tasks
-✅ **Flexible workflows** - Customize task statuses and transitions  
+✅ **Flexible workflows** - Customize task statuses and transitions
 ✅ **Git-friendly** - Tasks stored as markdown files
 ✅ **Multi-project support** - Manage multiple projects seamlessly
 ✅ **Config flexibility** - Project-local or global configuration
@@ -119,31 +110,27 @@ bash scripts/verify_task21.sh
 **Tasks not showing up?**
 - Check config: `opentask config view --path`
 - Verify storage location exists
-- See [VerificationGuide.md](VerificationGuide.md)
 
 **Can't find a task?**
 - List all: `opentask task list`
 - Search by type: `opentask task list --type story`
-- See [QUICKSTART.md](QUICKSTART.md) for filtering options
+- See [quickstart.md](quickstart.md) for filtering options
 
 **Config issues?**
 - View resolved config: `opentask config view`
-- Check [Config.md](Config.md) for syntax
-- See [TaskConfigFixes.md](TaskConfigFixes.md) for common issues
+- Check [config.md](config.md) for syntax
 
 ## Getting Help
 
 1. Check the relevant documentation above
-2. Run verification: `bash scripts/verify_task21.sh`
-3. Review [VerificationGuide.md](VerificationGuide.md)
-4. Check test examples in [TESTING.md](TESTING.md)
+2. Check test examples in [testing.md](testing.md)
 
 ## Contributing
 
-Interested in contributing? 
-- See [DESIGN_SUMMARY.md](DESIGN_SUMMARY.md) for architecture
-- See [TESTING.md](TESTING.md) for test patterns
-- See [PHASE4_ROADMAP.md](PHASE4_ROADMAP.md) for planned features
+Interested in contributing?
+- See [design-summary.md](design-summary.md) for architecture
+- See [testing.md](testing.md) for test patterns
+- See [phase4-roadmap.md](phase4-roadmap.md) for planned features
 
 ## Version Information
 
