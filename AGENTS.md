@@ -85,6 +85,12 @@ memoria_get_pattern_recommendations(problemDescription="create new service class
 
 ## Current Work Status
 
+**Phase**: 6 - Deployment & Distribution Research (COMPLETE)
+**Status**: ✅ 774-line research document delivered
+**Worker**: OpenCode Agent
+**Last Updated**: 2025-11-28
+**Key Findings**: Single binary pattern (PocketBase, Ollama), goreleaser + Docker + systemd
+
 **Phase**: 5 - Task Command Refactoring (IN PROGRESS)
 **Status**: 🔄 Service layer complete, cmd integration pending
 **Worker**: OpenCode Agent
@@ -129,9 +135,13 @@ memoria_get_pattern_recommendations(problemDescription="create new service class
 3. Final commit
 4. Update completion metrics
 
-**Phase 6 Options**:
-1. API layer for programmatic access (builds on TaskService)
-2. Additional command extractions
-3. Performance optimizations
+**Phase 6 Options** (Research complete):
+1. ✅ **Deployment & Distribution Research** - COMPLETE (2025-11-28)
+   - Research doc: `.memory/research-phase6-deployment-distribution.md` (774 lines)
+   - Recommendation: Single binary with `opentask serve` subcommand
+   - Evidence: PocketBase (53k⭐), Ollama (106k⭐), Woodpecker CI (4k⭐)
+   - Distribution: goreleaser + Docker + systemd + Homebrew
+2. API layer implementation (Phase 6a: ~1-2 weeks)
+3. Distribution packaging (Phase 6b: ~1-2 weeks)
 
 See TODO.md for detailed opportunities.
