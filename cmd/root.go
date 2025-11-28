@@ -158,7 +158,7 @@ func init() {
 			b := brand.NewBanner(
 				brand.WithText("opentask"),
 				brand.WithRandomTheme(),
-				brand.WithFont(brand.FontSlant),
+				brand.WithFont(brand.FontScript),
 				brand.WithTagline("Task management with markdown files"),
 				brand.WithVersion(Version),
 			)
