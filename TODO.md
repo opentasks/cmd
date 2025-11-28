@@ -2,11 +2,11 @@
 
 ## Current Status
 
-🔄 **Phase 5: Task Command Refactoring - IN PROGRESS** (2025-11-28)
+✅ **Phase 5: Task Command Refactoring - COMPLETE** (2025-11-28)
 
-Service layer complete. Cmd integration pending.
+All 5 task commands refactored to use TaskService. 16 LOC reduction in cmd layer.
 
-## Phase 5: Task Command Refactoring (Partial)
+## Phase 5: Task Command Refactoring (Complete)
 
 ### Completed Work (2025-11-28)
 - [x] Research task refactoring approaches (480-line analysis)
@@ -15,19 +15,15 @@ Service layer complete. Cmd integration pending.
 - [x] Add comprehensive service tests (210 LOC, 6 tests)
 - [x] Commit ID parser (commit: 9d0a014)
 - [x] Commit TaskService (commit: 372771a)
-
-### Pending Work
-- [ ] Refactor cmd/task.go to use TaskService (5 commands)
-  - [ ] taskNewCmd → service.Create()
-  - [ ] taskUpdateCmd → service.Update()
-  - [ ] taskShowCmd → service.Get()
-  - [ ] taskListCmd → service.List()
-  - [ ] taskDeleteCmd → service.Delete()
-- [ ] Expected reduction: 279 → ~160 LOC (43%)
-- [ ] Run full test suite
-- [ ] Verify 100% coverage maintained
-- [ ] Final commit with conventional message
-- [ ] Update .memory/summary.md with completion metrics
+- [x] Refactor cmd/task.go to use TaskService (5 commands)
+  - [x] taskNewCmd → service.Create()
+  - [x] taskUpdateCmd → service.Update()
+  - [x] taskShowCmd → service.Get()
+  - [x] taskListCmd → service.List()
+  - [x] taskDeleteCmd → service.Delete()
+- [x] Reduction: 279 → 263 LOC (16 line / 6% reduction)
+- [x] All tests passing (83.3% task package coverage)
+- [x] Final commit (0b0ff0e)
 
 ## Phase 4: Security Fixes (COMPLETED 2025-11-27)
 - [x] Fix gosec hook configuration

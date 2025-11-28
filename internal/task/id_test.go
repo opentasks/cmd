@@ -37,7 +37,7 @@ func TestParseID(t *testing.T) {
 			name:    "whitespace",
 			idStr:   "  42  ",
 			wantID:  42,
-			wantErr: false, // test passes because ParseID trims whitespace before parsing
+			wantErr: false, // TrimSpace handles leading/trailing whitespace
 		},
 		{
 			name:    "empty string",
