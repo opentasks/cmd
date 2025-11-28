@@ -46,7 +46,7 @@ func (m *Manager) GlobalConfigPath() (string, error) {
 	configPath := filepath.Join(opentaskDir, "config.toml")
 
 	// Create directory if it doesn't exist
-	if err := os.MkdirAll(opentaskDir, 0755); err != nil {
+	if err := os.MkdirAll(opentaskDir, 0750); err != nil {
 		return "", fmt.Errorf("failed to create config directory: %w", err)
 	}
 

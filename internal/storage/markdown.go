@@ -22,7 +22,7 @@ type MarkdownFileStorage struct {
 // NewMarkdownFileStorage creates a new markdown file storage backend
 func NewMarkdownFileStorage(basePath string) (*MarkdownFileStorage, error) {
 	// Ensure path exists
-	if err := os.MkdirAll(basePath, 0755); err != nil {
+	if err := os.MkdirAll(basePath, 0750); err != nil {
 		return nil, err
 	}
 
@@ -228,7 +228,7 @@ func (s *MarkdownFileStorage) SaveTask(ctx context.Context, task *model.Task) er
 
 	// Ensure directory exists
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0750); err != nil {
 		return err
 	}
 
@@ -276,7 +276,7 @@ func (s *MarkdownFileStorage) SaveTask(ctx context.Context, task *model.Task) er
 	content := fmt.Sprintf("---\n%s---\n\n%s\n", string(yamlBytes), task.Description)
 
 	// Write file
-	return os.WriteFile(path, []byte(content), 0644)
+	return os.WriteFile(path, []byte(content), 0600)
 }
 
 // DeleteTask removes the task file

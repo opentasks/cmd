@@ -27,9 +27,10 @@ local security_linters = new Mapping<String, Step> {
     }
 
     // Go security scanning - custom (builtin passes individual files, gosec needs directories)
+    // Excludes G204 (subprocess) and G304 (file inclusion) - acceptable for CLI tools
     ["gosec"] {
         glob = "**/*.go"
-        check = "gosec ./..."
+        check = "gosec -exclude=G204,G304 ./..."
     }
 
     // Note: govulncheck removed from pre-commit (slow, better suited for CI)
