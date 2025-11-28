@@ -2,14 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/opentasks/cmd/internal/display"
 	"github.com/opentasks/cmd/internal/editor"
-	"github.com/opentasks/cmd/internal/model"
 	"github.com/opentasks/cmd/internal/query"
 	"github.com/opentasks/cmd/internal/task"
+	"github.com/spf13/cobra"
 )
 
 // taskCmd represents the task command group
@@ -35,30 +33,20 @@ var taskNewCmd = &cobra.Command{
 
 		ctx := GetContext()
 
-		// Validate task type
-		if !model.IsValidType(taskType) {
-			return fmt.Errorf("invalid task type: %s", taskType)
-		}
+		// Create service
+		service := task.NewService(Engine, Store)
 
-		// Get next ID
-		nextID, err := Engine.NextID(ctx)
+		// Create task
+		newTask, err := service.Create(ctx, task.CreateRequest{
+			Title:       title,
+			Type:        taskType,
+			Status:      status,
+			Description: description,
+			ParentID:    parentID,
+			Tags:        tags,
+		})
 		if err != nil {
-			return fmt.Errorf("failed to generate task ID: %w", err)
-		}
-
-		// Determine status using task manager
-		taskManager := task.NewManager()
-		finalStatus := status
-		if finalStatus == "" {
-			finalStatus = taskManager.DetermineInitialStatus(taskType, description)
-		}
-
-		// Create task using task manager
-		newTask := taskManager.CreateTask(nextID, title, taskType, finalStatus, description, tags, parentID)
-
-		// Save task
-		if err := Store.SaveTask(ctx, newTask); err != nil {
-			return fmt.Errorf("failed to save task: %w", err)
+			return err
 		}
 
 		fmt.Printf("Created task %d: %s\n", newTask.ID, newTask.Title)
@@ -96,10 +84,11 @@ var taskListCmd = &cobra.Command{
 			filters = append(filters, query.WithTags(tags))
 		}
 
-		// List tasks
-		tasks, err := Engine.ListTasks(ctx, filters...)
+		// Create service and list tasks
+		service := task.NewService(Engine, Store)
+		tasks, err := service.List(ctx, filters...)
 		if err != nil {
-			return fmt.Errorf("failed to list tasks: %w", err)
+			return err
 		}
 
 		// Display results
@@ -108,9 +97,7 @@ var taskListCmd = &cobra.Command{
 			return nil
 		}
 
-		// Use display package for formatting
 		fmt.Print(display.TaskTable(tasks))
-
 		return nil
 	},
 }
@@ -126,21 +113,19 @@ var taskShowCmd = &cobra.Command{
 		ctx := GetContext()
 
 		// Parse task ID
-		var taskID int
-		_, err := fmt.Sscanf(args[0], "%d", &taskID)
+		taskID, err := task.ParseID(args[0])
 		if err != nil {
-			return fmt.Errorf("invalid task ID: %s", args[0])
+			return err
 		}
 
-		// Load task
-		taskItem, err := Engine.FindByID(ctx, taskID)
+		// Create service and get task
+		service := task.NewService(Engine, Store)
+		taskItem, err := service.Get(ctx, taskID)
 		if err != nil {
-			return fmt.Errorf("failed to load task: %w", err)
+			return err
 		}
 
-		// Use display package for formatting
 		fmt.Print(display.TaskDetails(taskItem))
-
 		return nil
 	},
 }
@@ -156,15 +141,15 @@ var taskDeleteCmd = &cobra.Command{
 		ctx := GetContext()
 
 		// Parse task ID
-		var taskID int
-		_, err := fmt.Sscanf(args[0], "%d", &taskID)
+		taskID, err := task.ParseID(args[0])
 		if err != nil {
-			return fmt.Errorf("invalid task ID: %s", args[0])
+			return err
 		}
 
-		// Delete task
-		if err := Store.DeleteTask(ctx, taskID); err != nil {
-			return fmt.Errorf("failed to delete task: %w", err)
+		// Create service and delete task
+		service := task.NewService(Engine, Store)
+		if err := service.Delete(ctx, taskID); err != nil {
+			return err
 		}
 
 		fmt.Printf("Deleted task %d\n", taskID)
@@ -183,64 +168,63 @@ var taskUpdateCmd = &cobra.Command{
 		ctx := GetContext()
 
 		// Parse task ID
-		var taskID int
-		_, err := fmt.Sscanf(args[0], "%d", &taskID)
+		taskID, err := task.ParseID(args[0])
 		if err != nil {
-			return fmt.Errorf("invalid task ID: %s", args[0])
+			return err
 		}
 
-		// Load task
-		taskItem, err := Engine.FindByID(ctx, taskID)
-		if err != nil {
-			return fmt.Errorf("failed to load task: %w", err)
-		}
+		// Build update request
+		req := task.UpdateRequest{}
 
-		// Apply updates
 		if cmd.Flags().Changed("status") {
 			status, _ := cmd.Flags().GetString("status")
-			taskItem.Status = status
+			req.Status = &status
 		}
 
 		if cmd.Flags().Changed("title") {
 			title, _ := cmd.Flags().GetString("title")
-			taskItem.Title = title
+			req.Title = &title
 		}
 
 		if cmd.Flags().Changed("description") {
 			description, _ := cmd.Flags().GetString("description")
-			taskItem.Description = description
+			req.Description = &description
 		}
 
-		// Use task manager for tag operations
-		taskManager := task.NewManager()
 		if cmd.Flags().Changed("tag") {
 			tags, _ := cmd.Flags().GetStringSlice("tag")
-			taskItem.Tags = taskManager.MergeTags(taskItem.Tags, tags)
+			req.AddTags = tags
 		}
 
 		if cmd.Flags().Changed("remove-tag") {
 			removeTags, _ := cmd.Flags().GetStringSlice("remove-tag")
-			taskItem.Tags = taskManager.RemoveTags(taskItem.Tags, removeTags)
+			req.RemoveTags = removeTags
 		}
 
-		// Handle editor flag
+		// Handle editor flag separately (before service call)
 		if cmd.Flags().Changed("editor") {
 			editorFlag, _ := cmd.Flags().GetBool("editor")
 			if editorFlag {
-				updatedDescription, err := editor.EditFile(taskItem.Description)
+				// Get current task to edit description
+				service := task.NewService(Engine, Store)
+				currentTask, err := service.Get(ctx, taskID)
+				if err != nil {
+					return err
+				}
+
+				updatedDescription, err := editor.EditFile(currentTask.Description)
 				if err != nil {
 					return fmt.Errorf("failed to edit content: %w", err)
 				}
-				taskItem.Description = updatedDescription
+				req.Description = &updatedDescription
 			}
 		}
 
-		// Update timestamp
-		taskItem.UpdatedAt = time.Now().UTC()
-
-		// Save task
-		if err := Store.SaveTask(ctx, taskItem); err != nil {
-			return fmt.Errorf("failed to save task: %w", err)
+		// Create service and update task
+		service := task.NewService(Engine, Store)
+		taskItem, err := service.Update(ctx, taskID, req)
+		if err != nil {
+			return err
 		}
 
 		fmt.Printf("Updated task %d\n", taskItem.ID)
