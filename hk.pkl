@@ -8,9 +8,10 @@ import "package://github.com/jdx/hk/releases/download/v1.25.0/hk@1.25.0#/Builtin
 // Configured checks:
 // - Secret detection (gitleaks)
 // - Go security scanning (gosec)
-// - Vulnerability checks (govulncheck)
 // - Code quality (merge conflicts, private keys, trailing whitespace)
 // - Go formatting (gofmt, goimports)
+//
+// Note: govulncheck excluded from pre-commit (too slow, run manually or in CI)
 //
 // To activate: uncomment the hooks sections below
 // Then run: mise exec -- hk install
@@ -25,11 +26,14 @@ local security_linters = new Mapping<String, Step> {
         check = "gitleaks detect --source . --no-git --exit-code 1"
     }
 
-    // Go security scanning - uses builtin
-    ["gosec"] = Builtins.go_sec
+    // Go security scanning - custom (builtin passes individual files, gosec needs directories)
+    ["gosec"] {
+        glob = "**/*.go"
+        check = "gosec ./..."
+    }
 
-    // Go vulnerability checking - uses builtin
-    ["govulncheck"] = Builtins.go_vuln_check
+    // Note: govulncheck removed from pre-commit (slow, better suited for CI)
+    // Run manually: mise exec -- govulncheck ./...
 }
 
 local go_formatters = new Mapping<String, Step> {
