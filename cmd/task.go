@@ -201,12 +201,14 @@ var taskUpdateCmd = &cobra.Command{
 			req.RemoveTags = removeTags
 		}
 
+		// Create service once for efficiency
+		service := task.NewService(Engine, Store)
+
 		// Handle editor flag separately (before service call)
 		if cmd.Flags().Changed("editor") {
 			editorFlag, _ := cmd.Flags().GetBool("editor")
 			if editorFlag {
 				// Get current task to edit description
-				service := task.NewService(Engine, Store)
 				currentTask, err := service.Get(ctx, taskID)
 				if err != nil {
 					return err
@@ -220,8 +222,7 @@ var taskUpdateCmd = &cobra.Command{
 			}
 		}
 
-		// Create service and update task
-		service := task.NewService(Engine, Store)
+		// Update task using same service instance
 		taskItem, err := service.Update(ctx, taskID, req)
 		if err != nil {
 			return err
