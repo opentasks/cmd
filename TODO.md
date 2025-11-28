@@ -29,7 +29,7 @@ Service layer complete. Cmd integration pending.
 - [ ] Final commit with conventional message
 - [ ] Update .memory/summary.md with completion metrics
 
-### Phase 4: Security Fixes (COMPLETED 2025-11-27)
+## Phase 4: Security Fixes (COMPLETED 2025-11-27)
 - [x] Fix gosec hook configuration
 - [x] Install govulncheck via mise
 - [x] Fix 3x HIGH: Weak random in banner.go → use crypto/rand (12 → 3 issues)
@@ -38,7 +38,6 @@ Service layer complete. Cmd integration pending.
 - [x] Review remaining 3x MEDIUM issues → acceptable for CLI tool
   - G204: $EDITOR subprocess launch (legitimate use case)
   - G304: File operations (bounded by basePath, safe for CLI)
-
 ### Future Opportunities
 - [ ] Refactor cmd/task.go (279 LOC) - Extract TaskCreator, TaskUpdater services
 - [ ] Extract more complex command logic to internal packages
