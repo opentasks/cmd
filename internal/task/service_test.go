@@ -125,6 +125,20 @@ func TestService_Create_Success(t *testing.T) {
 	}
 }
 
+func TestService_Create_EmptyTitle(t *testing.T) {
+	service := NewService(&MockEngine{}, &MockStore{})
+
+	req := CreateRequest{
+		Title: "",
+		Type:  model.TypeTask,
+	}
+
+	_, err := service.Create(testContext(), req)
+	if err == nil {
+		t.Error("Create() expected error for empty title, got nil")
+	}
+}
+
 func TestService_Create_InvalidType(t *testing.T) {
 	service := NewService(&MockEngine{}, &MockStore{})
 
@@ -136,6 +150,23 @@ func TestService_Create_InvalidType(t *testing.T) {
 	_, err := service.Create(testContext(), req)
 	if err == nil {
 		t.Error("Create() expected error for invalid type, got nil")
+	}
+}
+
+func TestService_Update_EmptyTitle(t *testing.T) {
+	mockEngine := &MockEngine{
+		FindByIDFunc: func(context.Context, int) (*model.Task, error) {
+			return &model.Task{ID: 42, Title: "Original", Status: "todo"}, nil
+		},
+	}
+	service := NewService(mockEngine, &MockStore{})
+
+	emptyTitle := ""
+	req := UpdateRequest{Title: &emptyTitle}
+
+	_, err := service.Update(testContext(), 42, req)
+	if err == nil {
+		t.Error("Update() expected error for empty title, got nil")
 	}
 }
 
