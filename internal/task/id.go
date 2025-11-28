@@ -14,10 +14,7 @@ func ParseID(idStr string) (int, error) {
 		return 0, fmt.Errorf("invalid task ID: %s", idStr)
 	}
 	if id <= 0 {
-		return 0, fmt.Errorf("invalid task ID: must be positive")
-	}
-	if id <= 0 {
-		return 0, fmt.Errorf("invalid task ID: must be positive")
+		return 0, fmt.Errorf("task ID must be positive: %d", id)
 	}
 	return id, nil
 }
