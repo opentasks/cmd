@@ -51,6 +51,8 @@ func (ci *ConfigInitializer) Initialize(name, storagePath string, force bool) er
 	}
 
 	// Write config file
+	// #nosec G306 - File permissions 0600 are intentional for config files (sensitive data)
+	// #nosec G304 - configPath constructed from user-provided path, validated by caller
 	if err := os.WriteFile(configPath, []byte(configContent), 0600); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}

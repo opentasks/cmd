@@ -46,6 +46,8 @@ func (m *Manager) GlobalConfigPath() (string, error) {
 	configPath := filepath.Join(opentaskDir, "config.toml")
 
 	// Create directory if it doesn't exist
+	// #nosec G301 - Directory permissions 0750 are intentional for config directory
+	// Path derived from os.UserConfigDir() (XDG_CONFIG_HOME or equivalent)
 	if err := os.MkdirAll(opentaskDir, 0750); err != nil {
 		return "", fmt.Errorf("failed to create config directory: %w", err)
 	}

@@ -22,6 +22,8 @@ func (s *GlobalConfigSaver) Save(path string, cfg *OpentaskGlobalConfigFile) err
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
 
+	// #nosec G306 - File permissions 0600 are intentional for config files (sensitive data)
+	// #nosec G304 - Path provided by caller (ProjectManager.GlobalConfigPath), validated
 	if err := os.WriteFile(path, data, 0600); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}

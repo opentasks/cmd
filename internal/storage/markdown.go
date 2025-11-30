@@ -22,6 +22,8 @@ type MarkdownFileStorage struct {
 // NewMarkdownFileStorage creates a new markdown file storage backend
 func NewMarkdownFileStorage(basePath string) (*MarkdownFileStorage, error) {
 	// Ensure path exists
+	// #nosec G301 - Directory permissions 0750 are intentional for task storage root
+	// basePath is validated and set from configuration
 	if err := os.MkdirAll(basePath, 0750); err != nil {
 		return nil, err
 	}
@@ -94,6 +96,8 @@ func (s *MarkdownFileStorage) taskToPath(ctx context.Context, task *model.Task) 
 // parseTaskFile parses markdown file into Task
 // Format: frontmatter (YAML) separator (---) markdown body
 func (s *MarkdownFileStorage) parseTaskFile(filePath string) (*model.Task, error) {
+	// #nosec G304 - filePath comes from filepath.Walk within basePath boundary
+	// All files are scoped to basePath set at storage initialization
 	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
@@ -228,6 +232,8 @@ func (s *MarkdownFileStorage) SaveTask(ctx context.Context, task *model.Task) er
 
 	// Ensure directory exists
 	dir := filepath.Dir(path)
+	// #nosec G301 - Directory permissions 0750 are intentional for task storage
+	// Path is constructed from validated basePath (set at storage initialization)
 	if err := os.MkdirAll(dir, 0750); err != nil {
 		return err
 	}
@@ -276,6 +282,9 @@ func (s *MarkdownFileStorage) SaveTask(ctx context.Context, task *model.Task) er
 	content := fmt.Sprintf("---\n%s---\n\n%s\n", string(yamlBytes), task.Description)
 
 	// Write file
+	// #nosec G306 - File permissions 0600 are intentional for task files
+	// #nosec G304 - Path constructed from validated basePath + sanitized filename
+	// basePath set at initialization, filename derived from task ID and sanitized title
 	return os.WriteFile(path, []byte(content), 0600)
 }
 

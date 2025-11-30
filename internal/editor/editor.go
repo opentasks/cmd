@@ -40,6 +40,7 @@ func EditFile(initialContent string) (string, error) {
 	}
 
 	// Read the updated content
+	// #nosec G304 - tmpFilePath created by os.CreateTemp, safe temporary file
 	updatedContent, err := os.ReadFile(tmpFilePath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read updated content: %w", err)
