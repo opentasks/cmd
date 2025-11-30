@@ -82,7 +82,7 @@ opentask --help       # Shows all commands
   - G304: File operations (bounded by basePath, safe for CLI)
 
 ### Future Opportunities
-- [ ] Implement `pkg/opentasks/` API layer (Phase 6a - Implementation)
+- [ ] Refactor additional commands following Phase 5 pattern
 - [ ] Extract more complex command logic to internal packages
 - [ ] Consider API layer for programmatic access to domain logic
 - [ ] Add support for more template types
