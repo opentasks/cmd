@@ -2,9 +2,55 @@
 
 ## Current Status
 
+✅ **Phase 6 Research: Deployment & Distribution - COMPLETE** (2025-11-28)
+
+Research deliverable: 774 lines analyzing CLI+API hybrid patterns.
+
 ✅ **Phase 5: Task Command Refactoring - COMPLETE** (2025-11-28)
 
 All 5 task commands refactored to use TaskService. 16 LOC reduction in cmd layer.
+
+## Phase 6: Deployment & Distribution Research ✅ COMPLETE (2025-11-28)
+
+### Deliverable
+**Research document**: `.memory/research-phase6-deployment-distribution.md` (774 lines)
+
+### Key Findings
+- **Recommended pattern**: Single binary with `opentask serve` subcommand
+- **Evidence**: PocketBase (53k⭐), Ollama (106k⭐), Woodpecker CI (4k⭐)
+- **Distribution**: goreleaser + Docker + systemd + Homebrew
+- **API versioning**: `/api/v1` URL path pattern (Concourse, Gin examples)
+- **Configuration**: Viper (flags > env > config file > defaults)
+
+### Architecture Decision
+```
+opentask              # CLI mode (existing)
+opentask serve        # API server mode (new)
+opentask --help       # Shows all commands
+```
+
+### Citations Provided
+- 10+ production tools analyzed (GitHub stars: 1k-106k)
+- goreleaser configs from PocketBase, CLI
+- Dockerfile patterns from Ollama, PocketBase
+- systemd units from Redis, Valkey
+- Kubernetes deployments from Concourse
+- Homebrew formula patterns from GitHub CLI
+
+### Next Steps (Phase 6a - Implementation)
+1. Add `cmd/opentask/serve.go` (API server command)
+2. Extract HTTP handlers to `internal/api/handlers/`
+3. Integrate TaskService from Phase 5
+4. Basic routes: `/api/v1/tasks` (GET, POST)
+5. Viper config for server settings
+
+### Deferred to Phase 6b (Distribution)
+- Docker multi-stage build
+- systemd service unit
+- goreleaser packaging updates
+- Deployment documentation
+
+---
 
 ## Phase 5: Task Command Refactoring (Complete)
 
@@ -34,8 +80,9 @@ All 5 task commands refactored to use TaskService. 16 LOC reduction in cmd layer
 - [x] Review remaining 3x MEDIUM issues → acceptable for CLI tool
   - G204: $EDITOR subprocess launch (legitimate use case)
   - G304: File operations (bounded by basePath, safe for CLI)
+
 ### Future Opportunities
-- [ ] Refactor cmd/task.go (279 LOC) - Extract TaskCreator, TaskUpdater services
+- [ ] Refactor additional commands following Phase 5 pattern
 - [ ] Extract more complex command logic to internal packages
 - [ ] Consider API layer for programmatic access to domain logic
 - [ ] Add support for more template types
