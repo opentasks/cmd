@@ -199,7 +199,7 @@ opentask task list  # Now shows personal tasks
 opentask project list
 ```
 
-See `ProjectContexts.md` for detailed project context documentation.
+See [project-contexts.md](project-contexts.md) for detailed project context documentation.
 
 ## Command Line Options
 
@@ -301,8 +301,7 @@ opentask task list --type story --status todo
 
 ## Next Steps
 
-- Read `DESIGN_SUMMARY.md` for architecture details
-- Check `.tasks/design/` for detailed specifications
+- Read [design-summary.md](design-summary.md) for architecture details
 - Run tests with `go test ./...`
 - Customize `config.toml` for your workflow
 - Create project templates in `templates/`
