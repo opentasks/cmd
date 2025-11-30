@@ -11,6 +11,7 @@ dist/
 demo/
 .worktrees/
 .memory/
+.obsidian/
 in-memoria.db
 in-memoria*
 opentask
