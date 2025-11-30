@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="docs/banner.png" alt="OpenTask Banner" style="border-radius: 12px; max-width: 600px;" />
+</div>
+
 # opentask
 
 **Git-agnostic task management for developers and AI agents.**
@@ -186,7 +190,7 @@ ${XDG_DATA_HOME}/opentask/
 
 opentask is designed with AI agents in mind. The core task management is **ready today**, but the full AI experience (MCP support, autonomous task management) ships in **Phase 3**.
 
-**Today**: Humans organize tasks that agents will eventually manage  
+**Today**: Humans organize tasks that agents will eventually manage
 **Phase 3**: Agents can discover projects via MCP and autonomously coordinate work
 
 See [AGENTS.md](AGENTS.md) for current collaboration patterns and the roadmap.
@@ -250,7 +254,7 @@ For development: see [MISE.md](docs/MISE.md) for task automation.
 
 ---
 
-**Status**: MVP Complete (Phase 1 ✅)  
-**Next**: Phase 2 (Polish & Features) – Estimated Q4 2025  
-**Then**: Phase 3 (AI Integration) – Estimated Q1 2026  
+**Status**: MVP Complete (Phase 1 ✅)
+**Next**: Phase 2 (Polish & Features) – Estimated Q4 2025
+**Then**: Phase 3 (AI Integration) – Estimated Q1 2026
 **Future**: Phase 4 (Storage Plugins) – Estimated Q2 2026
