@@ -37,7 +37,7 @@ func TestParseID(t *testing.T) {
 			name:    "whitespace",
 			idStr:   "  42  ",
 			wantID:  42,
-			wantErr: false, // strconv.Atoi trims whitespace
+			wantErr: false, // TrimSpace handles leading/trailing whitespace
 		},
 		{
 			name:    "empty string",
@@ -48,14 +48,14 @@ func TestParseID(t *testing.T) {
 		{
 			name:    "negative ID",
 			idStr:   "-5",
-			wantID:  -5,
-			wantErr: false, // Sscanf parses negatives successfully
+			wantID:  0,
+			wantErr: true, // task IDs must be positive
 		},
 		{
 			name:    "zero ID",
 			idStr:   "0",
 			wantID:  0,
-			wantErr: false,
+			wantErr: true, // task IDs must be positive
 		},
 	}
 

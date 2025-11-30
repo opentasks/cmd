@@ -96,11 +96,6 @@ var (
 	errMockDelete = errors.New("mock DeleteTask error")
 )
 
-// Helper to create string pointer
-func strPtr(s string) *string {
-	return &s
-}
-
 // Simplified tests - focus on critical paths given time constraints
 func TestService_Create_Success(t *testing.T) {
 	mockEngine := &MockEngine{
@@ -130,6 +125,20 @@ func TestService_Create_Success(t *testing.T) {
 	}
 }
 
+func TestService_Create_EmptyTitle(t *testing.T) {
+	service := NewService(&MockEngine{}, &MockStore{})
+
+	req := CreateRequest{
+		Title: "",
+		Type:  model.TypeTask,
+	}
+
+	_, err := service.Create(testContext(), req)
+	if err == nil {
+		t.Error("Create() expected error for empty title, got nil")
+	}
+}
+
 func TestService_Create_InvalidType(t *testing.T) {
 	service := NewService(&MockEngine{}, &MockStore{})
 
@@ -141,6 +150,23 @@ func TestService_Create_InvalidType(t *testing.T) {
 	_, err := service.Create(testContext(), req)
 	if err == nil {
 		t.Error("Create() expected error for invalid type, got nil")
+	}
+}
+
+func TestService_Update_EmptyTitle(t *testing.T) {
+	mockEngine := &MockEngine{
+		FindByIDFunc: func(context.Context, int) (*model.Task, error) {
+			return &model.Task{ID: 42, Title: "Original", Status: "todo"}, nil
+		},
+	}
+	service := NewService(mockEngine, &MockStore{})
+
+	emptyTitle := ""
+	req := UpdateRequest{Title: &emptyTitle}
+
+	_, err := service.Update(testContext(), 42, req)
+	if err == nil {
+		t.Error("Update() expected error for empty title, got nil")
 	}
 }
 
@@ -224,5 +250,117 @@ func TestService_Delete_Success(t *testing.T) {
 	err := service.Delete(testContext(), 42)
 	if err != nil {
 		t.Fatalf("Delete() unexpected error: %v", err)
+	}
+}
+
+// Error path tests
+func TestService_Create_NextIDError(t *testing.T) {
+	mockEngine := &MockEngine{
+		NextIDFunc: func(context.Context) (int, error) { return 0, errMockNextID },
+	}
+	service := NewService(mockEngine, &MockStore{})
+
+	req := CreateRequest{Title: "Test", Type: model.TypeTask}
+	_, err := service.Create(testContext(), req)
+
+	if err == nil {
+		t.Error("Create() expected error when NextID fails, got nil")
+	}
+}
+
+func TestService_Create_SaveError(t *testing.T) {
+	mockEngine := &MockEngine{
+		NextIDFunc: func(context.Context) (int, error) { return 42, nil },
+	}
+	mockStore := &MockStore{
+		SaveTaskFunc: func(context.Context, *model.Task) error { return errMockSave },
+	}
+	service := NewService(mockEngine, mockStore)
+
+	req := CreateRequest{Title: "Test", Type: model.TypeTask, Status: "todo"}
+	_, err := service.Create(testContext(), req)
+
+	if err == nil {
+		t.Error("Create() expected error when SaveTask fails, got nil")
+	}
+}
+
+func TestService_Update_LoadError(t *testing.T) {
+	mockEngine := &MockEngine{
+		FindByIDFunc: func(context.Context, int) (*model.Task, error) {
+			return nil, errMockLoad
+		},
+	}
+	service := NewService(mockEngine, &MockStore{})
+
+	newStatus := "done"
+	req := UpdateRequest{Status: &newStatus}
+	_, err := service.Update(testContext(), 42, req)
+
+	if err == nil {
+		t.Error("Update() expected error when FindByID fails, got nil")
+	}
+}
+
+func TestService_Update_SaveError(t *testing.T) {
+	mockEngine := &MockEngine{
+		FindByIDFunc: func(context.Context, int) (*model.Task, error) {
+			return &model.Task{ID: 42, Status: "todo"}, nil
+		},
+	}
+	mockStore := &MockStore{
+		SaveTaskFunc: func(context.Context, *model.Task) error { return errMockSave },
+	}
+	service := NewService(mockEngine, mockStore)
+
+	newStatus := "done"
+	req := UpdateRequest{Status: &newStatus}
+	_, err := service.Update(testContext(), 42, req)
+
+	if err == nil {
+		t.Error("Update() expected error when SaveTask fails, got nil")
+	}
+}
+
+func TestService_Get_NotFound(t *testing.T) {
+	mockEngine := &MockEngine{
+		FindByIDFunc: func(context.Context, int) (*model.Task, error) {
+			return nil, errMockLoad
+		},
+	}
+	service := NewService(mockEngine, &MockStore{})
+
+	_, err := service.Get(testContext(), 999)
+
+	if err == nil {
+		t.Error("Get() expected error for non-existent task, got nil")
+	}
+}
+
+func TestService_List_Error(t *testing.T) {
+	mockEngine := &MockEngine{
+		ListTasksFunc: func(context.Context, ...query.TaskFilter) ([]*model.Task, error) {
+			return nil, errMockLoad
+		},
+	}
+	service := NewService(mockEngine, &MockStore{})
+
+	_, err := service.List(testContext())
+
+	if err == nil {
+		t.Error("List() expected error when ListTasks fails, got nil")
+	}
+}
+
+func TestService_Delete_Error(t *testing.T) {
+	mockStore := &MockStore{
+		DeleteTaskFunc: func(context.Context, int) error { return errMockDelete },
+	}
+	service := NewService(&MockEngine{}, mockStore)
+
+	err := service.Delete(testContext(), 42)
+
+	if err == nil {
+		t.Error("Delete() expected error when DeleteTask fails, got nil")
 	}
 }
