@@ -47,6 +47,11 @@ type CreateRequest struct {
 // Create creates a new task with the given parameters
 // Returns the created task or an error
 func (s *Service) Create(ctx context.Context, req CreateRequest) (*model.Task, error) {
+	// Validate title
+	if req.Title == "" {
+		return nil, fmt.Errorf("task title cannot be empty")
+	}
+
 	// Validate task type
 	if !model.IsValidType(req.Type) {
 		return nil, fmt.Errorf("invalid task type: %s", req.Type)
@@ -100,6 +105,9 @@ func (s *Service) Update(ctx context.Context, taskID int, req UpdateRequest) (*m
 	}
 
 	if req.Title != nil {
+		if *req.Title == "" {
+			return nil, fmt.Errorf("task title cannot be empty")
+		}
 		task.Title = *req.Title
 	}
 

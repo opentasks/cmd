@@ -6,9 +6,9 @@
 
 Research deliverable: 774 lines analyzing CLI+API hybrid patterns.
 
-🔄 **Phase 5: Task Command Refactoring - IN PROGRESS** (2025-11-28)
+✅ **Phase 5: Task Command Refactoring - COMPLETE** (2025-11-28)
 
-Service layer complete. Cmd integration pending.
+All 5 task commands refactored to use TaskService. 16 LOC reduction in cmd layer.
 
 ## Phase 6: API Architecture Research ✅ COMPLETE (2025-11-28)
 
@@ -52,7 +52,7 @@ opentask --help       # Shows all commands
 
 ---
 
-## Phase 5: Task Command Refactoring (Partial)
+## Phase 5: Task Command Refactoring (Complete)
 
 ### Completed Work (2025-11-28)
 - [x] Research task refactoring approaches (480-line analysis)
@@ -61,21 +61,17 @@ opentask --help       # Shows all commands
 - [x] Add comprehensive service tests (210 LOC, 6 tests)
 - [x] Commit ID parser (commit: 9d0a014)
 - [x] Commit TaskService (commit: 372771a)
+- [x] Refactor cmd/task.go to use TaskService (5 commands)
+  - [x] taskNewCmd → service.Create()
+  - [x] taskUpdateCmd → service.Update()
+  - [x] taskShowCmd → service.Get()
+  - [x] taskListCmd → service.List()
+  - [x] taskDeleteCmd → service.Delete()
+- [x] Reduction: 279 → 263 LOC (16 line / 6% reduction)
+- [x] All tests passing (83.3% task package coverage)
+- [x] Final commit (0b0ff0e)
 
-### Pending Work
-- [ ] Refactor cmd/task.go to use TaskService (5 commands)
-  - [ ] taskNewCmd → service.Create()
-  - [ ] taskUpdateCmd → service.Update()
-  - [ ] taskShowCmd → service.Get()
-  - [ ] taskListCmd → service.List()
-  - [ ] taskDeleteCmd → service.Delete()
-- [ ] Expected reduction: 279 → ~160 LOC (43%)
-- [ ] Run full test suite
-- [ ] Verify 100% coverage maintained
-- [ ] Final commit with conventional message
-- [ ] Update .memory/summary.md with completion metrics
-
-### Phase 4: Security Fixes (COMPLETED 2025-11-27)
+## Phase 4: Security Fixes (COMPLETED 2025-11-27)
 - [x] Fix gosec hook configuration
 - [x] Install govulncheck via mise
 - [x] Fix 3x HIGH: Weak random in banner.go → use crypto/rand (12 → 3 issues)
@@ -85,20 +81,10 @@ opentask --help       # Shows all commands
   - G204: $EDITOR subprocess launch (legitimate use case)
   - G304: File operations (bounded by basePath, safe for CLI)
 
-### Phase 6: API Architecture Research ✅ COMPLETE (2025-11-28)
-- [x] Analyze GitHub CLI, Docker CLI, Terraform, Kubernetes API patterns
-- [x] Compare 3 patterns: Library Packages, Service Layer, Embedded Servers
-- [x] Document 425-line research with real-world evidence
-- [x] Provide code structure recommendations
-- [x] Create migration path for `pkg/opentasks/` API layer
-- [x] Cite 5+ major open-source projects (all with GitHub repo links)
-- [x] Mark biases and assumptions with [BIAS] and [ASSUMPTION] tags
-- **Recommendation:** Library Package Pattern (87% adoption rate)
-- **File:** `.memory/research-phase6-api-architecture.md`
-
 ### Future Opportunities
-- [ ] Implement `pkg/opentasks/` API layer (if Phase 6 recommendation approved)
+- [ ] Implement `pkg/opentasks/` API layer (Phase 6a - Implementation)
 - [ ] Extract more complex command logic to internal packages
+- [ ] Consider API layer for programmatic access to domain logic
 - [ ] Add support for more template types
 - [ ] Implement configuration hot-reload capability
 - [ ] Add configuration validation and schema checking

@@ -91,8 +91,8 @@ memoria_get_pattern_recommendations(problemDescription="create new service class
 **Last Updated**: 2025-11-28
 **Key Findings**: Single binary pattern (PocketBase, Ollama), goreleaser + Docker + systemd
 
-**Phase**: 5 - Task Command Refactoring (IN PROGRESS)
-**Status**: 🔄 Service layer complete, cmd integration pending
+**Phase**: 5 - Task Command Refactoring (COMPLETE)
+**Status**: ✅ All 5 task commands refactored to use TaskService
 **Worker**: OpenCode Agent
 **Last Updated**: 2025-11-28
 
@@ -119,21 +119,15 @@ memoria_get_pattern_recommendations(problemDescription="create new service class
 - Commits: `2f01fe1`, `2c241a4`
 - Pattern: Stateful services (instantiated with config)
 
-**Phase 5: Task Command Refactoring** 🔄 (2025-11-28)
+**Phase 5: Task Command Refactoring** ✅ (2025-11-28)
 - ✅ Research complete: 480-line analysis (`.memory/research-phase5-task-refactoring.md`)
 - ✅ ID Parser: 15 LOC + 56 test LOC (commit: `9d0a014`)
 - ✅ TaskService: 157 LOC + 210 test LOC (commit: `372771a`)
   - 5 CRUD methods with interface-based DI
   - Pattern: TaskEngine interface for testability
-- ⏳ **PENDING**: Refactor cmd/task.go (5 commands, ~120 LOC reduction)
+- ✅ Refactor cmd/task.go (5 commands, 16 LOC reduction)
 
 ### Next Phase
-
-**Phase 5 Completion** (Next session - 1-2 hours):
-1. Refactor cmd/task.go to use TaskService
-2. Run full test suite and verify coverage
-3. Final commit
-4. Update completion metrics
 
 **Phase 6 Options** (Research complete):
 1. ✅ **Deployment & Distribution Research** - COMPLETE (2025-11-28)
@@ -143,5 +137,7 @@ memoria_get_pattern_recommendations(problemDescription="create new service class
    - Distribution: goreleaser + Docker + systemd + Homebrew
 2. API layer implementation (Phase 6a: ~1-2 weeks)
 3. Distribution packaging (Phase 6b: ~1-2 weeks)
+4. Additional command extractions
+5. Performance optimizations
 
 See TODO.md for detailed opportunities.
