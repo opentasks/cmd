@@ -11,6 +11,8 @@
 
 ## Project Guidelines
 
+- golang project
+- ALWAYS use mise tasks for any work done
 - never commit binaries
 - when adjusting .gitignore, stop. get human help.
 
