@@ -6,7 +6,7 @@
 > **CRITICAL** Before doing any work,
 > - read `.memory/todo.md`, `.memory/summary.md` and `.memory/team.md`
 > - if `.memory/` is missing these files, then create those three.
-> - Use relevant in-memoria tools before starting a task o<Select>r thinking about an answer.
+> - Use relevant in-memoria tools before starting a task or thinking about an answer.
 
 
 ## Project Guidelines
