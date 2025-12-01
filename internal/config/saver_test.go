@@ -17,7 +17,6 @@ func TestGlobalConfigSaver_Save(t *testing.T) {
 		{
 			name: "save valid config",
 			config: &OpentaskGlobalConfigFile{
-				ActiveProject: "test-proj",
 				Projects: []GlobalProjectConfig{
 					{
 						ID:   "test-proj",
@@ -72,10 +71,6 @@ func TestGlobalConfigSaver_Save(t *testing.T) {
 				}
 
 				// Basic validation
-				if readBack.ActiveProject != tt.config.ActiveProject {
-					t.Errorf("active_project mismatch: got %s, want %s", readBack.ActiveProject, tt.config.ActiveProject)
-				}
-
 				if len(readBack.Projects) != len(tt.config.Projects) {
 					t.Errorf("project count mismatch: got %d, want %d", len(readBack.Projects), len(tt.config.Projects))
 				}

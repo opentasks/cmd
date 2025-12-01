@@ -13,8 +13,6 @@ func TestLoadGlobalConfigBasic(t *testing.T) {
 	configPath := filepath.Join(tmpDir, "global.toml")
 
 	globalConfig := `
-active_project = "work"
-
 [workflow]
 statuses = ["todo", "done"]
 initial = "todo"
@@ -49,10 +47,6 @@ path = "~/personal/.tasks"
 		t.Fatal("LoadGlobalConfig returned nil")
 	}
 
-	if cfg.ActiveProject != "work" {
-		t.Errorf("ActiveProject = %q, want %q", cfg.ActiveProject, "work")
-	}
-
 	if len(cfg.Projects) != 2 {
 		t.Errorf("Projects count = %d, want 2", len(cfg.Projects))
 	}
@@ -68,9 +62,8 @@ func TestLoadProjectConfigBasic(t *testing.T) {
 	configPath := filepath.Join(tmpDir, ".opentask.toml")
 
 	projectConfig := `
-active_project = "my-project"
-
 [project]
+id = "my-project"
 name = "My Project"
 description = "A test project"
 owner = "me"
@@ -101,12 +94,12 @@ initial = "todo"
 		t.Fatal("Project section is nil")
 	}
 
-	if cfg.Project.Name != "My Project" {
-		t.Errorf("Project.Name = %q, want %q", cfg.Project.Name, "My Project")
+	if cfg.Project.ID != "my-project" {
+		t.Errorf("Project.ID = %q, want %q", cfg.Project.ID, "my-project")
 	}
 
-	if cfg.ActiveProject != "my-project" {
-		t.Errorf("ActiveProject = %q, want %q", cfg.ActiveProject, "my-project")
+	if cfg.Project.Name != "My Project" {
+		t.Errorf("Project.Name = %q, want %q", cfg.Project.Name, "My Project")
 	}
 
 	if cfg.Storage.Path != "./.tasks" {
@@ -124,8 +117,6 @@ func TestResolveProjectConfigSimpleGlobalOnly(t *testing.T) {
 	globalPath := filepath.Join(globalDir, "config.toml")
 
 	globalConfig := `
-active_project = "test"
-
 [[projects]]
 id = "test"
 name = "Test Project"
@@ -194,8 +185,6 @@ func TestResolveProjectConfigActiveProjectDerivation(t *testing.T) {
 	projectStoragePath := filepath.Join(tmpDir, "work", ".tasks")
 
 	globalConfig := `
-active_project = "work"
-
 [[projects]]
 id = "work"
 name = "Work"
@@ -280,7 +269,6 @@ path = "./.tasks"
 // TestMergeConfigsSimple tests merging a single config
 func TestMergeConfigsSimple(t *testing.T) {
 	global := &OpentaskGlobalConfigFile{
-		ActiveProject: "test",
 		Workflow: &WorkflowConfig{
 			Statuses: []string{"todo", "done"},
 			Initial:  "todo",

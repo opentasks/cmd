@@ -159,12 +159,11 @@ func TestProjectService_DetachContext(t *testing.T) {
 
 func TestProjectService_RemoveProject(t *testing.T) {
 	tests := []struct {
-		name              string
-		initialConfig     *OpentaskGlobalConfigFile
-		projectID         string
-		wantErr           bool
-		wantProjectCount  int
-		wantActiveCleared bool
+		name             string
+		initialConfig    *OpentaskGlobalConfigFile
+		projectID        string
+		wantErr          bool
+		wantProjectCount int
 	}{
 		{
 			name: "remove existing project",
@@ -173,26 +172,22 @@ func TestProjectService_RemoveProject(t *testing.T) {
 					{ID: "proj1", Name: "Project 1"},
 					{ID: "proj2", Name: "Project 2"},
 				},
-				ActiveProject: "proj1",
 			},
-			projectID:         "proj2",
-			wantErr:           false,
-			wantProjectCount:  1,
-			wantActiveCleared: false,
+			projectID:        "proj2",
+			wantErr:          false,
+			wantProjectCount: 1,
 		},
 		{
-			name: "remove active project (should clear active_project)",
+			name: "remove first project",
 			initialConfig: &OpentaskGlobalConfigFile{
 				Projects: []GlobalProjectConfig{
 					{ID: "proj1", Name: "Project 1"},
 					{ID: "proj2", Name: "Project 2"},
 				},
-				ActiveProject: "proj1",
 			},
-			projectID:         "proj1",
-			wantErr:           false,
-			wantProjectCount:  1,
-			wantActiveCleared: true,
+			projectID:        "proj1",
+			wantErr:          false,
+			wantProjectCount: 1,
 		},
 		{
 			name: "remove non-existent project",
@@ -220,10 +215,6 @@ func TestProjectService_RemoveProject(t *testing.T) {
 			if !tt.wantErr {
 				if len(tt.initialConfig.Projects) != tt.wantProjectCount {
 					t.Errorf("got %d projects, want %d", len(tt.initialConfig.Projects), tt.wantProjectCount)
-				}
-
-				if tt.wantActiveCleared && tt.initialConfig.ActiveProject != "" {
-					t.Errorf("active_project not cleared, got %s", tt.initialConfig.ActiveProject)
 				}
 
 				// Verify project is actually removed

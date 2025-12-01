@@ -49,7 +49,7 @@ func TestOpentaskConfigCoreSchemaDefaults(t *testing.T) {
 // TestOpentaskConfigGlobalSchemaStructure tests global config schema
 func TestOpentaskConfigGlobalSchemaStructure(t *testing.T) {
 	global := &OpentaskConfigGlobalSchema{
-		ActiveProject: "test-project",
+		// ActiveProject removed - now derived at runtime
 		Projects: []GlobalProjectConfig{
 			{
 				ID:   "test-project",
@@ -60,10 +60,6 @@ func TestOpentaskConfigGlobalSchemaStructure(t *testing.T) {
 				},
 			},
 		},
-	}
-
-	if global.ActiveProject != "test-project" {
-		t.Errorf("ActiveProject = %q, want %q", global.ActiveProject, "test-project")
 	}
 
 	if len(global.Projects) != 1 {
@@ -86,22 +82,19 @@ func TestOpentaskConfigProjectSchemaStructure(t *testing.T) {
 			Backend: "markdown-fs",
 			Path:    "./.tasks",
 		},
-		ActiveProject: "my-project",
+		// ActiveProject removed - now derived at runtime
 	}
 
 	if project.Project.Name != "My Project" {
 		t.Errorf("Project.Name = %q, want %q", project.Project.Name, "My Project")
 	}
 
-	if project.ActiveProject != "my-project" {
-		t.Errorf("ActiveProject = %q, want %q", project.ActiveProject, "my-project")
-	}
 }
 
 // TestOpentaskGlobalConfigFile tests the complete global config file type
 func TestOpentaskGlobalConfigFile(t *testing.T) {
 	globalConfig := &OpentaskGlobalConfigFile{
-		ActiveProject: "work",
+		// ActiveProject removed - now derived at runtime
 		Projects: []GlobalProjectConfig{
 			{
 				ID:   "work",
@@ -116,10 +109,6 @@ func TestOpentaskGlobalConfigFile(t *testing.T) {
 			Statuses: []string{"todo", "done"},
 			Initial:  "todo",
 		},
-	}
-
-	if globalConfig.ActiveProject != "work" {
-		t.Errorf("ActiveProject = %q, want %q", globalConfig.ActiveProject, "work")
 	}
 
 	if len(globalConfig.Projects) != 1 {
@@ -141,7 +130,7 @@ func TestOpentaskProjectConfigFile(t *testing.T) {
 			Backend: "markdown-fs",
 			Path:    "./.tasks",
 		},
-		ActiveProject: "my-project",
+		// ActiveProject removed - now derived at runtime
 		Core: &OpentaskConfigCoreSchema{
 			Workflow: &WorkflowConfig{
 				Statuses: []string{"todo", "in-progress", "done"},
@@ -158,9 +147,6 @@ func TestOpentaskProjectConfigFile(t *testing.T) {
 		t.Fatal("Core section is nil")
 	}
 
-	if projectConfig.ActiveProject != "my-project" {
-		t.Errorf("ActiveProject = %q, want %q", projectConfig.ActiveProject, "my-project")
-	}
 }
 
 // TestOpentaskResolvedConfigStructure tests the final merged config
@@ -181,7 +167,7 @@ func TestOpentaskResolvedConfigStructure(t *testing.T) {
 			Backend: "markdown-fs",
 			Path:    "/absolute/path/.tasks",
 		},
-		ActiveProject: "final-project",
+		// ActiveProject removed - now derived at runtime
 		// DiscoveredFiles contains the config files that were merged
 		DiscoveredFiles: []string{
 			"./.opentask.toml",
@@ -191,10 +177,6 @@ func TestOpentaskResolvedConfigStructure(t *testing.T) {
 
 	if resolved.Project.Name != "Final Project" {
 		t.Errorf("Project.Name = %q, want %q", resolved.Project.Name, "Final Project")
-	}
-
-	if resolved.ActiveProject != "final-project" {
-		t.Errorf("ActiveProject = %q, want %q", resolved.ActiveProject, "final-project")
 	}
 
 	if len(resolved.DiscoveredFiles) != 2 {

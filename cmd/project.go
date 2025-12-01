@@ -187,8 +187,13 @@ var projectListCmd = &cobra.Command{
 		fmt.Print(lister.List())
 		fmt.Println()
 
-		if globalConfig.ActiveProject != "" {
-			fmt.Printf("* = active_project (%s)\n", globalConfig.ActiveProject)
+		// Show which project would be active for current directory
+		cwd, err := os.Getwd()
+		if err == nil {
+			resolved, err := config.ResolveProjectConfig(cwd)
+			if err == nil && resolved.IsResolved {
+				fmt.Printf("\nNote: Current directory resolves to project: %s\n", resolved.ActiveProject)
+			}
 		}
 
 		return nil

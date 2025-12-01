@@ -35,22 +35,8 @@ func (pl *ProjectLister) List() string {
 	return strings.Join(entries, "\n")
 }
 
-// GetActive returns the name of the currently active project, or an empty string if none
-func (pl *ProjectLister) GetActive() string {
-	if pl.globalConfig == nil {
-		return ""
-	}
-	return pl.globalConfig.ActiveProject
-}
-
 // formatProjectEntry formats a single project entry for display
 func (pl *ProjectLister) formatProjectEntry(proj GlobalProjectConfig) string {
-	// Mark active project
-	activeMarker := ""
-	if pl.globalConfig != nil && pl.globalConfig.ActiveProject == proj.ID {
-		activeMarker = " *"
-	}
-
 	// Use project name if available, otherwise use ID
 	projectName := proj.Name
 	if projectName == "" {
@@ -60,7 +46,7 @@ func (pl *ProjectLister) formatProjectEntry(proj GlobalProjectConfig) string {
 	var sb strings.Builder
 
 	// Project header line
-	sb.WriteString(fmt.Sprintf("%s (%s)%s\n", proj.ID, projectName, activeMarker))
+	sb.WriteString(fmt.Sprintf("%s (%s)\n", proj.ID, projectName))
 
 	// Storage path
 	if proj.Storage != nil && proj.Storage.Path != "" {

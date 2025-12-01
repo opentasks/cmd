@@ -44,14 +44,10 @@ func LoadProjectConfig(path string) (*OpentaskProjectConfigFile, error) {
 // MergeGlobalConfig merges global config into the resolved config.
 // Global config provides defaults that can be overridden by project configs.
 // Note: We start with defaults, so global config will override them if present.
+// Note: ActiveProject is NOT merged here - it's derived at runtime via ResolveActiveProject().
 func MergeGlobalConfig(resolved *OpentaskResolvedConfig, global *OpentaskGlobalConfigFile) *OpentaskResolvedConfig {
 	if global == nil {
 		return resolved
-	}
-
-	// Merge active project if set
-	if global.ActiveProject != "" {
-		resolved.ActiveProject = global.ActiveProject
 	}
 
 	// Merge workflow if present (overrides built-in defaults)
@@ -101,9 +97,7 @@ func MergeProjectConfig(resolved *OpentaskResolvedConfig, project *OpentaskProje
 		resolved.Templates = project.Templates
 	}
 
-	if project.ActiveProject != "" {
-		resolved.ActiveProject = project.ActiveProject
-	}
+	// Note: ActiveProject is NOT merged here - it's derived at runtime via ResolveActiveProject()
 
 	// Merge project core config (fallback if top-level fields not set)
 	// Priority: project.X > project.Core.X > global.Core.X > built-in defaults
@@ -261,12 +255,9 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 		if len(projectFiles) > 0 {
 			configDir := filepath.Dir(projectFiles[0])
 			resolved.ActiveProject = deriveActiveProject("", configDir, globalProjects)
-		} else {
-			// No project config and no context match, use global active_project if available
-			if globalConfig != nil && globalConfig.ActiveProject != "" {
-				resolved.ActiveProject = globalConfig.ActiveProject
-			}
 		}
+		// Note: If no project config and no context match, ActiveProject remains empty
+		// This will trigger onboarding flow in commands that require a project
 	}
 
 	// Merge settings from matching global project if not already set
