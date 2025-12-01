@@ -204,7 +204,8 @@ path = "` + projectStoragePath + `"
 	projectPath := filepath.Join(projectDir, ".opentask.toml")
 
 	projectConfig := `
-[project.project]
+[project]
+id = "work"
 name = "Work Project"
 `
 
