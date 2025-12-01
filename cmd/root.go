@@ -8,6 +8,7 @@ import (
 
 	"github.com/opentasks/cmd/internal/brand"
 	"github.com/opentasks/cmd/internal/config"
+	"github.com/opentasks/cmd/internal/display"
 	"github.com/opentasks/cmd/internal/query"
 	"github.com/opentasks/cmd/internal/storage"
 	"github.com/spf13/cobra"
@@ -26,8 +27,9 @@ var (
 	verbose     bool
 
 	// Global state
-	Engine *query.QueryEngine
-	Store  storage.BaseStorage
+	Engine   *query.QueryEngine
+	Store    storage.BaseStorage
+	Resolved *config.OpentaskResolvedConfig // Resolved configuration
 )
 
 // rootCmd represents the base command
@@ -71,8 +73,6 @@ func initializeStorage(cmd *cobra.Command, args []string) error {
 	}
 
 	// Resolve configuration (searches hierarchically from current path)
-	var resolved *config.OpentaskResolvedConfig
-
 	if configPath != "" {
 		// Explicit config path provided - load only that file
 		projectConfig, err := config.LoadProjectConfig(configPath)
@@ -83,26 +83,26 @@ func initializeStorage(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("configuration file not found: %s", configPath)
 		}
 		// Convert to resolved config
-		resolved = config.NewResolvedConfig()
-		resolved = config.MergeProjectConfig(resolved, projectConfig)
+		Resolved = config.NewResolvedConfig()
+		Resolved = config.MergeProjectConfig(Resolved, projectConfig)
 	} else {
 		// Discover and resolve configs hierarchically from the project path
-		resolved, err = config.ResolveProjectConfig(absPath)
+		Resolved, err = config.ResolveProjectConfig(absPath)
 		if err != nil {
 			return fmt.Errorf("failed to resolve configuration: %w", err)
 		}
 	}
 
 	// Ensure storage path is set
-	if resolved.Storage.Path == "" {
-		resolved.Storage.Path = absPath
+	if Resolved.Storage.Path == "" {
+		Resolved.Storage.Path = absPath
 	}
 
 	// Initialize storage
 	storageConfig := storage.StorageConfig{
-		Backend: resolved.Storage.Backend,
-		Path:    resolved.Storage.Path,
-		Options: resolved.Storage.Options,
+		Backend: Resolved.Storage.Backend,
+		Path:    Resolved.Storage.Path,
+		Options: Resolved.Storage.Options,
 	}
 
 	Store, err = storage.NewStorage(storageConfig)
@@ -114,10 +114,10 @@ func initializeStorage(cmd *cobra.Command, args []string) error {
 	Engine = query.NewQueryEngine(Store)
 
 	if verbose {
-		fmt.Fprintf(os.Stderr, "Initialized storage: %s at %s\n", resolved.Storage.Backend, resolved.Storage.Path)
-		if len(resolved.DiscoveredFiles) > 0 {
+		fmt.Fprintf(os.Stderr, "Initialized storage: %s at %s\n", Resolved.Storage.Backend, Resolved.Storage.Path)
+		if len(Resolved.DiscoveredFiles) > 0 {
 			fmt.Fprintf(os.Stderr, "Configuration files:\n")
-			for _, f := range resolved.DiscoveredFiles {
+			for _, f := range Resolved.DiscoveredFiles {
 				fmt.Fprintf(os.Stderr, "  - %s\n", f)
 			}
 		}
@@ -132,6 +132,32 @@ func cleanupStorage(cmd *cobra.Command, args []string) error {
 		return Store.Close()
 	}
 	return nil
+}
+
+// requireActiveProject is a PreRun hook that requires an active project to be resolved.
+// If no project is resolved, it prints the onboarding box and returns an error.
+// Use this for commands that need a project (e.g., task operations).
+func requireActiveProject(cmd *cobra.Command, args []string) error {
+	// First initialize storage (which resolves config)
+	if err := initializeStorage(cmd, args); err != nil {
+		return err
+	}
+
+	// Check if project is resolved
+	if !Resolved.IsResolved {
+		cwd, _ := os.Getwd()
+		display.PrintOnboardingBox(os.Stderr, cwd)
+		return fmt.Errorf("no active project found")
+	}
+
+	return nil
+}
+
+// allowUnresolved is a PreRun hook that allows commands to work without an active project.
+// Use this for onboarding commands (e.g., config init, project list).
+func allowUnresolved(cmd *cobra.Command, args []string) error {
+	// Just initialize storage - it's okay if project is not resolved
+	return initializeStorage(cmd, args)
 }
 
 // GetContext returns a context for the command

@@ -70,9 +70,10 @@ var configViewCmd = &cobra.Command{
 
 // configInitCmd initializes a new opentask project
 var configInitCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Initialize a new project",
-	Long:  "Create a new .opentask.toml configuration file in the current directory",
+	Use:     "init",
+	Short:   "Initialize a new project",
+	Long:    "Create a new .opentask.toml configuration file in the current directory",
+	PreRunE: allowUnresolved, // Allow init to work without existing project
 	RunE: func(cmd *cobra.Command, args []string) error {
 		nameFlag, _ := cmd.Flags().GetString("name")
 		storagePath, _ := cmd.Flags().GetString("storage")

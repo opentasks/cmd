@@ -2,6 +2,8 @@ package display
 
 import (
 	"fmt"
+	"github.com/charmbracelet/lipgloss"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -133,4 +135,66 @@ func TaskDetails(task *model.Task) string {
 	}
 
 	return result.String()
+}
+
+// PrintOnboardingBox prints a helpful onboarding message when no active project is found.
+// This guides users through the options for getting started with opentask.
+func PrintOnboardingBox(w io.Writer, cwd string) {
+	// Define styles
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("205")).
+		Padding(0, 1)
+
+	headerStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("170")).
+		MarginTop(1)
+
+	commandStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("86")).
+		Padding(0, 2)
+
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		Padding(1, 2).
+		Width(60)
+
+	// Format the current working directory
+	displayCwd := FormatPath(cwd)
+	if len(displayCwd) > 50 {
+		displayCwd = Truncate(displayCwd, 47) + "..."
+	}
+
+	// Build content
+	var content strings.Builder
+
+	content.WriteString(titleStyle.Render("NO OPENTASK PROJECT FOUND"))
+	content.WriteString("\n\n")
+	content.WriteString(fmt.Sprintf("Current directory: %s\n", displayCwd))
+	content.WriteString("\n")
+	content.WriteString("No project configuration found for this location.\n")
+
+	content.WriteString(headerStyle.Render("Choose an option:"))
+	content.WriteString("\n\n")
+
+	content.WriteString("1. Initialize a new project here\n")
+	content.WriteString(commandStyle.Render("$ opentask config init"))
+	content.WriteString("\n\n")
+
+	content.WriteString("2. Attach this directory to an existing project\n")
+	content.WriteString(commandStyle.Render("$ opentask project attach <project-id>"))
+	content.WriteString("\n")
+	content.WriteString(commandStyle.Render("$ opentask project list  # see available projects"))
+	content.WriteString("\n\n")
+
+	content.WriteString("3. Work in a directory with an existing project\n")
+	content.WriteString(commandStyle.Render("$ cd /path/to/existing/project"))
+	content.WriteString("\n\n")
+
+	content.WriteString("Learn more: opentask config --help")
+
+	// Render the box
+	fmt.Fprintln(w, boxStyle.Render(content.String()))
 }
