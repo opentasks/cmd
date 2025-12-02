@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Run E2E tests"
+set -euo pipefail
+
+go test -v -race ./test/e2e/...

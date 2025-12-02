@@ -37,6 +37,9 @@ jobs:
       - name: Test
         run: go test -v -race -coverprofile=coverage.out ./...
 
+      - name: E2E Tests
+        run: mise run test-e2e
+
       - name: Upload coverage
         uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 #v4
         with:
