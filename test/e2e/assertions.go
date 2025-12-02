@@ -292,7 +292,7 @@ func (a *AssertTask) FileExists() *AssertTask {
 
 	// List all files in temp directory
 	var files []string
-	filepath.Walk(a.env.TmpDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(a.env.TmpDir, func(path string, info os.FileInfo, err error) error {
 		if err == nil && !info.IsDir() {
 			relPath, _ := filepath.Rel(a.env.TmpDir, path)
 			files = append(files, relPath)
@@ -378,7 +378,7 @@ func formatFileList(tmpDir string) string {
 	}
 
 	var files []string
-	filepath.Walk(tmpDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(tmpDir, func(path string, info os.FileInfo, err error) error {
 		if err == nil && !info.IsDir() {
 			relPath, _ := filepath.Rel(tmpDir, path)
 			size := info.Size()
