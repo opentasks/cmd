@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -278,4 +279,194 @@ func CreateTask(t *testing.T, store storage.BaseStorage, opts ...TaskOption) *mo
 	}
 
 	return task
+}
+
+// BulkCreateTasks creates N tasks of the same type with pattern-based titles
+// Reduces boilerplate for creating multiple similar tasks
+//
+// Example:
+//
+//	tasks := BulkCreateTasks(t, store, 3, model.TypeTask,
+//	    WithParent(storyID),
+//	    WithStatus("todo"),
+//	)
+//
+// Creates: "Test Task 1", "Test Task 2", "Test Task 3"
+func BulkCreateTasks(t *testing.T, store storage.BaseStorage, count int, taskType string, opts ...TaskOption) []*model.Task {
+	t.Helper()
+
+	if count <= 0 {
+		t.Fatal("BulkCreateTasks: count must be > 0")
+	}
+
+	ctx := context.Background()
+	tasks := make([]*model.Task, count)
+
+	// Default title pattern based on task type
+	var titlePattern string
+	switch taskType {
+	case model.TypeEpic:
+		titlePattern = "Test Epic %d"
+	case model.TypeStory:
+		titlePattern = "Test Story %d"
+	case model.TypeTask:
+		titlePattern = "Test Task %d"
+	case model.TypePlan:
+		titlePattern = "Test Plan %d"
+	case model.TypeResearch:
+		titlePattern = "Test Research %d"
+	case model.TypeDecision:
+		titlePattern = "Test Decision %d"
+	default:
+		titlePattern = "Test Task %d"
+	}
+
+	for i := 0; i < count; i++ {
+		// Get next ID from storage
+		nextID, err := store.NextID(ctx)
+		if err != nil {
+			t.Fatalf("BulkCreateTasks[%d]: Failed to get next ID: %v", i, err)
+		}
+
+		// Create task with defaults
+		now := time.Now().UTC()
+		task := &model.Task{
+			ID:            nextID,
+			Title:         "", // Will be set after options
+			Type:          taskType,
+			Status:        "todo",
+			Description:   "",
+			Tags:          []string{},
+			Relationships: []model.Relationship{},
+			CreatedAt:     now,
+			UpdatedAt:     now,
+		}
+
+		// Apply common options first
+		for _, opt := range opts {
+			opt(task)
+		}
+
+		// Apply title pattern if title wasn't set by options
+		if task.Title == "" {
+			if count > 1 {
+				task.Title = fmt.Sprintf(titlePattern, i+1)
+			} else {
+				task.Title = titlePattern
+			}
+		}
+
+		// Save to storage
+		if err := store.SaveTask(ctx, task); err != nil {
+			t.Fatalf("BulkCreateTasks[%d]: Failed to save task: %v", i, err)
+		}
+
+		tasks[i] = task
+	}
+
+	return tasks
+}
+
+// AssertRelationship verifies a task has a specific relationship
+// Provides rich error output showing all current relationships
+//
+// Example:
+//
+//	testutil.AssertRelationship(t, story, model.RelParent, epic.ID)
+func AssertRelationship(t *testing.T, task *model.Task, relType string, targetID int) {
+	t.Helper()
+
+	// Search for the relationship
+	found := false
+	for _, rel := range task.Relationships {
+		if rel.Type == relType && rel.TaskID == targetID {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		// Build current relationships list
+		relList := ""
+		if len(task.Relationships) == 0 {
+			relList = "  (none)"
+		} else {
+			for i, rel := range task.Relationships {
+				relList += fmt.Sprintf("  %d. %s → Task #%d\n", i+1, rel.Type, rel.TaskID)
+			}
+		}
+
+		t.Fatalf(`
+Relationship Missing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Expected: %s → Task #%d
+Task: #%d %q (%s)
+
+Current Relationships:
+%s
+Test cannot continue without this relationship.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+			relType,
+			targetID,
+			task.ID,
+			task.Title,
+			task.Type,
+			relList)
+	}
+}
+
+// TransitionTaskState updates task status and verifies persistence
+// Loads task, updates status, saves, then reloads to verify
+//
+// Example:
+//
+//	task := testutil.TransitionTaskState(t, env.Store, taskID, "in-progress")
+func TransitionTaskState(t *testing.T, store storage.BaseStorage, taskID int, newStatus string) *model.Task {
+	t.Helper()
+
+	ctx := context.Background()
+
+	// Load task
+	task, err := store.LoadTask(ctx, taskID)
+	if err != nil {
+		t.Fatalf("TransitionTaskState: Failed to load task #%d: %v", taskID, err)
+	}
+
+	oldStatus := task.Status
+
+	// Update status
+	task.Status = newStatus
+	task.UpdatedAt = time.Now().UTC()
+
+	// Save to storage
+	if err := store.SaveTask(ctx, task); err != nil {
+		t.Fatalf("TransitionTaskState: Failed to save task #%d: %v", taskID, err)
+	}
+
+	// Reload to verify persistence
+	reloaded, err := store.LoadTask(ctx, taskID)
+	if err != nil {
+		t.Fatalf("TransitionTaskState: Failed to reload task #%d after save: %v", taskID, err)
+	}
+
+	// Verify status was persisted
+	if reloaded.Status != newStatus {
+		t.Fatalf(`
+Status Transition Failed
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Task: #%d %q
+Old Status: %q
+New Status: %q
+Reloaded:   %q (MISMATCH!)
+
+Status was not persisted correctly.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
+			taskID,
+			reloaded.Title,
+			oldStatus,
+			newStatus,
+			reloaded.Status)
+	}
+
+	return reloaded
 }
