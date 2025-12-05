@@ -20,8 +20,16 @@ import (
 func ExecuteCLI(t *testing.T, tmpDir string, args ...string) (string, string, int) {
 	t.Helper()
 
+	// Find the opentask binary
+	binaryPath := "opentask"
+
+	// Try to find it in the bin directory (for test execution)
+	if _, err := os.Stat("./bin/opentask"); err == nil {
+		binaryPath = "./bin/opentask"
+	}
+
 	// Build command
-	cmd := exec.Command("opentask", args...)
+	cmd := exec.Command(binaryPath, args...)
 
 	// Capture output
 	var outBuf, errBuf bytes.Buffer

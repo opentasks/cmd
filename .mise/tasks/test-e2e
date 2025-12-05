@@ -5,6 +5,5 @@ set -euo pipefail
 # Build binary first so CLI tests can find it
 mise run build
 
-# Run E2E tests with binary in PATH
-export PATH="./bin:$PATH"
+# Run E2E tests (binary path is resolved in ExecuteCLI helper)
 go test -v -race ./test/e2e/...
