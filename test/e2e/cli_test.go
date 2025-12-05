@@ -24,14 +24,25 @@ func ExecuteCLI(t *testing.T, tmpDir string, args ...string) (string, string, in
 	// Find the opentask binary
 	binaryPath := "opentask"
 
-	// Try to find it in the bin directory relative to the module root
-	_, filename, _, ok := runtime.Caller(0)
-	if ok {
-		// Get the module root (go up from test/e2e/cli_test.go to project root)
+	// Try multiple locations to find the binary
+	possiblePaths := []string{
+		"opentask",           // Try PATH first
+		"./bin/opentask",     // Relative to current working directory
+		"../bin/opentask",    // Up one directory
+		"../../bin/opentask", // Up two directories
+	}
+
+	// Also try using runtime.Caller for module root
+	if _, filename, _, ok := runtime.Caller(0); ok {
 		moduleRoot := filepath.Join(filepath.Dir(filename), "..", "..")
-		binPath := filepath.Join(moduleRoot, "bin", "opentask")
-		if _, err := os.Stat(binPath); err == nil {
-			binaryPath = binPath
+		possiblePaths = append(possiblePaths, filepath.Join(moduleRoot, "bin", "opentask"))
+	}
+
+	// Find the first path that exists
+	for _, path := range possiblePaths {
+		if _, err := os.Stat(path); err == nil {
+			binaryPath = path
+			break
 		}
 	}
 
