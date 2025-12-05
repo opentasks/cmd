@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -23,9 +24,15 @@ func ExecuteCLI(t *testing.T, tmpDir string, args ...string) (string, string, in
 	// Find the opentask binary
 	binaryPath := "opentask"
 
-	// Try to find it in the bin directory (for test execution)
-	if _, err := os.Stat("./bin/opentask"); err == nil {
-		binaryPath = "./bin/opentask"
+	// Try to find it in the bin directory relative to the module root
+	_, filename, _, ok := runtime.Caller(0)
+	if ok {
+		// Get the module root (go up from test/e2e/cli_test.go to project root)
+		moduleRoot := filepath.Join(filepath.Dir(filename), "..", "..")
+		binPath := filepath.Join(moduleRoot, "bin", "opentask")
+		if _, err := os.Stat(binPath); err == nil {
+			binaryPath = binPath
+		}
 	}
 
 	// Build command
