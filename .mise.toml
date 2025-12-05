@@ -12,6 +12,7 @@ hk = "latest"
 pkl = "latest"
 trufflehog = "latest"
 "go:golang.org/x/vuln/cmd/govulncheck" = "latest"
+"ubi:opentasks/cmd" = { version = "latest", exe = "opentask" }
 
 # Tasks are defined as file tasks in .mise/tasks/
 # Run `mise tasks` to see available tasks

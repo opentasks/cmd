@@ -27,15 +27,13 @@ jobs:
           cache: true
 
       - name: Build
-        run: go build -v ./...
+        run: mise run build
 
       - name: Lint
-        run: |
-          go vet ./...
-          golangci-lint run ./...
+        run: mise run lint
 
       - name: Test
-        run: go test -v -race -coverprofile=coverage.out ./...
+        run: mise run test --coverage
 
       - name: E2E Tests
         run: mise run test-e2e
