@@ -1,6 +1,7 @@
 package display
 
 import (
+	"bytes"
 	"strings"
 	"testing"
 	"time"
@@ -148,5 +149,110 @@ func TestTaskDetails(t *testing.T) {
 	}
 	if !strings.Contains(result, "parent") {
 		t.Errorf("TaskDetails should contain relationship type")
+	}
+}
+
+// TestPrintOnboardingBox_BasicOutput tests basic output structure and content
+func TestPrintOnboardingBox_BasicOutput(t *testing.T) {
+	var buf bytes.Buffer
+	cwd := "/home/user/my-project"
+
+	PrintOnboardingBox(&buf, cwd)
+	output := buf.String()
+
+	// Check that output contains expected content
+	if !strings.Contains(output, "NO OPENTASK PROJECT FOUND") {
+		t.Errorf("PrintOnboardingBox should contain header")
+	}
+	if !strings.Contains(output, "opentask config init") {
+		t.Errorf("PrintOnboardingBox should contain opentask config init command")
+	}
+	if !strings.Contains(strings.ToLower(output), "project") {
+		t.Errorf("PrintOnboardingBox should mention project")
+	}
+}
+
+// TestPrintOnboardingBox_PathTruncation tests long path truncation
+func TestPrintOnboardingBox_PathTruncation(t *testing.T) {
+	var buf bytes.Buffer
+	// Very long path that should be truncated
+	cwd := "/very/long/path/that/exceeds/the/maximum/path/length/displayed/in/onboarding/message/to/test/truncation"
+
+	PrintOnboardingBox(&buf, cwd)
+	output := buf.String()
+
+	// Should contain the output and handle truncation gracefully
+	if output == "" {
+		t.Errorf("PrintOnboardingBox should produce output even with long paths")
+	}
+	// Should still contain the directory structure hint
+	if !strings.Contains(output, "opentask") {
+		t.Errorf("PrintOnboardingBox should mention opentask even with long paths")
+	}
+}
+
+// TestPrintOnboardingBox_EmptyPath tests empty path handling
+func TestPrintOnboardingBox_EmptyPath(t *testing.T) {
+	var buf bytes.Buffer
+	cwd := ""
+
+	PrintOnboardingBox(&buf, cwd)
+	output := buf.String()
+
+	// Should produce output
+	if output == "" {
+		t.Errorf("PrintOnboardingBox should produce output even with empty path")
+	}
+	// Should still have the main message
+	if !strings.Contains(output, "NO OPENTASK PROJECT FOUND") {
+		t.Errorf("PrintOnboardingBox should contain main message with empty path")
+	}
+}
+
+// TestPrintOnboardingBox_UnknownDirectory tests unknown directory handling
+func TestPrintOnboardingBox_UnknownDirectory(t *testing.T) {
+	var buf bytes.Buffer
+	cwd := "(unknown directory)"
+
+	PrintOnboardingBox(&buf, cwd)
+	output := buf.String()
+
+	// Should produce output
+	if output == "" {
+		t.Errorf("PrintOnboardingBox should produce output for unknown directory")
+	}
+	// Should still have the instructions
+	if !strings.Contains(output, "opentask") {
+		t.Errorf("PrintOnboardingBox should contain opentask reference for unknown directory")
+	}
+}
+
+// TestPrintOnboardingBox_OutputNotEmpty tests that output is never empty and contains formatting
+func TestPrintOnboardingBox_OutputNotEmpty(t *testing.T) {
+	tests := []struct {
+		name string
+		cwd  string
+	}{
+		{"root directory", "/"},
+		{"home directory", "/home/user"},
+		{"deeply nested", "/a/b/c/d/e/f/g/h/i/j/k/l/m/n/o/p"},
+		{"relative path", "relative/path"},
+		{"single character", "x"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			PrintOnboardingBox(&buf, tt.cwd)
+			output := buf.String()
+
+			if output == "" {
+				t.Errorf("PrintOnboardingBox should produce output for %q", tt.cwd)
+			}
+			// Verify key messages are present
+			if !strings.Contains(strings.ToLower(output), "project") && !strings.Contains(strings.ToLower(output), "opentask") {
+				t.Errorf("PrintOnboardingBox output should be meaningful for %q", tt.cwd)
+			}
+		})
 	}
 }
