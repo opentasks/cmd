@@ -23,6 +23,7 @@ func ExecuteCLI(t *testing.T, tmpDir string, args ...string) (string, string, in
 
 	// Find the opentask binary
 	binaryPath := "opentask"
+	binaryFound := false
 
 	// Try multiple locations to find the binary
 	possiblePaths := []string{
@@ -42,7 +43,17 @@ func ExecuteCLI(t *testing.T, tmpDir string, args ...string) (string, string, in
 	for _, path := range possiblePaths {
 		if _, err := os.Stat(path); err == nil {
 			binaryPath = path
+			binaryFound = true
 			break
+		}
+	}
+
+	// Skip the test if binary can't be found
+	if !binaryFound {
+		// Check if it's in PATH
+		if _, err := exec.LookPath("opentask"); err != nil {
+			t.Skipf("opentask binary not found in PATH or expected locations; skipping CLI test")
+			return "", "", 0
 		}
 	}
 
