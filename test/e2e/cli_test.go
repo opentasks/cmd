@@ -220,19 +220,19 @@ func TestE2E_CLIErrorHandling(t *testing.T) {
 
 		stdout, stderr, exitCode := ExecuteCLI(t, tmpDir, "task", "list")
 
-		// CURRENT BEHAVIOR: opentask doesn't error, just shows "No tasks found"
-		// This is actually graceful behavior - it auto-initializes or handles missing config
-		assert.Equal(t, 0, exitCode, "CLI gracefully handles missing project")
+		// With active project resolution, operations should fail gracefully when no project is found
+		// The CLI should exit with non-zero code but provide helpful error message
+		assert.NotEqual(t, 0, exitCode, "CLI should exit with error when no project context")
 		t.Logf("stdout: %s", stdout)
 		t.Logf("stderr: %s", stderr)
 
-		// Should show empty list or "no tasks" message
+		// Should show helpful error message about missing project
 		combinedOutput := strings.ToLower(stdout + stderr)
 		assert.True(t,
-			strings.Contains(combinedOutput, "no tasks") ||
+			strings.Contains(combinedOutput, "no active project") ||
 				strings.Contains(combinedOutput, "not found") ||
-				len(stdout) > 0, // Or shows empty table
-			"Should show no tasks or empty list")
+				strings.Contains(combinedOutput, "project"),
+			"Should show error message about missing project")
 	})
 
 	t.Run("error on invalid task ID", func(t *testing.T) {
