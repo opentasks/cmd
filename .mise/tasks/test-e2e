@@ -5,5 +5,12 @@ set -euo pipefail
 # Build binary first so CLI tests can find it
 mise run build
 
-# Run E2E tests (binary path is resolved in ExecuteCLI helper)
+# Get the project root directory
+PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+BIN_DIR="${PROJECT_ROOT}/bin"
+
+# Add bin directory to PATH so CLI tests can find the binary
+export PATH="${BIN_DIR}:${PATH}"
+
+# Run E2E tests
 go test -v -race ./test/e2e/...
