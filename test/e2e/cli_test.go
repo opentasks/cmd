@@ -42,7 +42,14 @@ func ExecuteCLI(t *testing.T, tmpDir string, args ...string) (string, string, in
 	// Find the first path that exists
 	for _, path := range possiblePaths {
 		if _, err := os.Stat(path); err == nil {
-			binaryPath = path
+			// Convert to absolute path since we'll change working directories later
+			absPath, err := filepath.Abs(path)
+			if err != nil {
+				// Fallback to original path if Abs fails
+				binaryPath = path
+			} else {
+				binaryPath = absPath
+			}
 			binaryFound = true
 			break
 		}
