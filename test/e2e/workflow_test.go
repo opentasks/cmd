@@ -174,9 +174,9 @@ func TestE2E_ResearchPlanningImplementationWorkflow(t *testing.T) {
 		}
 	}
 
-	// We created: 1 epic + 1 research + 1 plan + 1 story + 2 tasks = 6 tasks
+	// We created: 1 epic + 1 research + 1 plan + 1 story + 2 tasks = 6 tasks total
 	// All should be done
-	assert.GreaterOrEqual(t, doneCount, 6, "At least 6 tasks should be done")
+	assert.Equal(t, 6, doneCount, "All 6 tasks should be done")
 
 	t.Logf("✓ Workflow complete: %d tasks done", doneCount)
 }

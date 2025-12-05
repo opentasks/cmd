@@ -349,11 +349,7 @@ func BulkCreateTasks(t *testing.T, store storage.BaseStorage, count int, taskTyp
 
 		// Apply title pattern if title wasn't set by options
 		if task.Title == "" {
-			if count > 1 {
-				task.Title = fmt.Sprintf(titlePattern, i+1)
-			} else {
-				task.Title = titlePattern
-			}
+			task.Title = fmt.Sprintf(titlePattern, i+1)
 		}
 
 		// Save to storage

@@ -145,7 +145,10 @@ func requireActiveProject(cmd *cobra.Command, args []string) error {
 
 	// Check if project is resolved
 	if !Resolved.IsResolved {
-		cwd, _ := os.Getwd()
+		cwd, err := os.Getwd()
+		if err != nil {
+			cwd = "(unknown directory)"
+		}
 		display.PrintOnboardingBox(os.Stderr, cwd)
 		return fmt.Errorf("no active project found")
 	}

@@ -197,6 +197,7 @@ func PrintOnboardingBox(w io.Writer, cwd string) {
 
 	// Render the box
 	if _, err := fmt.Fprintln(w, boxStyle.Render(content.String())); err != nil {
-		return
+		// Log error but don't fail - this is a display function
+		fmt.Fprintf(os.Stderr, "error writing onboarding box: %v\n", err)
 	}
 }
