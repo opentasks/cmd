@@ -196,5 +196,7 @@ func PrintOnboardingBox(w io.Writer, cwd string) {
 	content.WriteString("Learn more: opentask config --help")
 
 	// Render the box
-	fmt.Fprintln(w, boxStyle.Render(content.String()))
+	if _, err := fmt.Fprintln(w, boxStyle.Render(content.String())); err != nil {
+		return
+	}
 }

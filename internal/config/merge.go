@@ -148,54 +148,6 @@ func ResolveActiveProject(cwd string, localConfig *OpentaskProjectConfigFile, gl
 	return "", false
 }
 
-// deriveActiveProject derives the active_project from the config file path and global projects.
-// DEPRECATED: Use ResolveActiveProject() instead.
-// Priority:
-// 1. If active_project is already set, return it
-// 2. Check if the config directory matches a global project storage path
-// 3. Fall back to the config directory name
-func deriveActiveProject(activeProject string, configDir string, globalProjects []GlobalProjectConfig) string {
-	if activeProject != "" {
-		return activeProject
-	}
-
-	// Try to match config directory with global project storage path
-	// Use absolute path for comparison
-	configDirAbs, err := filepath.Abs(configDir)
-	if err != nil {
-		configDirAbs = configDir
-	}
-
-	for _, proj := range globalProjects {
-		if proj.Storage == nil {
-			continue
-		}
-
-		projPath := proj.Storage.Path
-
-		// Expand ~ to home directory
-		if projPath[0] == '~' {
-			home, err := os.UserHomeDir()
-			if err == nil {
-				projPath = filepath.Join(home, projPath[1:])
-			}
-		}
-
-		projPathAbs, err := filepath.Abs(projPath)
-		if err != nil {
-			continue
-		}
-
-		// Check if paths match
-		if configDirAbs == projPathAbs {
-			return proj.ID
-		}
-	}
-
-	// Fall back to directory name
-	return filepath.Base(configDir)
-}
-
 // ResolveProjectConfig resolves the final merged configuration for a project.
 // This is the main entry point for the resolution algorithm.
 //
