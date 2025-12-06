@@ -3,10 +3,10 @@
 # AGENTS.md
 
 > [!NOTE]
-> **CRITICAL** Before doing any work,
-> - read `.memory/todo.md`, `.memory/summary.md` and `.memory/team.md`
-> - if `.memory/` is missing these files, then create those three.
-> - Use relevant in-memoria tools before starting a task or thinking about an answer.
+> **CRITICAL** Before doing any work:
+> - Check for active tasks: `opentask task list --status in_progress`
+> - Review pending work: `opentask task list --status pending`
+> - Check for blocked work: `opentask task list --tag BLOCKED`
 
 
 ## Project Guidelines
@@ -16,69 +16,78 @@
 - never commit binaries
 - when adjusting .gitignore, stop. get human help.
 
-## Research Guidelines
+## Research & Documentation Guidelines
 
-- [knowledge] store findings in `.memory/` directory
-- [knowledge] all notes in `.memory/` must be in markdown format
-- [knowledge] except for `.memory/summary.md`, all notes in `.memory/` must follow the filename convention of `.memory/<type>-<id>-<title>.md`
-- [knowledge] where `<type>` is one of: `research`, `phase`, `guide`, `notes`, `implementation`, `task`
-- [knowledge] Always keep `.memory/summary.md` up to date with current status, prune incorrect or outdated information.
-- [tasks] when finishing a phase, compact relevant successful outcomes from implementation, research and phase into the `.memory/summary.md` and delete the other files. empty `.memory/todo.md` of completed tasks.
-- [tasks] break down tasks into manageable phases, each with clear objectives and deliverables.
-- [tasks] use `.memory/todo.md` to track remaining tasks. This file only contains links to `.memory/task-<id>-<title>.md` files. [CRITICAL] keep `.memory/todo.md` up to date at every step.
-- [git] when committing changes, follow conventional commit guidelines.
-- [git] Use clear commit messages referencing relevant files for changes.
+- [knowledge] Document findings in opentask task descriptions using `--description` flag
+- [knowledge] All notes must be in markdown format
+- [knowledge] Use opentask tags to categorize work: `research`, `documentation`, `implementation`, etc.
+- [knowledge] Keep task descriptions up to date with current status and findings
+- [tasks] Break down work into manageable phases using opentask hierarchy (parent/child tasks)
+- [tasks] Use opentask task types to organize: `phase` for multi-step work, `task` for atomic units
+- [tasks] Track all work through opentask - use `opentask task list` to find remaining items
+- [git] When committing changes, follow conventional commit guidelines
+- [git] Use clear commit messages referencing relevant task IDs and files (e.g., "fix: improve auth flow (task #42)")
 
-## Searching Memory
+## Task Management with Opentask
 
-- use `grep -r "<search-term>" .memory/` to find relevant notes
-- use `grep -r "TODO" .memory/todo.md` to find outstanding tasks
+**Core opentask commands for workflow:**
+- `opentask task new "<title>" --type phase` - Create tracking tasks for work phases
+- `opentask task new "<title>" --type task --parent <id>` - Create subtasks for atomic work
+- `opentask task list --status pending` - View all pending work items
+- `opentask task list --status in_progress` - View active work
+- `opentask task update <id> --status in_progress` - Mark work as active
+- `opentask task update <id> --status completed` - Mark work as complete
+- `opentask task show <id>` - View task details and context
 
-## In-Memoria Intelligence (Codebase Navigation)
+**Task types for agent workflows:**
+- `type:phase` - Multi-step implementation phases with clear objectives
+- `type:task` - Atomic work units within phases
+- `type:research` - Investigation/discovery work
+- `type:epic` - Large features spanning multiple phases
+- `type:story` - User-facing features or use cases
 
-**When to use In-Memoria** (prefer over manual grep/glob):
-- [ALWAYS] When asked "where should I..." or "what files..." → Use `memoria_predict_coding_approach`
-- [ALWAYS] When searching for patterns across codebase → Use `memoria_search_codebase`
-- [START OF SESSION] Get project overview → Use `memoria_get_project_blueprint`
-- [BEFORE REFACTORING] Check existing patterns → Use `memoria_get_pattern_recommendations`
-
-**Quick commands:**
-```bash
-# Project overview (run once per session)
-memoria_get_project_blueprint(path="/mnt/Store/Projects/Mine/Github/opentasks")
-
-# Find files for a task
-memoria_predict_coding_approach(problemDescription="add task filtering by assignee")
-
-# Search for pattern usage
-memoria_search_codebase(query="ProjectService", type="text")
-
-# Get recommended patterns for new code
-memoria_get_pattern_recommendations(problemDescription="create new service class")
-```
+**Tags for workflow control:**
+- `tag:NEEDS-HUMAN` - Work blocked on human decision/intervention
+- `tag:BLOCKED` - Work blocked on external dependencies
+- `tag:CRITICAL` - High-priority work requiring immediate attention
 
 **Benefits:**
-- ✅ 10-100x faster than manual grep/find
-- ✅ Learns project patterns (Factory, Builder, Service patterns)
-- ✅ No more "exploring to understand" - instant routing
-- ✅ Confidence scores guide decisions
+- ✅ Native persistence across sessions
+- ✅ Structured task hierarchy and filtering
+- ✅ Integrated with project context
+- ✅ No manual file management overhead
+- ✅ Clear status tracking for agent coordination
 
-**When NOT to use:**
-- Reading specific known files → Use `read` tool directly
-- Exact file path operations → Use bash/filesystem tools
+**Workflow example:**
+```bash
+# Create a new phase
+opentask task new "Implement authentication feature" --type phase --description "Multi-step implementation"
+
+# Create subtasks for the phase (get phase ID from list)
+opentask task new "Research OAuth libraries" --type research --parent <phase-id>
+opentask task new "Implement OAuth flow" --type task --parent <phase-id>
+
+# Track progress
+opentask task update <task-id> --status in_progress
+opentask task update <task-id> --status completed
+
+# Find blocked work
+opentask task list --tag BLOCKED
+```
 
 ## Execution Steps
 
-0. always read `.memory/summary.md` first to understand successful outcomes so far.
-1. update `.memory/team.md` to indicate which phase is being worked on and by whom (use the session id to indicate this, not the agent name).
-2. If there are any `[NEEDS-HUMAN]` tasks in `.memory/todo.md`, stop and wait for human intervention.
-3. follow the research guidelines above.
-4. when you are blocked by actions that require human intervention, create a `.memory/todo.md` file listing the tasks that need to be done by a human. tag it with `[NEEDS-HUMAN]` on the task line.
-5. after completing a phase, update `.memory/summary.md` and prune other files as necessary.
-6. commit changes with clear messages referencing relevant files.
+0. Check task status: `opentask task list --status pending` to understand remaining work.
+1. Create/update tasks as needed to track work phases and atomic units.
+2. If there are any `--tag BLOCKED` or `--tag NEEDS-HUMAN` tasks, stop and wait for human intervention.
+3. Follow the research and documentation guidelines above.
+4. When blocked by actions requiring human intervention, create a task with `--tag NEEDS-HUMAN` describing what needs to be done.
+5. Mark tasks as `--status completed` when work is finished.
+6. Commit changes with clear messages referencing relevant task IDs (e.g., "task #42").
 
 ## Human Interaction
 
 - If you need clarification or additional information, please ask a human for assistance.
-- print a large ascii box in chat indicating that human intervention is needed, and list the tasks from `.memory/todo.md` inside the box.
-- wait for human to complete the tasks before proceeding.
+- When human intervention is needed, create a task with `--tag NEEDS-HUMAN` describing what must be done.
+- Print a large ascii box in chat indicating that human intervention is needed, and run `opentask task list --tag NEEDS-HUMAN` to show blocking tasks.
+- Wait for human to complete the tasks before proceeding.
