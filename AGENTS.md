@@ -16,6 +16,29 @@
 - never commit binaries
 - when adjusting .gitignore, stop. get human help.
 
+## Tool Selection: grep vs gh_grep vs opentask
+
+**Use `grep` (local codebase search):**
+- Searching for patterns in local source files: `grep -r "pattern" internal/`
+- Finding function/variable definitions: `grep -r "func MyFunc" cmd/`
+- Locating specific imports or dependencies: `grep -r "import" go.mod`
+- Quick ad-hoc exploration of local files
+- **When:** You know the repo location and need immediate code context
+
+**Use `gh_grep` (remote GitHub search):**
+- Searching across GitHub issues/PRs for discussions: `gh_grep "performance" --type issues`
+- Finding references in issues/comments from other repos
+- Discovering how others solved similar problems in open source
+- Checking external documentation or examples on GitHub
+- **When:** You need context beyond this project or want to reference issues/PRs
+
+**Use `opentask` (planning & tracking):**
+- Creating work phases and atomic tasks for implementation
+- Storing findings and analysis in task descriptions
+- Tracking progress across research → implementation → completion
+- Blocking on external dependencies or human decisions
+- **When:** You need persistent state across sessions or coordinating multi-step work
+
 ## Research & Documentation Guidelines
 
 - [knowledge] Document findings in opentask task descriptions using `--description` flag
