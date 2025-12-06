@@ -55,16 +55,23 @@ This means:
    - Global config's `[global]` section (4th - core schema)
    - Built-in defaults (5th)
 
-2. **Merging result**: 
+2. **Merging result**:
    - Module-A's config overrides Work's config
    - Work's config overrides global project definition
    - Global settings apply where not overridden
    - Final result: One merged `OpentaskResolvedConfig` with all settings
 
-**Active project selection:**
-- If `.opentask.toml` specifies `active_project`, that's used
-- Otherwise, derived from directory name ("module-a") or global projects list
-- Can override with `--project` flag
+**Active project resolution:**
+
+The active project is **always derived at runtime** - never persisted to disk. Resolution follows a clear 3-tier priority:
+
+1. **Priority 1: Explicit ID** - If local `.opentask.toml` has `[project] id = "foo"`, that wins
+2. **Priority 2: Context Match** - Matches current directory against global config `[[projects.context]]` paths (longest match wins)
+3. **Priority 3: Directory Name** - If `.opentask.toml` exists but has no explicit ID, uses directory name (e.g., "module-a")
+
+If none of these resolve, you'll see an onboarding guide to initialize or attach a project.
+
+See "Active Project Resolution" section below for details.
 
 ## Configuration Structure
 
@@ -130,10 +137,6 @@ Define user-level defaults and multiple projects.
 
 **Example:**
 ```toml
-# Global settings applied to all projects
-[global]
-active_project = "work"
-
 # Shared workflow definition
 [workflow]
 statuses = ["todo", "in-progress", "reviewing", "done", "archived"]
@@ -150,22 +153,172 @@ to = ["in-progress", "archived"]
 epic = "~/.local/share/opentask/templates/epic.md"
 plan = "~/.local/share/opentask/templates/plan.md"
 
-# Define projects
-[[global.projects]]
+# Define projects with context paths
+[[projects]]
 id = "work"
 name = "Work Tasks"
 
-[global.projects.storage]
+[[projects.context]]
+path = "~/work/company-repo"
+
+[[projects.context]]
+path = "~/work/client-projects"
+
+[projects.storage]
 backend = "markdown-fs"
 path = "~/work/.tasks"
 
-[[global.projects]]
+[[projects]]
 id = "personal"
 name = "Personal Tasks"
 
-[global.projects.storage]
+[[projects.context]]
+path = "~/personal/blog"
+
+[[projects.context]]
+path = "~/personal/side-projects"
+
+[projects.storage]
 backend = "markdown-fs"
 path = "~/personal/.tasks"
+```
+
+## Active Project Resolution
+
+Opentask determines which project you're working on by analyzing your current directory and configuration files. The active project is **always derived at runtime** - never stored or persisted.
+
+### Resolution Algorithm
+
+The system follows a clear 3-tier priority:
+
+```
+ActiveProject = f(cwd, local_config, global_config)
+```
+
+#### Priority 1: Explicit Project ID (Highest)
+
+If your local `.opentask.toml` specifies an explicit `[project] id`, that always wins:
+
+```toml
+# /home/user/myapp/.opentask.toml
+[project]
+id = "myapp-v2"  # ← Explicit, overrides everything
+name = "My Application"
+```
+
+**Use case**: When you want a specific project ID that differs from the directory name.
+
+#### Priority 2: Global Config Context Match
+
+Matches your current directory against `[[projects.context]]` paths in global config. Longest matching path wins:
+
+```toml
+# ~/.config/opentask/config.toml
+[[projects]]
+id = "client-work"
+name = "Client Project"
+
+[[projects.context]]
+path = "/home/user/work/client-repo"
+
+[[projects.context]]
+path = "/home/user/work/client-frontend"
+```
+
+```bash
+cd /home/user/work/client-repo
+opentask task list
+# → ActiveProject = "client-work" (matched by context)
+```
+
+**Use case**: Multiple directories share the same project (monorepo, multiple clones).
+
+#### Priority 3: Directory Name Fallback
+
+If `.opentask.toml` exists but has no explicit `[project] id`, uses the directory name:
+
+```bash
+cd /home/user/projects/awesome-app
+ls .opentask.toml  # exists, no explicit id
+opentask task list
+# → ActiveProject = "awesome-app" (from directory)
+```
+
+**Use case**: Simple single-directory projects.
+
+### Onboarding Flow
+
+If no project can be resolved (no `.opentask.toml`, no context match), you'll see an onboarding guide:
+
+```
+╭────────────────────────────────────────────────────────╮
+│  NO OPENTASK PROJECT FOUND                            │
+│                                                       │
+│  Current directory: /home/user/random-dir            │
+│                                                       │
+│  Choose an option:                                    │
+│                                                       │
+│  1. Initialize a new project here                     │
+│     $ opentask config init                           │
+│                                                       │
+│  2. Attach this directory to an existing project      │
+│     $ opentask project attach <project-id>           │
+│                                                       │
+│  3. Work in a directory with an existing project      │
+│     $ cd /path/to/existing/project                   │
+╰────────────────────────────────────────────────────────╯
+```
+
+**Commands that bypass onboarding:**
+- `opentask config init` - Creates local config
+- `opentask project list` - Shows available projects
+- `opentask project attach` - Adds context to existing project
+- `opentask --help` - Help/docs
+
+**Commands that require a resolved project:**
+- `opentask task *` - All task operations
+- `opentask config view` - Needs to know which config to show
+
+### Examples
+
+#### Example 1: Explicit ID Override
+
+```toml
+# /home/user/my-project/.opentask.toml
+[project]
+id = "prod-app"  # Overrides directory name "my-project"
+name = "Production Application"
+```
+
+Result: `ActiveProject = "prod-app"`
+
+#### Example 2: Multiple Clones via Context
+
+```toml
+# ~/.config/opentask/config.toml
+[[projects]]
+id = "webapp"
+name = "Web Application"
+
+[[projects.context]]
+path = "/home/user/repos/webapp-main"
+
+[[projects.context]]
+path = "/home/user/repos/webapp-feature-x"
+
+[[projects.context]]
+path = "/home/user/repos/webapp-hotfix"
+```
+
+All three directories resolve to `ActiveProject = "webapp"` - they share tasks!
+
+#### Example 3: Simple Directory Name
+
+```bash
+cd ~/projects/blog-site
+ls .opentask.toml  # exists, no [project] id
+opentask task list
+# → ActiveProject = "blog-site"
 ```
 
 ## Configuration Reference
@@ -226,9 +379,18 @@ Paths to custom task type templates. All optional.
 
 Paths are resolved relative to the config file location.
 
-#### `active_project` - Project Identifier
+#### `id` - Project Identifier
 
-Optional string. If not specified, automatically derived from directory name or matched against global projects.
+Optional string in `[project]` section. Explicitly sets the project ID. If not specified, defaults to directory name.
+
+**Example:**
+```toml
+[project]
+id = "my-app-v2"  # Explicit ID (Priority 1)
+name = "My Application"
+```
+
+Without explicit ID, the project ID is derived from the directory name.
 
 ### Global Config Structure
 
@@ -236,11 +398,9 @@ Global configs use the `[global.*]` and `[workflow]`, `[templates]` namespaces:
 
 #### `[global]` - Global Settings
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `active_project` | string | Currently selected project ID |
+**Note**: The `active_project` field is **deprecated** and no longer used. Active project is now derived at runtime (see "Active Project Resolution" below).
 
-#### `[[global.projects]]` - Project Definitions
+#### `[[projects]]` - Project Definitions
 
 Array of project definitions available globally.
 
@@ -248,9 +408,25 @@ Array of project definitions available globally.
 |-------|------|-------------|
 | `id` | string | **Required.** Unique project identifier |
 | `name` | string | Project display name |
+| `context` | array | Array of `[[projects.context]]` tables with `path` fields |
 | `storage` | table | Storage configuration for this project |
 | `workflow` | table | Optional project-specific workflow override |
 | `templates` | table | Optional project-specific templates override |
+
+**Context paths** allow multiple directories to resolve to the same project:
+
+```toml
+[[projects]]
+id = "webapp"
+
+[[projects.context]]
+path = "/home/user/webapp-main"
+
+[[projects.context]]
+path = "/home/user/webapp-feature"
+```
+
+When you `cd` into either directory, `ActiveProject = "webapp"`.
 
 #### `[workflow]` - Global Workflow Defaults
 
@@ -303,7 +479,7 @@ For projects with custom task statuses:
 
 ## Commands
 
-- `opentask config init` - Initialize a new project config
+- `opentask config init` - Initialize a new project config in current directory
 - `opentask config view` - Show resolved configuration with discovery details
-- `opentask config projects` - List all projects in global config
-- `opentask config projects --active [id]` - Switch active project (global config)
+- `opentask project list` - List all projects in global config
+- `opentask project attach <project-id>` - Attach current directory to an existing project (adds to context paths)

@@ -1,5 +1,7 @@
 # OpenTask - mise configuration
 # Specifies development environment requirements
+[env]
+_.path = ["./bin", "./node_modules/.bin"]
 
 [tools]
 # Go version - pinned to match go.mod
@@ -12,6 +14,15 @@ hk = "latest"
 pkl = "latest"
 trufflehog = "latest"
 "go:golang.org/x/vuln/cmd/govulncheck" = "latest"
+# ubi is a universal binary installer - installs latest opentask release from GitHub releases
+"ubi:opentasks/cmd" = { version = "latest", exe = "opentask" }
+shellcheck = "latest"
+
+# VS Code Go tools
+"go:github.com/golangci/golangci-lint/cmd/golangci-lint" = "latest"
+"go:github.com/go-delve/delve/cmd/dlv" = "latest"
+"go:golang.org/x/tools/gopls" = "latest"
+"go:honnef.co/go/tools/cmd/staticcheck" = "latest"
 
 # Tasks are defined as file tasks in .mise/tasks/
 # Run `mise tasks` to see available tasks

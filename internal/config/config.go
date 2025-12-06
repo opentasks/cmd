@@ -17,10 +17,10 @@ type OpentaskConfigCoreSchema struct {
 }
 
 // OpentaskConfigGlobalSchema defines user-level global configuration.
-// This includes the active project selection and list of known projects.
+// This schema is for reference only - OpentaskGlobalConfigFile is the actual struct used for parsing.
+// Note: active_project is intentionally excluded as it's runtime state, not persisted configuration.
 type OpentaskConfigGlobalSchema struct {
-	ActiveProject string                `toml:"active_project"`
-	Projects      []GlobalProjectConfig `toml:"projects"`
+	Projects []GlobalProjectConfig `toml:"projects"`
 }
 
 // ProjectContext represents a working directory context associated with a project.
@@ -52,40 +52,46 @@ type OpentaskConfigProjectSchema struct {
 
 // OpentaskGlobalConfigFile represents the complete structure of a global config file (~/.config/opentask/config.toml).
 // Top-level keys are implicitly global - no [global] section wrapper needed.
+// Note: active_project is NOT stored in this file - it's derived at runtime from cwd + config.
 type OpentaskGlobalConfigFile struct {
-	ActiveProject string                `toml:"active_project"`
-	Projects      []GlobalProjectConfig `toml:"projects"`
-	Workflow      *WorkflowConfig       `toml:"workflow"`
-	Templates     *TemplateConfig       `toml:"templates"`
+	Projects  []GlobalProjectConfig `toml:"projects"`
+	Workflow  *WorkflowConfig       `toml:"workflow"`
+	Templates *TemplateConfig       `toml:"templates"`
 }
 
 // OpentaskProjectConfigFile represents the complete structure of a project config file (.opentask.toml).
 // Top-level keys map directly to project settings - no [project] wrapper needed.
+// Note: active_project is NOT stored in this file - it's derived at runtime via ResolveActiveProject().
 // Example:
 //
 //	[project]
+//	id = "myapp"  # Optional explicit ID
 //	name = "My Project"
 //	[storage]
 //	path = "./.tasks"
 type OpentaskProjectConfigFile struct {
-	Project       *ProjectSection           `toml:"project"`
-	Storage       *StorageConfig            `toml:"storage"`
-	Workflow      *WorkflowConfig           `toml:"workflow"`
-	Templates     *TemplateConfig           `toml:"templates"`
-	ActiveProject string                    `toml:"active_project"`
-	Core          *OpentaskConfigCoreSchema `toml:"core"` // Optional project-specific workflow/templates
+	Project   *ProjectSection           `toml:"project"`
+	Storage   *StorageConfig            `toml:"storage"`
+	Workflow  *WorkflowConfig           `toml:"workflow"`
+	Templates *TemplateConfig           `toml:"templates"`
+	Core      *OpentaskConfigCoreSchema `toml:"core"` // Optional project-specific workflow/templates
 }
 
 // OpentaskResolvedConfig is the final merged configuration after resolving from all sources.
 // This is what the application uses at runtime - a complete, validated configuration with no ambiguities.
 // The DiscoveredFiles field tracks which config files were merged to produce this result.
+// ActiveProject is ALWAYS derived at runtime from cwd + config, never persisted.
 type OpentaskResolvedConfig struct {
-	Project         *ProjectSection `toml:"-"`
-	Workflow        *WorkflowConfig `toml:"-"`
-	Templates       *TemplateConfig `toml:"-"`
-	Storage         *StorageConfig  `toml:"-"`
-	ActiveProject   string          `toml:"-"`
-	DiscoveredFiles []string        `toml:"-"` // Config files that were merged (for debugging/display)
+	Project       *ProjectSection `toml:"-"`
+	Workflow      *WorkflowConfig `toml:"-"`
+	Templates     *TemplateConfig `toml:"-"`
+	Storage       *StorageConfig  `toml:"-"`
+	ActiveProject string          `toml:"-"` // Derived at runtime (never read from file)
+	// IsResolved indicates whether ActiveProject was successfully resolved from config + cwd.
+	// true: ProjectID found via explicit ID, context match, or directory fallback
+	// false: No project configuration found (onboarding required)
+	IsResolved      bool     `toml:"-"`
+	DiscoveredFiles []string `toml:"-"` // Config files that were merged (for debugging/display)
 }
 
 // ProjectConfig holds all configuration for a project (legacy, kept for backwards compatibility during transition)
@@ -98,6 +104,7 @@ type ProjectConfig struct {
 
 // ProjectSection holds project metadata
 type ProjectSection struct {
+	ID          string `toml:"id"` // Optional explicit project ID (overrides directory-based derivation)
 	Name        string `toml:"name"`
 	Description string `toml:"description"`
 	Owner       string `toml:"owner"`

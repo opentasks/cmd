@@ -20,8 +20,9 @@ var projectCmd = &cobra.Command{
 
 // projectAttachCmd attaches a working directory to a project
 var projectAttachCmd = &cobra.Command{
-	Use:   "attach [PATH]",
-	Short: "Attach a working directory to a project",
+	Use:     "attach [PATH]",
+	Short:   "Attach a working directory to a project",
+	PreRunE: allowUnresolved, // Allow attach without existing project in cwd
 	Long: `Attach a working directory to a project so that tasks are automatically
 found in the project's storage when working from that directory.
 
@@ -91,8 +92,9 @@ Example:
 
 // projectDetachCmd detaches a working directory from a project
 var projectDetachCmd = &cobra.Command{
-	Use:   "detach [PATH]",
-	Short: "Detach a working directory from a project",
+	Use:     "detach [PATH]",
+	Short:   "Detach a working directory from a project",
+	PreRunE: allowUnresolved, // Allow detach without existing project
 	Long: `Remove a working directory from a project.
 
 If PATH is not provided, the current working directory is used.
@@ -159,9 +161,10 @@ Example:
 
 // projectListCmd lists all projects and their contexts
 var projectListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List all projects",
-	Long:  "Display all projects with their storage paths and working directory contexts",
+	Use:     "list",
+	Short:   "List all projects",
+	Long:    "Display all projects with their storage paths and working directory contexts",
+	PreRunE: allowUnresolved, // Allow list without existing project
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Load global config
 		pm := project.NewManager()
@@ -187,8 +190,13 @@ var projectListCmd = &cobra.Command{
 		fmt.Print(lister.List())
 		fmt.Println()
 
-		if globalConfig.ActiveProject != "" {
-			fmt.Printf("* = active_project (%s)\n", globalConfig.ActiveProject)
+		// Show which project would be active for current directory
+		cwd, err := os.Getwd()
+		if err == nil {
+			resolved, err := config.ResolveProjectConfig(cwd)
+			if err == nil && resolved.IsResolved {
+				fmt.Printf("\nNote: Current directory resolves to project: %s\n", resolved.ActiveProject)
+			}
 		}
 
 		return nil

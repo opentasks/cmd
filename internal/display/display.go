@@ -2,6 +2,8 @@ package display
 
 import (
 	"fmt"
+	"github.com/charmbracelet/lipgloss"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -133,4 +135,72 @@ func TaskDetails(task *model.Task) string {
 	}
 
 	return result.String()
+}
+
+// PrintOnboardingBox prints a helpful onboarding message when no active project is found.
+// This guides users through the options for getting started with opentask.
+func PrintOnboardingBox(w io.Writer, cwd string) {
+	// Define styles
+	titleStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("205")).
+		Padding(0, 1)
+
+	headerStyle := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color("170")).
+		MarginTop(1)
+
+	commandStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("86")).
+		Padding(0, 2)
+
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		Padding(1, 2).
+		Width(60)
+
+	// Maximum width for content (60 width - 4 padding = 56 effective)
+	const maxContentWidth = 56
+
+	// Format the current working directory
+	displayCwd := FormatPath(cwd)
+	if len(displayCwd) > 50 {
+		displayCwd = Truncate(displayCwd, 47)
+	}
+
+	// Build content
+	var content strings.Builder
+
+	content.WriteString(titleStyle.Render("NO OPENTASK PROJECT FOUND"))
+	content.WriteString("\n\n")
+	content.WriteString(fmt.Sprintf("Current directory: %s\n", displayCwd))
+	content.WriteString("\n")
+	content.WriteString("No project configuration found for this location.\n")
+
+	content.WriteString(headerStyle.Render("Choose an option:"))
+	content.WriteString("\n\n")
+
+	content.WriteString("1. Initialize a new project here\n")
+	content.WriteString(commandStyle.Render(Truncate("$ opentask config init", maxContentWidth)))
+	content.WriteString("\n\n")
+
+	content.WriteString("2. Attach this directory to an existing project\n")
+	content.WriteString(commandStyle.Render(Truncate("$ opentask project attach <project-id>", maxContentWidth)))
+	content.WriteString("\n")
+	content.WriteString(commandStyle.Render(Truncate("$ opentask project list  # see available projects", maxContentWidth)))
+	content.WriteString("\n\n")
+
+	content.WriteString("3. Work in a directory with an existing project\n")
+	content.WriteString(commandStyle.Render(Truncate("$ cd /path/to/existing/project", maxContentWidth)))
+	content.WriteString("\n\n")
+
+	content.WriteString(Truncate("Learn more: opentask config --help", maxContentWidth))
+
+	// Render the box
+	if _, err := fmt.Fprintln(w, boxStyle.Render(content.String())); err != nil {
+		// Log error but don't fail - this is a display function
+		fmt.Fprintf(os.Stderr, "error writing onboarding box: %v\n", err)
+	}
 }

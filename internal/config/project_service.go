@@ -46,7 +46,6 @@ func (s *ProjectService) DetachContext(projectID, resolvedPath string) error {
 }
 
 // RemoveProject removes a project from the global config.
-// If the removed project was the active project, active_project is cleared.
 func (s *ProjectService) RemoveProject(projectID string) error {
 	projectIndex := s.findProjectIndex(projectID)
 	if projectIndex == -1 {
@@ -58,11 +57,6 @@ func (s *ProjectService) RemoveProject(projectID string) error {
 		s.globalConfig.Projects[:projectIndex],
 		s.globalConfig.Projects[projectIndex+1:]...,
 	)
-
-	// Clear active project if it was the removed project
-	if s.globalConfig.ActiveProject == projectID {
-		s.globalConfig.ActiveProject = ""
-	}
 
 	return nil
 }

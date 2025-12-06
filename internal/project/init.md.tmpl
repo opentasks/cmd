@@ -1,6 +1,4 @@
-
-
-# AGENTS.md
+# {{.ProjectName}} - Agent Guidelines
 
 > [!NOTE]
 > **CRITICAL** Before doing any work:
@@ -84,7 +82,7 @@
 **Workflow example:**
 ```bash
 # Create a new phase
-opentask task new "Implement authentication feature" --type phase --description "Multi-step implementation"
+opentask task new "Implement authentication feature" --type plan --description "Multi-step implementation"
 
 # Create subtasks for the phase (get phase ID from list)
 opentask task new "Research OAuth libraries" --type research --parent <phase-id>

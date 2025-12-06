@@ -12,9 +12,10 @@ import (
 
 // taskCmd represents the task command group
 var taskCmd = &cobra.Command{
-	Use:   "task",
-	Short: "Manage tasks",
-	Long:  "Commands for creating, listing, and managing tasks",
+	Use:               "task",
+	Short:             "Manage tasks",
+	Long:              "Commands for creating, listing, and managing tasks",
+	PersistentPreRunE: requireActiveProject, // All task commands require an active project
 }
 
 // taskNewCmd creates a new task

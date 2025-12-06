@@ -44,14 +44,10 @@ func LoadProjectConfig(path string) (*OpentaskProjectConfigFile, error) {
 // MergeGlobalConfig merges global config into the resolved config.
 // Global config provides defaults that can be overridden by project configs.
 // Note: We start with defaults, so global config will override them if present.
+// Note: ActiveProject is NOT merged here - it's derived at runtime via ResolveActiveProject().
 func MergeGlobalConfig(resolved *OpentaskResolvedConfig, global *OpentaskGlobalConfigFile) *OpentaskResolvedConfig {
 	if global == nil {
 		return resolved
-	}
-
-	// Merge active project if set
-	if global.ActiveProject != "" {
-		resolved.ActiveProject = global.ActiveProject
 	}
 
 	// Merge workflow if present (overrides built-in defaults)
@@ -101,12 +97,9 @@ func MergeProjectConfig(resolved *OpentaskResolvedConfig, project *OpentaskProje
 		resolved.Templates = project.Templates
 	}
 
-	if project.ActiveProject != "" {
-		resolved.ActiveProject = project.ActiveProject
-	}
-
 	// Merge project core config (fallback if top-level fields not set)
 	// Priority: project.X > project.Core.X > global.Core.X > built-in defaults
+	// Note: ActiveProject is NOT merged here - it's derived at runtime via ResolveActiveProject()
 	if project.Core != nil {
 		// If project doesn't have workflow, use project.Core workflow
 		if project.Workflow == nil && project.Core.Workflow != nil {
@@ -121,51 +114,37 @@ func MergeProjectConfig(resolved *OpentaskResolvedConfig, project *OpentaskProje
 	return resolved
 }
 
-// deriveActiveProject derives the active_project from the config file path and global projects.
-// Priority:
-// 1. If active_project is already set, return it
-// 2. Check if the config directory matches a global project storage path
-// 3. Fall back to the config directory name
-func deriveActiveProject(activeProject string, configDir string, globalProjects []GlobalProjectConfig) string {
-	if activeProject != "" {
-		return activeProject
+// ResolveActiveProject derives the active project ID from runtime context.
+// This is a pure function: same inputs always produce same output.
+//
+// Resolution priority:
+//  1. Explicit project.id in local .opentask.toml
+//  2. Context match in global config (longest path wins)
+//  3. Directory name fallback (if local config exists AND no global match)
+//  4. Unresolved (empty string)
+//
+// Returns (projectID, isResolved) where isResolved indicates whether a project was successfully identified.
+func ResolveActiveProject(cwd string, localConfig *OpentaskProjectConfigFile, globalConfig *OpentaskGlobalConfigFile) (string, bool) {
+	// Priority 1: Explicit project.id in local .opentask.toml
+	if localConfig != nil && localConfig.Project != nil && localConfig.Project.ID != "" {
+		return localConfig.Project.ID, true
 	}
 
-	// Try to match config directory with global project storage path
-	// Use absolute path for comparison
-	configDirAbs, err := filepath.Abs(configDir)
-	if err != nil {
-		configDirAbs = configDir
-	}
-
-	for _, proj := range globalProjects {
-		if proj.Storage == nil {
-			continue
-		}
-
-		projPath := proj.Storage.Path
-
-		// Expand ~ to home directory
-		if projPath[0] == '~' {
-			home, err := os.UserHomeDir()
-			if err == nil {
-				projPath = filepath.Join(home, projPath[1:])
-			}
-		}
-
-		projPathAbs, err := filepath.Abs(projPath)
-		if err != nil {
-			continue
-		}
-
-		// Check if paths match
-		if configDirAbs == projPathAbs {
-			return proj.ID
+	// Priority 2: Context match in global config
+	if globalConfig != nil {
+		projectID, matchedProject := FindProjectByContext(cwd, globalConfig.Projects)
+		if matchedProject != nil {
+			return projectID, true
 		}
 	}
 
-	// Fall back to directory name
-	return filepath.Base(configDir)
+	// Priority 3: Derive from local .opentask.toml directory name (fallback if no global match found)
+	if localConfig != nil {
+		return filepath.Base(cwd), true
+	}
+
+	// Priority 4: Unresolved - onboarding required
+	return "", false
 }
 
 // ResolveProjectConfig resolves the final merged configuration for a project.
@@ -177,6 +156,8 @@ func deriveActiveProject(activeProject string, configDir string, globalProjects 
 // 3. Global config [[projects]] matching project ID (project schema fields)
 // 4. Global config [global] section (core schema fields)
 // 5. Built-in defaults
+//
+// ActiveProject is ALWAYS derived at runtime via ResolveActiveProject() - never read from files.
 func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 	// Start with defaults
 	resolved := NewResolvedConfig()
@@ -190,6 +171,7 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 	// Load and merge project configs (furthest to closest, so closest overrides)
 	// Note: projectFiles may include the global config at the end
 	var globalConfig *OpentaskGlobalConfigFile
+	var localConfig *OpentaskProjectConfigFile
 	var globalPath string
 
 	for i := len(projectFiles) - 1; i >= 0; i-- {
@@ -222,6 +204,10 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 			}
 
 			if projectConfig != nil {
+				// Save the closest (first) local config for resolution
+				if i == 0 {
+					localConfig = projectConfig
+				}
 				resolved = MergeProjectConfig(resolved, projectConfig)
 				// Insert at beginning to maintain order (closest first)
 				resolved.DiscoveredFiles = append([]string{projectFile}, resolved.DiscoveredFiles...)
@@ -229,48 +215,13 @@ func ResolveProjectConfig(cwd string) (*OpentaskResolvedConfig, error) {
 		}
 	}
 
-	// Try to match context if no .opentask.toml found and no active_project set
-	if resolved.ActiveProject == "" && len(projectFiles) == 0 {
-		if globalConfig != nil {
-			// Try to find a project by context matching
-			projectID, matchedProject := FindProjectByContext(cwd, globalConfig.Projects)
-			if matchedProject != nil {
-				resolved.ActiveProject = projectID
-				// Use the matched project's storage immediately
-				if matchedProject.Storage != nil {
-					resolved.Storage = matchedProject.Storage
-				}
-				if matchedProject.Workflow != nil {
-					resolved.Workflow = matchedProject.Workflow
-				}
-				if matchedProject.Templates != nil {
-					resolved.Templates = matchedProject.Templates
-				}
-			}
-		}
-	}
+	// ═══════════════════════════════════════════════════════════
+	// DERIVE ACTIVE PROJECT (pure function - never read from file)
+	// ═══════════════════════════════════════════════════════════
+	resolved.ActiveProject, resolved.IsResolved = ResolveActiveProject(cwd, localConfig, globalConfig)
 
-	// Derive active_project if still not set (do this BEFORE resolving storage path)
-	if resolved.ActiveProject == "" {
-		var globalProjects []GlobalProjectConfig
-		if globalConfig != nil {
-			globalProjects = globalConfig.Projects
-		}
-
-		// Find the closest project config directory (only if we found local .opentask.toml files)
-		if len(projectFiles) > 0 {
-			configDir := filepath.Dir(projectFiles[0])
-			resolved.ActiveProject = deriveActiveProject("", configDir, globalProjects)
-		} else {
-			// No project config and no context match, use global active_project if available
-			if globalConfig != nil && globalConfig.ActiveProject != "" {
-				resolved.ActiveProject = globalConfig.ActiveProject
-			}
-		}
-	}
-
-	// Merge settings from matching global project if not already set
-	if globalConfig != nil {
+	// If resolved, merge settings from matching global project
+	if resolved.IsResolved && globalConfig != nil {
 		for _, globalProj := range globalConfig.Projects {
 			if globalProj.ID == resolved.ActiveProject {
 				// Found matching global project, merge its settings
@@ -336,7 +287,13 @@ func FindProjectByContext(cwd string, globalProjects []GlobalProjectConfig) (str
 		return "", nil
 	}
 
-	// Normalize path
+	// Normalize path and expand ~
+	if len(cwdAbs) > 0 && cwdAbs[0] == '~' {
+		home, err := os.UserHomeDir()
+		if err == nil {
+			cwdAbs = filepath.Join(home, cwdAbs[1:])
+		}
+	}
 	cwdAbs = filepath.Clean(cwdAbs)
 
 	var longestMatchPath string

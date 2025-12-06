@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 #MISE description="Run all tests"
+#USAGE flag --coverage default="false"
+
 set -euo pipefail
 
-go test -v ./...
+go test -v -race ./...

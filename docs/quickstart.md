@@ -10,12 +10,20 @@ The binary will be available as `./opentask`
 
 ## Basic Usage
 
-### Create a Project
+### Initialize a New Project
 
 ```bash
 mkdir my_project
 cd my_project
+opentask config init --name "My Project"
 ```
+
+This creates `.opentask.toml` in the current directory. The project ID is automatically derived from the directory name ("my_project").
+
+**What happens:**
+- Creates `.opentask.toml` configuration
+- Sets up `.tasks/` directory for task storage
+- Project is immediately ready to use
 
 ### Create Your First Task
 
@@ -23,7 +31,7 @@ cd my_project
 opentask task new "My Epic" --type epic
 ```
 
-This creates task ID 1. Tasks are stored as markdown files with YAML frontmatter.
+This creates task ID 1. Tasks are stored as markdown files with YAML frontmatter in `.tasks/`.
 
 ### Create Subtasks
 
@@ -124,13 +132,18 @@ You can customize these in `config.toml`.
 
 ## Configuration
 
-Create a `config.toml` in your project root to customize:
+The `.opentask.toml` file was created by `config init`. You can edit it to customize:
 
 ```toml
 [project]
+id = "my-project"          # Optional: explicit project ID (defaults to directory name)
 name = "My Project"
 description = "Project description"
 owner = "my-team"
+
+[storage]
+backend = "markdown-fs"
+path = ".tasks"
 
 [workflow]
 statuses = ["todo", "in-progress", "review", "done"]
@@ -143,15 +156,13 @@ to = ["in-progress", "archived"]
 [[workflow.transitions]]
 from = "in-progress"
 to = ["review", "done", "archived"]
-
-[storage]
-backend = "markdown-fs"
-path = "."
 ```
 
-## Multi-Project Setup with Project Contexts
+**Pro tip**: If you don't specify `[project] id`, opentask uses the directory name. This makes projects portable!
 
-For teams with multiple projects, use project contexts to avoid needing `--path` on every command:
+## Multi-Project Setup
+
+For managing multiple projects, use global configuration with context paths. This lets you work on different projects without switching manually.
 
 ### Setup (One-time)
 
@@ -159,47 +170,68 @@ For teams with multiple projects, use project contexts to avoid needing `--path`
 # Create global config
 mkdir -p ~/.config/opentask
 cat > ~/.config/opentask/config.toml << 'TOML'
-active_project = "personal"
-
 [[projects]]
 id = "personal"
-name = "Personal Notes"
+name = "Personal Projects"
+
+[[projects.context]]
+path = "/home/user/personal/blog"
+
+[[projects.context]]
+path = "/home/user/personal/side-projects"
+
 [projects.storage]
 path = "/home/user/Notes/.tasks"
 
 [[projects]]
 id = "work"
 name = "Work Tasks"
+
+[[projects.context]]
+path = "/home/user/work/company-repo"
+
+[[projects.context]]
+path = "/home/user/work/client-projects"
+
 [projects.storage]
-path = "/home/user/work-notes/.tasks"
+path = "/home/user/work/.tasks"
 TOML
-
-# Attach your project directories
-cd /path/to/work/project
-opentask project attach --project work
-
-# Attach worktrees
-cd /path/to/work/project.worktrees/feature-branch
-opentask project attach --project work
 ```
+
+**What this does:**
+- Defines two projects: "personal" and "work"
+- Maps multiple directories to each project via context paths
+- When you `cd` into any context directory, opentask automatically uses that project!
 
 ### Daily Usage
 
 ```bash
-# From any directory within your attached project:
-cd /path/to/work/project/src/api
-opentask task list      # Automatically finds work project
-opentask task new "Bug" # Creates in work project's storage
+# Navigate to work directory
+cd /home/user/work/company-repo/src/api
+opentask task list      # Automatically uses "work" project (matched by context)
 
-# Switch projects
-opentask config projects --set-active personal
-opentask task list  # Now shows personal tasks
+# Navigate to personal project
+cd /home/user/personal/blog
+opentask task list      # Automatically uses "personal" project
 
-# View all projects and contexts
+# View all projects and their contexts
 opentask project list
 ```
 
-See [project-contexts.md](project-contexts.md) for detailed project context documentation.
+**No manual switching needed!** The active project is derived from your current directory.
+
+### Adding More Context Paths
+
+If you clone a new repository or create a new directory for an existing project:
+
+```bash
+cd /home/user/work/new-microservice
+opentask project attach work  # Adds this directory to "work" project contexts
+```
+
+Now this directory resolves to the "work" project automatically!
+
+See [project-contexts.md](project-contexts.md) for detailed documentation.
 
 ## Command Line Options
 
@@ -306,12 +338,78 @@ opentask task list --type story --status todo
 - Customize `config.toml` for your workflow
 - Create project templates in `templates/`
 
+## Onboarding Flow
+
+If you try to run a task command in a directory without a project, you'll see an onboarding guide:
+
+```
+╭────────────────────────────────────────────────────────╮
+│  NO OPENTASK PROJECT FOUND                            │
+│                                                       │
+│  Current directory: /home/user/random-dir            │
+│                                                       │
+│  No project configuration found for this location.    │
+│                                                       │
+│  Choose an option:                                    │
+│                                                       │
+│  1. Initialize a new project here                     │
+│     $ opentask config init                           │
+│                                                       │
+│  2. Attach this directory to an existing project      │
+│     $ opentask project attach <project-id>           │
+│     $ opentask project list  # see available projects│
+│                                                       │
+│  3. Work in a directory with an existing project      │
+│     $ cd /path/to/existing/project                   │
+╰────────────────────────────────────────────────────────╯
+```
+
+**Option 1**: Create a new project in this directory
+```bash
+opentask config init --name "My Project"
+```
+
+**Option 2**: Link this directory to an existing project
+```bash
+opentask project list            # See available projects
+opentask project attach work     # Attach to "work" project
+```
+
+**Option 3**: Navigate to a directory that already has a project
+```bash
+cd /path/to/existing/project
+opentask task list
+```
+
+## How Projects Are Resolved
+
+Opentask determines your active project using a clear 3-tier priority:
+
+1. **Explicit ID** - If `.opentask.toml` has `[project] id = "foo"`, that wins
+2. **Context Match** - Matches current directory against global config context paths
+3. **Directory Name** - If `.opentask.toml` exists but no explicit ID, uses directory name
+
+See [config.md](config.md#active-project-resolution) for detailed explanation.
+
 ## Troubleshooting
 
-**"task not found"** - Task ID doesn't exist. Use `task list` to see all tasks.
+### "No active project found"
 
-**"invalid task type"** - Use one of: epic, plan, research, story, decision, task
+This means opentask couldn't determine which project you're working on.
 
-**Files not being found** - Ensure you're in the right project directory or use `--path`
+**Solutions:**
+1. Run `opentask config init` to create a new project
+2. Run `opentask project attach <id>` to link this directory to an existing project
+3. Navigate to a directory with `.opentask.toml`
 
-**Config not loading** - Check that `config.toml` exists and is valid TOML syntax
+### "task not found"
+
+Task ID doesn't exist in the current project. Use `opentask task list` to see all tasks.
+
+### "invalid task type"
+
+Use one of the valid types: `epic`, `plan`, `research`, `story`, `decision`, `task`
+
+### Config not loading
+
+Check that `.opentask.toml` exists and is valid TOML syntax. Run `opentask config view` to see what was loaded.

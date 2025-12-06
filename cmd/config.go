@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
 	"github.com/opentasks/cmd/internal/config"
+	"github.com/spf13/cobra"
 )
 
 // configCmd represents the config command group
@@ -70,9 +70,10 @@ var configViewCmd = &cobra.Command{
 
 // configInitCmd initializes a new opentask project
 var configInitCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Initialize a new project",
-	Long:  "Create a new .opentask.toml configuration file in the current directory",
+	Use:     "init",
+	Short:   "Initialize a new project",
+	Long:    "Create a new .opentask.toml configuration file in the current directory",
+	PreRunE: allowUnresolved, // Allow init to work without existing project
 	RunE: func(cmd *cobra.Command, args []string) error {
 		nameFlag, _ := cmd.Flags().GetString("name")
 		storagePath, _ := cmd.Flags().GetString("storage")
@@ -124,8 +125,6 @@ var configProjectsCmd = &cobra.Command{
 	Short: "Manage projects",
 	Long:  "List and manage projects defined in global configuration",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		activeFlag, _ := cmd.Flags().GetString("active")
-
 		// Load global config
 		home, err := os.UserHomeDir()
 		if err != nil {
@@ -146,26 +145,7 @@ var configProjectsCmd = &cobra.Command{
 			return nil
 		}
 
-		// Handle --active flag to set active project
-		if activeFlag != "" {
-			// Validate project exists
-			found := false
-			for _, proj := range globalConfig.Projects {
-				if proj.ID == activeFlag {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return fmt.Errorf("project %q not found in global config", activeFlag)
-			}
-			globalConfig.ActiveProject = activeFlag
-			fmt.Printf("Set active project to: %s\n", activeFlag)
-			// TODO: Persist change to global config file
-			return nil
-		}
-
-		// List projects (default)
+		// List projects
 		if len(globalConfig.Projects) == 0 {
 			fmt.Println("No projects configured in global config")
 			return nil
@@ -178,8 +158,13 @@ var configProjectsCmd = &cobra.Command{
 		fmt.Print(lister.List())
 		fmt.Println()
 
-		if globalConfig.ActiveProject != "" {
-			fmt.Printf("* = active_project (%s)\n", globalConfig.ActiveProject)
+		// Show which project would be active for current directory
+		cwd, err := os.Getwd()
+		if err == nil {
+			resolved, err := config.ResolveProjectConfig(cwd)
+			if err == nil && resolved.IsResolved {
+				fmt.Printf("\nNote: Current directory resolves to project: %s\n", resolved.ActiveProject)
+			}
 		}
 
 		return nil
@@ -202,7 +187,4 @@ func init() {
 	configViewCmd.Flags().BoolP("path", "p", false, "Show only the resolved storage path")
 	configViewCmd.Flags().BoolP("json", "j", false, "Output resolved config as JSON")
 	configViewCmd.Flags().BoolP("verbose", "v", false, "Show each config file contents during merging")
-
-	// Flags for config projects
-	configProjectsCmd.Flags().StringP("active", "a", "", "Set the active project by ID")
 }

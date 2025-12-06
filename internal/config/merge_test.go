@@ -13,8 +13,6 @@ func TestLoadGlobalConfigBasic(t *testing.T) {
 	configPath := filepath.Join(tmpDir, "global.toml")
 
 	globalConfig := `
-active_project = "work"
-
 [workflow]
 statuses = ["todo", "done"]
 initial = "todo"
@@ -49,11 +47,7 @@ path = "~/personal/.tasks"
 		t.Fatal("LoadGlobalConfig returned nil")
 	}
 
-	if cfg.ActiveProject != "work" {
-		t.Errorf("ActiveProject = %q, want %q", cfg.ActiveProject, "work")
-	}
-
-	if len(cfg.Projects) != 2 {
+	if cfg == nil || len(cfg.Projects) != 2 {
 		t.Errorf("Projects count = %d, want 2", len(cfg.Projects))
 	}
 
@@ -68,9 +62,8 @@ func TestLoadProjectConfigBasic(t *testing.T) {
 	configPath := filepath.Join(tmpDir, ".opentask.toml")
 
 	projectConfig := `
-active_project = "my-project"
-
 [project]
+id = "my-project"
 name = "My Project"
 description = "A test project"
 owner = "me"
@@ -101,12 +94,12 @@ initial = "todo"
 		t.Fatal("Project section is nil")
 	}
 
-	if cfg.Project.Name != "My Project" {
-		t.Errorf("Project.Name = %q, want %q", cfg.Project.Name, "My Project")
+	if cfg.Project.ID != "my-project" {
+		t.Errorf("Project.ID = %q, want %q", cfg.Project.ID, "my-project")
 	}
 
-	if cfg.ActiveProject != "my-project" {
-		t.Errorf("ActiveProject = %q, want %q", cfg.ActiveProject, "my-project")
+	if cfg.Project.Name != "My Project" {
+		t.Errorf("Project.Name = %q, want %q", cfg.Project.Name, "My Project")
 	}
 
 	if cfg.Storage.Path != "./.tasks" {
@@ -124,8 +117,6 @@ func TestResolveProjectConfigSimpleGlobalOnly(t *testing.T) {
 	globalPath := filepath.Join(globalDir, "config.toml")
 
 	globalConfig := `
-active_project = "test"
-
 [[projects]]
 id = "test"
 name = "Test Project"
@@ -194,8 +185,6 @@ func TestResolveProjectConfigActiveProjectDerivation(t *testing.T) {
 	projectStoragePath := filepath.Join(tmpDir, "work", ".tasks")
 
 	globalConfig := `
-active_project = "work"
-
 [[projects]]
 id = "work"
 name = "Work"
@@ -215,7 +204,8 @@ path = "` + projectStoragePath + `"
 	projectPath := filepath.Join(projectDir, ".opentask.toml")
 
 	projectConfig := `
-[project.project]
+[project]
+id = "work"
 name = "Work Project"
 `
 
@@ -280,7 +270,6 @@ path = "./.tasks"
 // TestMergeConfigsSimple tests merging a single config
 func TestMergeConfigsSimple(t *testing.T) {
 	global := &OpentaskGlobalConfigFile{
-		ActiveProject: "test",
 		Workflow: &WorkflowConfig{
 			Statuses: []string{"todo", "done"},
 			Initial:  "todo",
@@ -488,6 +477,182 @@ func TestRemoveContextPath(t *testing.T) {
 	err = proj.RemoveContextPath("/mnt/repos/nonexistent")
 	if err == nil {
 		t.Errorf("should have failed removing non-existent context")
+	}
+}
+
+// TestResolveActiveProject_Priority1_ExplicitProjectID tests priority 1: explicit project ID in local config
+func TestResolveActiveProject_Priority1_ExplicitProjectID(t *testing.T) {
+	localConfig := &OpentaskProjectConfigFile{
+		Project: &ProjectSection{
+			ID:   "my-project",
+			Name: "My Project",
+		},
+	}
+
+	projectID, resolved := ResolveActiveProject("/some/path", localConfig, nil)
+
+	if !resolved {
+		t.Errorf("expected resolved=true, got false")
+	}
+	if projectID != "my-project" {
+		t.Errorf("expected projectID=%q, got %q", "my-project", projectID)
+	}
+}
+
+// TestResolveActiveProject_Priority2_ContextMatch tests priority 2: context match in global config
+func TestResolveActiveProject_Priority2_ContextMatch(t *testing.T) {
+	cwd := "/mnt/repos/work-project"
+
+	globalConfig := &OpentaskGlobalConfigFile{
+		Projects: []GlobalProjectConfig{
+			{
+				ID:   "work",
+				Name: "Work Project",
+				Context: []ProjectContext{
+					{Path: "/mnt/repos/work-project"},
+				},
+			},
+		},
+	}
+
+	// Local config has no explicit ID
+	localConfig := &OpentaskProjectConfigFile{
+		Project: &ProjectSection{
+			Name: "Work Project",
+		},
+	}
+
+	projectID, resolved := ResolveActiveProject(cwd, localConfig, globalConfig)
+
+	if !resolved {
+		t.Errorf("expected resolved=true, got false")
+	}
+	if projectID != "work" {
+		t.Errorf("expected projectID=%q, got %q", "work", projectID)
+	}
+}
+
+// TestResolveActiveProject_Priority3_DirectoryNameFallback tests priority 3: derive from directory name
+func TestResolveActiveProject_Priority3_DirectoryNameFallback(t *testing.T) {
+	cwd := "/home/user/my-project"
+
+	localConfig := &OpentaskProjectConfigFile{
+		Project: &ProjectSection{
+			Name: "My Project",
+		},
+	}
+
+	projectID, resolved := ResolveActiveProject(cwd, localConfig, nil)
+
+	if !resolved {
+		t.Errorf("expected resolved=true, got false")
+	}
+	if projectID != "my-project" {
+		t.Errorf("expected projectID=%q (derived from dir), got %q", "my-project", projectID)
+	}
+}
+
+// TestResolveActiveProject_Unresolved tests unresolved scenario (no config)
+func TestResolveActiveProject_Unresolved(t *testing.T) {
+	cwd := "/some/path"
+
+	projectID, resolved := ResolveActiveProject(cwd, nil, nil)
+
+	if resolved {
+		t.Errorf("expected resolved=false, got true")
+	}
+	if projectID != "" {
+		t.Errorf("expected projectID=%q (empty), got %q", "", projectID)
+	}
+}
+
+// TestResolveActiveProject_PriorityOrder tests that priority 1 overrides other priorities
+func TestResolveActiveProject_PriorityOrder(t *testing.T) {
+	cwd := "/mnt/repos/work-project"
+
+	// Global config has matching context
+	globalConfig := &OpentaskGlobalConfigFile{
+		Projects: []GlobalProjectConfig{
+			{
+				ID:   "global-work",
+				Name: "Global Work Project",
+				Context: []ProjectContext{
+					{Path: "/mnt/repos/work-project"},
+				},
+			},
+		},
+	}
+
+	// Local config has explicit ID (takes priority)
+	localConfig := &OpentaskProjectConfigFile{
+		Project: &ProjectSection{
+			ID:   "local-project",
+			Name: "Local Project",
+		},
+	}
+
+	projectID, resolved := ResolveActiveProject(cwd, localConfig, globalConfig)
+
+	if !resolved {
+		t.Errorf("expected resolved=true, got false")
+	}
+	if projectID != "local-project" {
+		t.Errorf("expected projectID=%q (priority 1), got %q", "local-project", projectID)
+	}
+}
+
+// TestResolveActiveProject_EdgeCases tests edge cases: nil configs, empty strings
+func TestResolveActiveProject_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name         string
+		cwd          string
+		localCfg     *OpentaskProjectConfigFile
+		globalCfg    *OpentaskGlobalConfigFile
+		wantID       string
+		wantResolved bool
+	}{
+		{
+			name:         "empty cwd with no config",
+			cwd:          "",
+			localCfg:     nil,
+			globalCfg:    nil,
+			wantID:       "",
+			wantResolved: false,
+		},
+		{
+			name:         "cwd with no name part",
+			cwd:          "/",
+			localCfg:     &OpentaskProjectConfigFile{},
+			globalCfg:    nil,
+			wantID:       "/", // filepath.Base("/") returns "/"
+			wantResolved: true,
+		},
+		{
+			name: "local config with empty project ID",
+			cwd:  "/some/path",
+			localCfg: &OpentaskProjectConfigFile{
+				Project: &ProjectSection{
+					ID:   "", // Empty - should not use priority 1
+					Name: "Test",
+				},
+			},
+			globalCfg:    nil,
+			wantID:       "path",
+			wantResolved: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			projectID, resolved := ResolveActiveProject(tt.cwd, tt.localCfg, tt.globalCfg)
+
+			if resolved != tt.wantResolved {
+				t.Errorf("resolved: got %v, want %v", resolved, tt.wantResolved)
+			}
+			if projectID != tt.wantID {
+				t.Errorf("projectID: got %q, want %q", projectID, tt.wantID)
+			}
+		})
 	}
 }
 

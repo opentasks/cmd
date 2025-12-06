@@ -109,7 +109,7 @@ func TestLoadConfigNonexistent(t *testing.T) {
 		t.Fatal("LoadConfig() returned nil config")
 	}
 
-	if config.Workflow.Initial != "backlog" {
+	if config == nil || config.Workflow.Initial != "backlog" {
 		t.Errorf("LoadConfig() default workflow initial = %q, want 'backlog'", config.Workflow.Initial)
 	}
 }
