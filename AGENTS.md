@@ -55,7 +55,7 @@
 
 **Core opentask commands for workflow:**
 - `opentask task new "<title>" --type plan` - Create tracking tasks for work phases.
-- `opentask task new "<title>" --type task --parent <id>` - Create subtasks for Atomicic work
+- `opentask task new "<title>" --type task --parent <id>` - Create subtasks for atomic work
 - `opentask task list --status pending` - View all pending work items
 - `opentask task list --status in_progress` - View active work
 - `opentask task update <id> --status in_progress` - Mark work as active

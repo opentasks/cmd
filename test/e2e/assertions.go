@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/opentasks/cmd/internal/model"
@@ -37,7 +38,7 @@ Task Details:
   ID:    %d
   Title: %q
   Type:  %q
-  
+
 Full Task:
 %s
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
@@ -300,12 +301,12 @@ func (a *AssertTask) FileExists() *AssertTask {
 		return nil
 	})
 
-	// Check if any file contains this task ID
+	// Check if file for this task exists
+	// Files are named like: epic-1-auth-system.md or story-2-user-login.md
 	found := false
+	expectedFilePrefix := fmt.Sprintf("%s-%d-", a.task.Type, a.task.ID)
 	for _, file := range files {
-		// Files are named like: epic-1-auth-system.md or story-2-user-login.md
-		if filepath.Ext(file) == ".md" {
-			// Basic check: file should exist
+		if strings.HasPrefix(filepath.Base(file), expectedFilePrefix) && filepath.Ext(file) == ".md" {
 			found = true
 			break
 		}
