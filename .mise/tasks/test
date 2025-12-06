@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="Run all tests"
-#USAGE flag --coverage description="run with coverage report" default=false
+#USAGE flag --coverage default="false"
 
 set -euo pipefail
 
