@@ -61,7 +61,7 @@ type OpentaskGlobalConfigFile struct {
 
 // OpentaskProjectConfigFile represents the complete structure of a project config file (.opentask.toml).
 // Top-level keys map directly to project settings - no [project] wrapper needed.
-// Note: active_project is NOT stored in this file - it's derived at runtime.
+// Note: active_project is NOT stored in this file - it's derived at runtime via ResolveActiveProject().
 // Example:
 //
 //	[project]
@@ -82,13 +82,16 @@ type OpentaskProjectConfigFile struct {
 // The DiscoveredFiles field tracks which config files were merged to produce this result.
 // ActiveProject is ALWAYS derived at runtime from cwd + config, never persisted.
 type OpentaskResolvedConfig struct {
-	Project         *ProjectSection `toml:"-"`
-	Workflow        *WorkflowConfig `toml:"-"`
-	Templates       *TemplateConfig `toml:"-"`
-	Storage         *StorageConfig  `toml:"-"`
-	ActiveProject   string          `toml:"-"` // Derived at runtime (never read from file)
-	IsResolved      bool            `toml:"-"` // true if ActiveProject was successfully resolved
-	DiscoveredFiles []string        `toml:"-"` // Config files that were merged (for debugging/display)
+	Project       *ProjectSection `toml:"-"`
+	Workflow      *WorkflowConfig `toml:"-"`
+	Templates     *TemplateConfig `toml:"-"`
+	Storage       *StorageConfig  `toml:"-"`
+	ActiveProject string          `toml:"-"` // Derived at runtime (never read from file)
+	// IsResolved indicates whether ActiveProject was successfully resolved from config + cwd.
+	// true: ProjectID found via explicit ID, context match, or directory fallback
+	// false: No project configuration found (onboarding required)
+	IsResolved      bool     `toml:"-"`
+	DiscoveredFiles []string `toml:"-"` // Config files that were merged (for debugging/display)
 }
 
 // ProjectConfig holds all configuration for a project (legacy, kept for backwards compatibility during transition)

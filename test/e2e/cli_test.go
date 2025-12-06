@@ -16,15 +16,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// ExecuteCLI runs opentask CLI command in test environment and captures output
-// Returns: stdout, stderr, exitCode
-func ExecuteCLI(t *testing.T, tmpDir string, args ...string) (string, string, int) {
-	t.Helper()
-
-	// Find the opentask binary
-	binaryPath := "opentask"
-	binaryFound := false
-
+// findOpentaskBinary locates the opentask binary in expected locations
+// Returns the absolute path to the binary or an error if not found
+func findOpentaskBinary() (string, error) {
 	// Try multiple locations to find the binary
 	possiblePaths := []string{
 		"opentask",           // Try PATH first
@@ -34,7 +28,7 @@ func ExecuteCLI(t *testing.T, tmpDir string, args ...string) (string, string, in
 	}
 
 	// Also try using runtime.Caller for module root
-	if _, filename, _, ok := runtime.Caller(0); ok {
+	if _, filename, _, ok := runtime.Caller(1); ok {
 		moduleRoot := filepath.Join(filepath.Dir(filename), "..", "..")
 		possiblePaths = append(possiblePaths, filepath.Join(moduleRoot, "bin", "opentask"))
 	}
@@ -46,22 +40,32 @@ func ExecuteCLI(t *testing.T, tmpDir string, args ...string) (string, string, in
 			absPath, err := filepath.Abs(path)
 			if err != nil {
 				// Fallback to original path if Abs fails
-				binaryPath = path
-			} else {
-				binaryPath = absPath
+				return path, nil
 			}
-			binaryFound = true
-			break
+			return absPath, nil
 		}
 	}
 
-	// Skip the test if binary can't be found
-	if !binaryFound {
-		// Check if it's in PATH
-		if _, err := exec.LookPath("opentask"); err != nil {
-			t.Skipf("opentask binary not found in PATH or expected locations; skipping CLI test")
-			return "", "", 0
-		}
+	// Check if it's in PATH as fallback
+	pathBinary, err := exec.LookPath("opentask")
+	if err == nil {
+		return pathBinary, nil
+	}
+
+	// Binary not found anywhere
+	return "", fmt.Errorf("opentask binary not found in PATH or expected locations")
+}
+
+// ExecuteCLI runs opentask CLI command in test environment and captures output
+// Returns: stdout, stderr, exitCode
+func ExecuteCLI(t *testing.T, tmpDir string, args ...string) (string, string, int) {
+	t.Helper()
+
+	// Verify binary exists before attempting execution
+	binaryPath, err := findOpentaskBinary()
+	if err != nil {
+		t.Skipf("opentask binary not available: %v", err)
+		return "", "", 0
 	}
 
 	// Build command
@@ -82,12 +86,12 @@ func ExecuteCLI(t *testing.T, tmpDir string, args ...string) (string, string, in
 
 	// Execute
 	exitCode := 0
-	err := cmd.Run()
-	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
+	runErr := cmd.Run()
+	if runErr != nil {
+		if exitErr, ok := runErr.(*exec.ExitError); ok {
 			exitCode = exitErr.ExitCode()
 		} else {
-			t.Logf("Command execution error: %v", err)
+			t.Logf("Command execution error: %v", runErr)
 			exitCode = 1
 		}
 	}

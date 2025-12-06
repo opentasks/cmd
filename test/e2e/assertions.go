@@ -11,6 +11,10 @@ import (
 	"github.com/opentasks/cmd/internal/model"
 )
 
+// Separator is used for visual formatting in assertion failure messages.
+// Extracted constant to reduce duplication across assertion methods.
+const Separator = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
 // AssertTask provides rich assertion failures for tasks
 type AssertTask struct {
 	t    *testing.T

@@ -328,28 +328,24 @@ func BulkCreateTasks(t *testing.T, store storage.BaseStorage, count int, taskTyp
 			t.Fatalf("BulkCreateTasks[%d]: Failed to get next ID: %v", i, err)
 		}
 
-		// Create task with defaults
+		// Create task with defaults (including generated title)
 		now := time.Now().UTC()
+		generatedTitle := fmt.Sprintf(titlePattern, i+1)
 		task := &model.Task{
 			ID:            nextID,
-			Title:         "", // Will be set after options
+			Title:         generatedTitle,
 			Type:          taskType,
 			Status:        "todo",
-			Description:   "",
+			Description:   "Test task description",
 			Tags:          []string{},
 			Relationships: []model.Relationship{},
 			CreatedAt:     now,
 			UpdatedAt:     now,
 		}
 
-		// Apply common options first
+		// Apply common options first (which may override title and description)
 		for _, opt := range opts {
 			opt(task)
-		}
-
-		// Apply title pattern if title wasn't set by options
-		if task.Title == "" {
-			task.Title = fmt.Sprintf(titlePattern, i+1)
 		}
 
 		// Save to storage

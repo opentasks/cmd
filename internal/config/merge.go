@@ -97,10 +97,9 @@ func MergeProjectConfig(resolved *OpentaskResolvedConfig, project *OpentaskProje
 		resolved.Templates = project.Templates
 	}
 
-	// Note: ActiveProject is NOT merged here - it's derived at runtime via ResolveActiveProject()
-
 	// Merge project core config (fallback if top-level fields not set)
 	// Priority: project.X > project.Core.X > global.Core.X > built-in defaults
+	// Note: ActiveProject is NOT merged here - it's derived at runtime via ResolveActiveProject()
 	if project.Core != nil {
 		// If project doesn't have workflow, use project.Core workflow
 		if project.Workflow == nil && project.Core.Workflow != nil {
