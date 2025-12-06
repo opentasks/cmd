@@ -54,8 +54,8 @@
 ## Task Management with Opentask
 
 **Core opentask commands for workflow:**
-- `opentask task new "<title>" --type phase` - Create tracking tasks for work phases
-- `opentask task new "<title>" --type task --parent <id>` - Create subtasks for atomic work
+- `opentask task new "<title>" --type plan` - Create tracking tasks for work phases.
+- `opentask task new "<title>" --type task --parent <id>` - Create subtasks for Atomicic work
 - `opentask task list --status pending` - View all pending work items
 - `opentask task list --status in_progress` - View active work
 - `opentask task update <id> --status in_progress` - Mark work as active
@@ -63,7 +63,7 @@
 - `opentask task show <id>` - View task details and context
 
 **Task types for agent workflows:**
-- `type:phase` - Multi-step implementation phases with clear objectives
+- `type:plan` - Multi-step implementation phases with clear objectives
 - `type:task` - Atomic work units within phases
 - `type:research` - Investigation/discovery work
 - `type:epic` - Large features spanning multiple phases

@@ -121,7 +121,7 @@ func MergeProjectConfig(resolved *OpentaskResolvedConfig, project *OpentaskProje
 // Resolution priority:
 //  1. Explicit project.id in local .opentask.toml
 //  2. Context match in global config (longest path wins)
-//  3. Directory name fallback (if local config exists)
+//  3. Directory name fallback (if local config exists AND no global match)
 //  4. Unresolved (empty string)
 //
 // Returns (projectID, isResolved) where isResolved indicates whether a project was successfully identified.
@@ -139,12 +139,12 @@ func ResolveActiveProject(cwd string, localConfig *OpentaskProjectConfigFile, gl
 		}
 	}
 
-	// Priority 3: Derive from local .opentask.toml directory name
+	// Priority 3: Derive from local .opentask.toml directory name (fallback if no global match found)
 	if localConfig != nil {
 		return filepath.Base(cwd), true
 	}
 
-	// Unresolved - onboarding required
+	// Priority 4: Unresolved - onboarding required
 	return "", false
 }
 
@@ -288,7 +288,13 @@ func FindProjectByContext(cwd string, globalProjects []GlobalProjectConfig) (str
 		return "", nil
 	}
 
-	// Normalize path
+	// Normalize path and expand ~
+	if len(cwdAbs) > 0 && cwdAbs[0] == '~' {
+		home, err := os.UserHomeDir()
+		if err == nil {
+			cwdAbs = filepath.Join(home, cwdAbs[1:])
+		}
+	}
 	cwdAbs = filepath.Clean(cwdAbs)
 
 	var longestMatchPath string
