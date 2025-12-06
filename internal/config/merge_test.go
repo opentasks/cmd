@@ -47,7 +47,7 @@ path = "~/personal/.tasks"
 		t.Fatal("LoadGlobalConfig returned nil")
 	}
 
-	if len(cfg.Projects) != 2 {
+	if cfg == nil || len(cfg.Projects) != 2 {
 		t.Errorf("Projects count = %d, want 2", len(cfg.Projects))
 	}
 

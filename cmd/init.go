@@ -29,7 +29,9 @@ func runInit(cmd *cobra.Command) error {
 	}
 
 	// Write to stdout
-	fmt.Fprint(cmd.OutOrStdout(), output)
+	if _, err := fmt.Fprint(cmd.OutOrStdout(), output); err != nil {
+		return fmt.Errorf("failed to write output: %w", err)
+	}
 	return nil
 }
 

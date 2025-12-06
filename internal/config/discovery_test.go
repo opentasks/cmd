@@ -231,7 +231,7 @@ func TestMergeConfigsEmpty(t *testing.T) {
 	}
 
 	// Should have defaults
-	if len(merged.Workflow.Statuses) == 0 {
+	if merged == nil || len(merged.Workflow.Statuses) == 0 {
 		t.Error("MergeConfigs(empty) should have default workflow")
 	}
 }
