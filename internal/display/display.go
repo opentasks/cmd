@@ -161,10 +161,13 @@ func PrintOnboardingBox(w io.Writer, cwd string) {
 		Padding(1, 2).
 		Width(60)
 
+	// Maximum width for content (60 width - 4 padding = 56 effective)
+	const maxContentWidth = 56
+
 	// Format the current working directory
 	displayCwd := FormatPath(cwd)
 	if len(displayCwd) > 50 {
-		displayCwd = Truncate(displayCwd, 47) + "..."
+		displayCwd = Truncate(displayCwd, 47)
 	}
 
 	// Build content
@@ -180,20 +183,20 @@ func PrintOnboardingBox(w io.Writer, cwd string) {
 	content.WriteString("\n\n")
 
 	content.WriteString("1. Initialize a new project here\n")
-	content.WriteString(commandStyle.Render("$ opentask config init"))
+	content.WriteString(commandStyle.Render(Truncate("$ opentask config init", maxContentWidth)))
 	content.WriteString("\n\n")
 
 	content.WriteString("2. Attach this directory to an existing project\n")
-	content.WriteString(commandStyle.Render("$ opentask project attach <project-id>"))
+	content.WriteString(commandStyle.Render(Truncate("$ opentask project attach <project-id>", maxContentWidth)))
 	content.WriteString("\n")
-	content.WriteString(commandStyle.Render("$ opentask project list  # see available projects"))
+	content.WriteString(commandStyle.Render(Truncate("$ opentask project list  # see available projects", maxContentWidth)))
 	content.WriteString("\n\n")
 
 	content.WriteString("3. Work in a directory with an existing project\n")
-	content.WriteString(commandStyle.Render("$ cd /path/to/existing/project"))
+	content.WriteString(commandStyle.Render(Truncate("$ cd /path/to/existing/project", maxContentWidth)))
 	content.WriteString("\n\n")
 
-	content.WriteString("Learn more: opentask config --help")
+	content.WriteString(Truncate("Learn more: opentask config --help", maxContentWidth))
 
 	// Render the box
 	if _, err := fmt.Fprintln(w, boxStyle.Render(content.String())); err != nil {
