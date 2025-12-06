@@ -306,9 +306,10 @@ func (a *AssertTask) FileExists() *AssertTask {
 	})
 
 	// Check if file for this task exists
-	// Files are named like: epic-1-auth-system.md or story-2-user-login.md
+	// Files are named like: e-1-auth-system.md or s-2-user-login.md (using type codes)
 	found := false
-	expectedFilePrefix := fmt.Sprintf("%s-%d-", a.task.Type, a.task.ID)
+	typeCode := model.TypeCode[a.task.Type]
+	expectedFilePrefix := fmt.Sprintf("%s-%d-", typeCode, a.task.ID)
 	for _, file := range files {
 		if strings.HasPrefix(filepath.Base(file), expectedFilePrefix) && filepath.Ext(file) == ".md" {
 			found = true
