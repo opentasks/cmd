@@ -35,6 +35,27 @@ jobs:
     needs: release-please
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4
+        with:
+          fetch-depth: 0  # Full history needed for tag distance calculation
+
+      - name: Calculate prerelease tag
+        id: prerelease-tag
+        if: needs.release-please.outputs.releases-created != 'true'
+        run: |
+          # Find the nearest tag matching v*
+          LATEST_TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$LATEST_TAG" ]; then
+            # No tags exist, use commit count from start
+            COMMIT_COUNT=$(git rev-list --count HEAD)
+            TAG="v0.0.0-${COMMIT_COUNT}+${GITHUB_SHA:0:7}"
+          else
+            # Count commits since the latest tag
+            COMMIT_DISTANCE=$(git rev-list --count ${LATEST_TAG}..HEAD)
+            TAG="${LATEST_TAG}-${COMMIT_DISTANCE}+${GITHUB_SHA:0:7}"
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
       - name: Dispatch publish (stable)
         if: needs.release-please.outputs.releases-created == 'true'
         uses: peter-evans/repository-dispatch@bf47d102fdb849e755b0b0023ea3e81a44b6f570 #v2
@@ -54,5 +75,5 @@ jobs:
           event-type: publish-package
           client-payload: |
             {
-              "prerelease": true
+              "tag": "${{ steps.prerelease-tag.outputs.tag }}"
             }
