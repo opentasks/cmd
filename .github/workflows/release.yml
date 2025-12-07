@@ -43,17 +43,8 @@ jobs:
         id: prerelease-tag
         if: needs.release-please.outputs.releases-created != 'true'
         run: |
-          # Find the nearest tag matching v*
-          LATEST_TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$LATEST_TAG" ]; then
-            # No tags exist, use commit count from start
-            COMMIT_COUNT=$(git rev-list --count HEAD)
-            TAG="v0.0.0-${COMMIT_COUNT}+${GITHUB_SHA:0:7}"
-          else
-            # Count commits since the latest tag
-            COMMIT_DISTANCE=$(git rev-list --count ${LATEST_TAG}..HEAD)
-            TAG="${LATEST_TAG}-${COMMIT_DISTANCE}+${GITHUB_SHA:0:7}"
-          fi
+          TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || echo "0.0.0")
+          TAG=$(echo "$TAG" | xargs -I {} npx semver {} -i prerelease --preid alpha )
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
 
       - name: Dispatch publish (stable)
