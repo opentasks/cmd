@@ -48,7 +48,7 @@ jobs:
           version: latest
           args: >-
             release --clean
-            ${{ github.event.client_payload.prerelease == 'true' && '--prerelease' || '' }}
+            ${{ fromJSON(github.event.client_payload.prerelease || 'false') && '--prerelease' || '' }}
         env:
-          GORELEASER_CURRENT_TAG: ${{ steps.inputs.outputs.tag || github.ref_name }}
+          GORELEASER_CURRENT_TAG: ${{ steps.inputs.outputs.tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
