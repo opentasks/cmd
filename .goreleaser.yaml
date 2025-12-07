@@ -16,28 +16,28 @@ builds:
   - id: default
     main: ./cmd/opentask
     binary: opentask
-    
+
     # Build for multiple platforms
     goos:
       - linux
       - darwin
       - windows
-    
+
     goarch:
       - amd64
       - arm64
       - arm
-    
+
     goarm:
       - "6"
       - "7"
-    
+
     ldflags:
       - -s -w
       - -X github.com/opentasks/cmd/cmd.Version={{.Version}}
       - -X github.com/opentasks/cmd/cmd.Commit={{.Commit}}
       - -X github.com/opentasks/cmd/cmd.Date={{.Date}}
-    
+
     # Build matrix - skip some combinations
     ignore:
       - goos: windows
@@ -63,7 +63,7 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
-    
+
     files:
       - README.md
       - LICENSE
@@ -85,17 +85,18 @@ release:
     owner: opentasks
     name: cmd
 
+  prerelease: auto  # Auto-detect prerelease from tag (rc, alpha, beta, etc.)
   mode: keep-existing  # Don't overwrite existing
   draft: false
   footer: |
     ## SHA256 Checksums
-    
+
     ```
     {{ .Checksums }}
     ```
-    
+
     **Installation:**
-    
+
     - **macOS (ARM64)**: `curl -sSL https://github.com/opentasks/cmd/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Darwin_arm64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
     - **macOS (Intel)**: `curl -sSL https://github.com/opentasks/cmd/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Darwin_x86_64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
     - **Linux (x86_64)**: `curl -sSL https://github.com/opentasks/cmd/releases/download/{{ .Tag }}/opentask_{{ .Version }}_Linux_x86_64.tar.gz | tar xz && sudo mv opentask /usr/local/bin/`
