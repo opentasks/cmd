@@ -45,7 +45,11 @@ jobs:
         run: |
           TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || echo "0.0.0")
           TAG=$(echo "$TAG" | xargs -I {} npx semver {} -i prerelease --preid alpha )
+          git config user.name "github-actions[bot]"
+          git config user.mail "github-actions[bot]@users.noreply.github.com"
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          git tag "$TAG"
+          git push origin "$TAG"
 
       - name: Dispatch publish (stable)
         if: needs.release-please.outputs.releases-created == 'true'
