@@ -5,7 +5,7 @@ on:
     tags:
       - 'v*'
   repository_dispatch:
-    types: [publish-release]
+    types: [publish-package]
   workflow_dispatch:
     inputs:
       tag:
@@ -34,7 +34,6 @@ jobs:
           fetch-tags: true
           ref: ${{ steps.inputs.outputs.tag || github.ref }}
 
-
       - name: Setup environment
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 #v3
         with:
@@ -47,7 +46,9 @@ jobs:
         with:
           distribution: goreleaser
           version: latest
-          args: release --clean
+          args: >-
+            release --clean
+            ${{ github.event.client_payload.prerelease == 'true' && '--prerelease' || '' }}
         env:
           GORELEASER_CURRENT_TAG: ${{ steps.inputs.outputs.tag || github.ref_name }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

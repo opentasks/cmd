@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - master
 
 permissions:
   contents: write
@@ -28,17 +27,32 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           release-type: go
 
+      - name: Release-Please Debug
+        run: |
+          echo "${{ steps.release.outputs }}" | jq -r
+
   dispatch-publish:
     needs: release-please
-    if: needs.release-please.outputs.releases-created == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Dispatch publish workflow
+      - name: Dispatch publish (stable)
+        if: needs.release-please.outputs.releases-created == 'true'
         uses: peter-evans/repository-dispatch@bf47d102fdb849e755b0b0023ea3e81a44b6f570 #v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: publish-release
+          event-type: publish-package
           client-payload: |
             {
               "tag": "${{ needs.release-please.outputs.tag-name }}"
+            }
+
+      - name: Dispatch publish (prerelease)
+        if: needs.release-please.outputs.releases-created != 'true'
+        uses: peter-evans/repository-dispatch@bf47d102fdb849e755b0b0023ea3e81a44b6f570 #v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: publish-package
+          client-payload: |
+            {
+              "prerelease": true
             }
