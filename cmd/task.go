@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/opentasks/cmd/internal/display"
 	"github.com/opentasks/cmd/internal/editor"
+	"github.com/opentasks/cmd/internal/graph"
+	"github.com/opentasks/cmd/internal/model"
 	"github.com/opentasks/cmd/internal/query"
 	"github.com/opentasks/cmd/internal/task"
 	"github.com/spf13/cobra"
@@ -234,6 +237,86 @@ var taskUpdateCmd = &cobra.Command{
 	},
 }
 
+// taskLoaderWrapper wraps a TaskEngine to implement the TaskLoader interface
+type taskLoaderWrapper struct {
+	engine task.TaskEngine
+}
+
+// GetTask implements TaskLoader interface
+func (w *taskLoaderWrapper) GetTask(ctx context.Context, id int) (*model.Task, error) {
+	return w.engine.FindByID(ctx, id)
+}
+
+// taskGraphCmd displays task relationships as a Graphviz DOT graph
+var taskGraphCmd = &cobra.Command{
+	Use:   "graph [id]",
+	Short: "Display task relationships as a graph",
+	Long:  "Display task relationships (parent-child, blocking, related) as Graphviz DOT format or ASCII tree for visualization",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx := GetContext()
+
+		// Parse task ID
+		taskID, err := task.ParseID(args[0])
+		if err != nil {
+			return err
+		}
+
+		// Get flags
+		depth, _ := cmd.Flags().GetInt("depth")
+		excludeTypesList, _ := cmd.Flags().GetStringSlice("exclude-type")
+		templateDir, _ := cmd.Flags().GetString("template-dir")
+		format, _ := cmd.Flags().GetString("format")
+
+		// Get default depth from config if depth not specified
+		if depth == 0 {
+			// Load from config if available
+			if Resolved != nil && Resolved.Graph != nil && Resolved.Graph.DefaultDepth > 0 {
+				depth = Resolved.Graph.DefaultDepth
+			} else {
+				depth = 4 // Fallback default
+			}
+		}
+
+		// Build exclude types map
+		excludeTypes := make(map[string]bool)
+		for _, t := range excludeTypesList {
+			excludeTypes[t] = true
+		}
+
+		// Create a TaskLoader wrapper around the engine
+		loader := &taskLoaderWrapper{engine: Engine}
+
+		// Build the graph using the graph package
+		graphData, err := graph.BuildGraph(ctx, taskID, depth, loader, excludeTypes)
+		if err != nil {
+			return fmt.Errorf("failed to build graph: %w", err)
+		}
+
+		// Render output based on format
+		var output string
+		switch format {
+		case "ascii":
+			output, err = graph.RenderASCII(graphData)
+			if err != nil {
+				return fmt.Errorf("failed to render ASCII graph: %w", err)
+			}
+		case "dot", "":
+			// Default to DOT format
+			output, err = graph.RenderDOT(graphData, templateDir)
+			if err != nil {
+				return fmt.Errorf("failed to render DOT graph: %w", err)
+			}
+		default:
+			return fmt.Errorf("unknown format: %s (supported: dot, ascii)", format)
+		}
+
+		// Output to stdout
+		fmt.Println(output)
+		return nil
+	},
+}
+
 func init() {
 	// task new flags
 	taskNewCmd.Flags().StringP("type", "t", "task", "Task type (epic, plan, research, story, decision, task)")
@@ -256,10 +339,17 @@ func init() {
 	taskUpdateCmd.Flags().StringSliceP("remove-tag", "r", []string{}, "Tags to remove from the task")
 	taskUpdateCmd.Flags().BoolP("editor", "e", false, "Open task content in $EDITOR for editing")
 
+	// task graph flags
+	taskGraphCmd.Flags().IntP("depth", "d", 0, "Maximum relationship depth (0 = use config default)")
+	taskGraphCmd.Flags().StringSliceP("exclude-type", "x", []string{}, "Relationship types to exclude (comma-separated)")
+	taskGraphCmd.Flags().StringP("template-dir", "T", "", "Directory containing custom DOT templates")
+	taskGraphCmd.Flags().StringP("format", "f", "dot", "Output format: dot (Graphviz) or ascii (terminal tree)")
+
 	// Add subcommands to task command
 	taskCmd.AddCommand(taskNewCmd)
 	taskCmd.AddCommand(taskListCmd)
 	taskCmd.AddCommand(taskShowCmd)
 	taskCmd.AddCommand(taskDeleteCmd)
 	taskCmd.AddCommand(taskUpdateCmd)
+	taskCmd.AddCommand(taskGraphCmd)
 }

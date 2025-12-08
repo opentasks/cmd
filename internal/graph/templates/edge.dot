@@ -1,0 +1,3 @@
+{{- define "edge" }}
+{{- printf "task_%d" .SourceID }} -> {{ printf "task_%d" .TargetID }} [label="{{ .RelationType }}"{{ if eq .RelationType "blocks" }} style=dashed color=red{{ else if eq .RelationType "relates-to" }} style=dotted{{ end }}];
+{{- end }}

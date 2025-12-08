@@ -1,0 +1,3 @@
+{{- define "node" }}
+{{- printf "task_%d" .ID }} [label="{{ .ID }}{{ if .IsMissing }}\n<missing>{{ else }}\n{{ .Title }}\n[{{ .Type }}]{{ end }}"{{ if .IsCenter }} fillcolor="#e8f4f8" style="rounded,filled"{{ else if .IsMissing }} fillcolor="#ffcccc" style="rounded,filled,dashed"{{ end }}];
+{{- end }}

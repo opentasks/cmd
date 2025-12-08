@@ -1,0 +1,15 @@
+{{- define "graph" }}
+digraph {
+  rankdir=TB;
+  node [shape=box, style=rounded];
+  edge [fontsize=10];
+  {{- range .Nodes }}
+
+  {{ template "node" . }}
+  {{- end }}
+  {{- range .Edges }}
+
+  {{ template "edge" . }}
+  {{- end }}
+}
+{{- end }}
