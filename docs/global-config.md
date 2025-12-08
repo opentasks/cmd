@@ -4,11 +4,11 @@ This guide explains how to set up and use global configuration for managing mult
 
 ## What is Global Configuration?
 
-Global configuration is a single configuration file stored at `~/.config/opentask/config.toml` that:
+Global configuration is a single configuration file stored at `${XDG_CONFIG_HOME}/opentask/config.toml` (typically `~/.config/opentask/config.toml`) that:
 
 - Defines default workflow and template settings used by all projects
 - Lists all your known projects with their storage locations
-- Tracks which project is currently active
+- Defines working directory contexts for automatic project detection
 - Provides a central place to manage project-level settings
 
 ## Why Use Global Configuration?
@@ -18,7 +18,7 @@ Global config is useful when:
 - **Multiple projects**: You have 3+ projects and want to manage them from one place
 - **Shared workflow**: Multiple projects use the same task statuses and transitions
 - **Consistent templates**: You want the same task templates across projects
-- **Quick switching**: You frequently switch between different projects
+- **Directory-based switching**: You want opentask to automatically detect which project based on your current working directory
 - **Monorepo with subprojects**: You have a large repo with multiple logical projects
 
 ## Getting Started
@@ -36,9 +36,6 @@ Create `~/.config/opentask/config.toml`:
 ```toml
 # Global opentask configuration
 # Defines default settings and projects
-
-[global]
-active_project = "work"
 
 # Default workflow for all projects
 [workflow]
@@ -68,56 +65,64 @@ plan = "~/.local/share/opentask/templates/plan.md"
 task = "~/.local/share/opentask/templates/task.md"
 
 # Define your projects
-[[global.projects]]
+[[projects]]
 id = "work"
 name = "Work Tasks"
 description = "Tasks for my day job"
 
-[global.projects.storage]
+[projects.storage]
 backend = "markdown-fs"
 path = "~/work/.tasks"
 
-[[global.projects]]
+[[projects.context]]
+path = "/home/user/work"
+
+[[projects]]
 id = "personal"
 name = "Personal Projects"
 description = "My personal projects and goals"
 
-[global.projects.storage]
+[projects.storage]
 backend = "markdown-fs"
 path = "~/personal/.tasks"
 
-[[global.projects]]
+[[projects.context]]
+path = "/home/user/personal"
+
+[[projects]]
 id = "opensource"
 name = "Open Source"
 description = "Open source projects I contribute to"
 
-[global.projects.storage]
+[projects.storage]
 backend = "markdown-fs"
 path = "~/projects/opensource/.tasks"
+
+[[projects.context]]
+path = "/home/user/projects/opensource"
 ```
 
-### Step 3: Initialize Project Directories
+### Step 3: Initialize Project Directories (Optional)
 
-For each project, create `.opentask.toml` in the project directory:
+For each project, you can optionally create `.opentask.toml` to override global settings:
 
 ```bash
 cd ~/work
-opentask config init
+cat > .opentask.toml << 'EOF'
+[project]
+name = "Work Tasks"
+owner = "Your Name"
+
+# Optional: Override workflow for this project only
+[workflow]
+statuses = ["backlog", "todo", "in-progress", "review", "done"]
+initial = "todo"
+EOF
 ```
 
-This creates a project config with the correct structure.
+## Configuration Reference
 
-## Configuration Options
-
-### [global] Section
-
-Required section that defines global settings.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `active_project` | string | Currently selected project ID |
-
-### [[global.projects]] Section
+### [[projects]] Section
 
 Array of project definitions. Each project needs:
 
@@ -127,12 +132,27 @@ Array of project definitions. Each project needs:
 | `name` | string | ✗ | Human-readable project name |
 | `description` | string | ✗ | Project description |
 | `storage` | table | ✓ | Storage configuration |
-| `storage.backend` | string | ✓ | Backend type (always `"markdown-fs"`) |
+| `storage.backend` | string | ✓ | Backend type (currently `"markdown-fs"`) |
 | `storage.path` | string | ✓ | Path to tasks directory (can use `~`) |
+
+### [[projects.context]] Section
+
+Array of working directory contexts for automatic project detection. When you run opentask from a directory, it matches the `cwd` against context paths to find the active project.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `path` | string | ✓ | Working directory path (can use `~`, expands to full path) |
+
+**How context matching works:**
+1. opentask checks your current working directory (cwd)
+2. For each project, it checks if cwd matches any `[[projects.context]]` path
+3. If a match is found, that project becomes active
+4. If no match, opentask looks for `.opentask.toml` in cwd or parent directories
+5. If still no match, returns an error (no active project found)
 
 ### [workflow] Section
 
-Global default workflow settings. Applied to all projects unless overridden.
+Global default workflow settings. Applied to all projects unless overridden by project-level `.opentask.toml`.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -142,7 +162,7 @@ Global default workflow settings. Applied to all projects unless overridden.
 
 ### [templates] Section
 
-Global default template paths. Applied to all projects unless overridden.
+Global default template paths. Applied to all projects unless overridden by project-level config.
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -153,37 +173,168 @@ Global default template paths. Applied to all projects unless overridden.
 | `task` | string | Path to task template |
 | `decision` | string | Path to decision template |
 
-## Managing Projects
+## Project Resolution Order
 
-### List All Projects
+When you run opentask, it resolves the active project in this order:
 
-```bash
-opentask config projects
+1. **Explicit flag**: `--project work` or `opentask_PROJECT` env var
+2. **Context match**: Current working directory matches a `[[projects.context]]` path
+3. **Local config**: `.opentask.toml` found in cwd or parent directories
+4. **Error**: No project found - you must specify one or define a matching context
+
+## Examples
+
+### Small Single-User Setup
+
+```toml
+# Simple global config for personal projects
+[workflow]
+statuses = ["todo", "in-progress", "done"]
+initial = "todo"
+
+[[workflow.transitions]]
+from = "todo"
+to = ["in-progress"]
+
+[[workflow.transitions]]
+from = "in-progress"
+to = ["done"]
+
+[[projects]]
+id = "personal"
+name = "Personal"
+
+[projects.storage]
+backend = "markdown-fs"
+path = "~/.local/share/opentask/projects/personal/.tasks"
+
+[[projects.context]]
+path = "~/projects"
+path = "~/documents"
 ```
 
-Output:
+### Team Project Setup with Directory Contexts
+
+```toml
+[workflow]
+statuses = ["backlog", "todo", "in-progress", "review", "testing", "done"]
+initial = "backlog"
+
+[[workflow.transitions]]
+from = "backlog"
+to = ["todo"]
+
+[[workflow.transitions]]
+from = "todo"
+to = ["in-progress"]
+
+[[workflow.transitions]]
+from = "in-progress"
+to = ["review"]
+
+[[workflow.transitions]]
+from = "review"
+to = ["testing", "in-progress"]
+
+[[workflow.transitions]]
+from = "testing"
+to = ["done"]
+
+[templates]
+epic = "~/.local/share/opentask/templates/epic.md"
+task = "~/.local/share/opentask/templates/task.md"
+
+[[projects]]
+id = "main"
+name = "Main Project"
+
+[projects.storage]
+backend = "markdown-fs"
+path = "~/projects/main/.tasks"
+
+[[projects.context]]
+path = "/home/user/projects/main"
+path = "/home/user/work/main"
+
+[[projects]]
+id = "infrastructure"
+name = "Infrastructure"
+
+[projects.storage]
+backend = "markdown-fs"
+path = "~/projects/infrastructure/.tasks"
+
+[[projects.context]]
+path = "/home/user/projects/infrastructure"
+
+[[projects]]
+id = "documentation"
+name = "Documentation"
+
+[projects.storage]
+backend = "markdown-fs"
+path = "~/projects/documentation/.tasks"
+
+[[projects.context]]
+path = "/home/user/projects/documentation"
 ```
-Configured projects:
 
-* Work Tasks (work)
-  Path: ~/work/.tasks
-  Personal Projects (personal)
-  Path: ~/personal/.tasks
-  Open Source (opensource)
-  Path: ~/projects/opensource/.tasks
+### Monorepo Structure with Subproject Contexts
 
-Active project: work
+```toml
+[workflow]
+statuses = ["todo", "in-progress", "done"]
+initial = "todo"
+
+[[workflow.transitions]]
+from = "todo"
+to = ["in-progress"]
+
+[[workflow.transitions]]
+from = "in-progress"
+to = ["done"]
+
+# Root monorepo project
+[[projects]]
+id = "monorepo"
+name = "Monorepo Root"
+
+[projects.storage]
+backend = "markdown-fs"
+path = "~/monorepo/.tasks"
+
+[[projects.context]]
+path = "/home/user/monorepo"
+
+# Backend services
+[[projects]]
+id = "backend"
+name = "Backend Services"
+
+[projects.storage]
+backend = "markdown-fs"
+path = "~/monorepo/services/.tasks"
+
+[[projects.context]]
+path = "/home/user/monorepo/services"
+
+# Frontend apps
+[[projects]]
+id = "frontend"
+name = "Frontend Apps"
+
+[projects.storage]
+backend = "markdown-fs"
+path = "~/monorepo/apps/.tasks"
+
+[[projects.context]]
+path = "/home/user/monorepo/apps"
 ```
 
-The asterisk (*) indicates the currently active project.
-
-### Switch Active Project
-
-```bash
-opentask config projects --active personal
-```
-
-This updates the `active_project` field in your global config.
+With this setup:
+- `cd ~/monorepo` → activates `monorepo` project
+- `cd ~/monorepo/services` → activates `backend` project (context matches first)
+- `cd ~/monorepo/apps` → activates `frontend` project (context matches first)
 
 ## Project-Specific Overrides
 
@@ -192,179 +343,94 @@ Each project can have its own `.opentask.toml` to override global settings:
 ```toml
 # ~/work/.opentask.toml
 
-[project.project]
+[project]
 name = "Work Tasks"
-owner = "John Doe"
+owner = "Your Name"
 
 # Override workflow for this project
-[project.workflow]
+[workflow]
 statuses = ["backlog", "todo", "in-progress", "review", "done"]
 initial = "todo"
 
-[[project.workflow.transitions]]
+[[workflow.transitions]]
 from = "backlog"
 to = ["todo"]
 
-[[project.workflow.transitions]]
+[[workflow.transitions]]
 from = "todo"
 to = ["in-progress"]
 
-[[project.workflow.transitions]]
+[[workflow.transitions]]
 from = "in-progress"
 to = ["review"]
 
-[[project.workflow.transitions]]
+[[workflow.transitions]]
 from = "review"
 to = ["done"]
 
 # Optional: Override storage location
-[project.storage]
+[storage]
 backend = "markdown-fs"
 path = "~/work/.tasks"
 ```
 
 When you work in the `~/work` directory:
-1. The project config is loaded
-2. Settings from `[project.*]` override global settings
-3. Settings not in project config inherit from global
-4. Active project is matched from global projects list
-
-## Examples
-
-### Small Single-User Setup
-
-```toml
-# Simple global config for personal projects
-[global]
-active_project = "personal"
-
-[workflow]
-statuses = ["todo", "in-progress", "done"]
-initial = "todo"
-
-[[workflow.transitions]]
-from = "todo"
-to = ["in-progress"]
-
-[[workflow.transitions]]
-from = "in-progress"
-to = ["done"]
-
-[[global.projects]]
-id = "personal"
-name = "Personal"
-
-[global.projects.storage]
-path = "~/tasks/.tasks"
-```
-
-### Team Project Setup
-
-```toml
-# Global config for team projects
-[global]
-active_project = "main"
-
-[workflow]
-statuses = ["backlog", "todo", "in-progress", "review", "testing", "done"]
-initial = "backlog"
-
-# ... transitions ...
-
-[templates]
-epic = "~/.local/share/opentask/templates/epic.md"
-task = "~/.local/share/opentask/templates/task.md"
-
-[[global.projects]]
-id = "main"
-name = "Main Project"
-[global.projects.storage]
-path = "~/projects/main/.tasks"
-
-[[global.projects]]
-id = "infrastructure"
-name = "Infrastructure"
-[global.projects.storage]
-path = "~/projects/infrastructure/.tasks"
-
-[[global.projects]]
-id = "documentation"
-name = "Documentation"
-[global.projects.storage]
-path = "~/projects/documentation/.tasks"
-```
-
-### Monorepo Structure
-
-```toml
-# Global config for monorepo with multiple packages
-[global]
-active_project = "packages"
-
-[workflow]
-statuses = ["todo", "in-progress", "done"]
-initial = "todo"
-
-[[global.projects]]
-id = "packages"
-name = "Monorepo Packages"
-[global.projects.storage]
-path = "~/monorepo/.tasks"
-
-[[global.projects]]
-id = "backend"
-name = "Backend Services"
-[global.projects.storage]
-path = "~/monorepo/services/.tasks"
-
-[[global.projects]]
-id = "frontend"
-name = "Frontend Apps"
-[global.projects.storage]
-path = "~/monorepo/apps/.tasks"
-```
-
-Each directory also has its own `.opentask.toml`:
-- `~/monorepo/.opentask.toml` - Shared settings
-- `~/monorepo/services/.opentask.toml` - Backend-specific overrides
-- `~/monorepo/apps/.opentask.toml` - Frontend-specific overrides
+1. Global config loads first (workflows, templates, projects list)
+2. Local `.opentask.toml` overrides global settings
+3. Settings not in local config inherit from global defaults
+4. Active project is determined by context matching + local config
 
 ## Tips
 
 - **Use descriptive project IDs**: Use slugs like `my-project`, `team-work`, not `proj1`, `proj2`
 - **Path expansion**: Use `~` in paths - it's automatically expanded to your home directory
-- **Relative project paths**: Each project config's storage path is relative to that config file
-- **View active project**: Run `opentask config projects` to see which project is active
+- **Multiple contexts per project**: You can specify multiple `[[projects.context]]` paths for the same project (useful for monorepos or shared workspaces)
 - **Test resolution**: Run `opentask config view` from any project directory to see what settings will be used
-- **Consistency**: If multiple projects share settings, define them in global config rather than duplicating
+- **Consistency**: If multiple projects share settings, define them in global config rather than duplicating in each `.opentask.toml`
 
 ## Troubleshooting
 
 ### "No global configuration found"
 
-**Solution**: Create `~/.config/opentask/config.toml` with at least:
-```toml
-[global]
-active_project = "myproject"
+**Cause**: Global config file doesn't exist at `~/.config/opentask/config.toml`
 
-[[global.projects]]
+**Solution**: Create the file with minimal configuration:
+```toml
+[workflow]
+statuses = ["todo", "in-progress", "done"]
+initial = "todo"
+
+[[projects]]
 id = "myproject"
 name = "My Project"
-[global.projects.storage]
+
+[projects.storage]
+backend = "markdown-fs"
 path = "~/myproject/.tasks"
+
+[[projects.context]]
+path = "~/myproject"
 ```
 
-### "Project not found in global config"
+### "Project not found"
 
-**Solution**: Check that:
-1. The project ID in `.opentask.toml` matches a `[[global.projects]] id`
-2. The ID is spelled correctly (case-sensitive)
-3. Run `opentask config projects` to list available project IDs
+**Cause**: Current working directory doesn't match any `[[projects.context]]` path, and no `.opentask.toml` found
+
+**Solution**:
+1. Check that your cwd matches a context path in global config
+2. Or create `.opentask.toml` in your project directory
+3. Or use `--project <id>` flag to explicitly specify the project
 
 ### Settings not being applied
 
-**Solution**: Run `opentask config view` to see the merged configuration and which files were discovered. This helps you understand the merging order.
+**Cause**: Project-level `.opentask.toml` may be overriding global settings
 
-### Can't switch projects
+**Solution**: Run `opentask config view` to see the merged configuration and understand which settings came from which files.
 
-**Solution**: The `--active` flag currently only shows the option. To permanently change the active project, edit `~/.config/opentask/config.toml` and update the `active_project` field manually.
+### Settings inheritance
+
+**Order of precedence** (highest to lowest):
+1. Command-line flags (`--project`, `--status`, etc.)
+2. Project-level `.opentask.toml` settings
+3. Global config `[workflow]`, `[templates]`
+4. Built-in defaults
