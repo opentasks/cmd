@@ -8,9 +8,11 @@ type Relationship struct {
 
 // Relationship type constants
 const (
-	RelParent    = "parent"     // Hierarchical parent
-	RelBlocks    = "blocks"     // This task blocks another
-	RelRelatedTo = "relates-to" // Related but independent
+	RelImplements    = "implements"     // Task implements another
+	RelImplementedBy = "implemented-by" // Task is implemented by another
+	RelParent        = "parent"         // Hierarchical parent
+	RelBlocks        = "blocks"         // This task blocks another
+	RelRelatedTo     = "relates-to"     // Related but independent
 )
 
 // AllRelationshipTypes contains all valid relationship types

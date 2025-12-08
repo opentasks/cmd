@@ -60,11 +60,6 @@ func MergeGlobalConfig(resolved *OpentaskResolvedConfig, global *OpentaskGlobalC
 		resolved.Templates = global.Templates
 	}
 
-	// Merge graph config if present (overrides built-in defaults)
-	if global.Graph != nil {
-		resolved.Graph = global.Graph
-	}
-
 	return resolved
 }
 
@@ -102,10 +97,6 @@ func MergeProjectConfig(resolved *OpentaskResolvedConfig, project *OpentaskProje
 		resolved.Templates = project.Templates
 	}
 
-	if project.Graph != nil {
-		resolved.Graph = project.Graph
-	}
-
 	// Merge project core config (fallback if top-level fields not set)
 	// Priority: project.X > project.Core.X > global.Core.X > built-in defaults
 	// Note: ActiveProject is NOT merged here - it's derived at runtime via ResolveActiveProject()
@@ -117,10 +108,6 @@ func MergeProjectConfig(resolved *OpentaskResolvedConfig, project *OpentaskProje
 		// If project doesn't have templates, use project.Core templates
 		if project.Templates == nil && project.Core.Templates != nil {
 			resolved.Templates = project.Core.Templates
-		}
-		// If project doesn't have graph config, use project.Core graph config
-		if project.Graph == nil && project.Core.Graph != nil {
-			resolved.Graph = project.Core.Graph
 		}
 	}
 

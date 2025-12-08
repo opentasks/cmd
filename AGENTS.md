@@ -16,7 +16,10 @@
 - never commit binaries
 - when adjusting .gitignore, stop. get human help.
 
-## Tool Selection: grep vs gh_grep vs opentask
+## Tool Selection: Task Planning vs Codebase info
+
+**Use your inmemoria skill_find**
+- Learning about the codebase.
 
 **Use `grep` (local codebase search):**
 - Searching for patterns in local source files: `grep -r "pattern" internal/`
@@ -46,7 +49,7 @@
 - [knowledge] Use opentask tags to categorize work: `research`, `documentation`, `implementation`, etc.
 - [knowledge] Keep task descriptions up to date with current status and findings
 - [tasks] Break down work into manageable phases using opentask hierarchy (parent/child tasks)
-- [tasks] Use opentask task types to organize: `phase` for multi-step work, `task` for atomic units
+- [tasks] Use opentask task types to organize: `story` for multi-step work, `task` for atomic units
 - [tasks] Track all work through opentask - use `opentask task list` to find remaining items
 - [git] When committing changes, follow conventional commit guidelines
 - [git] Use clear commit messages referencing relevant task IDs and files (e.g., "fix: improve auth flow (task #42)")

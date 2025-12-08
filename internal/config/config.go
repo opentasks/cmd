@@ -14,7 +14,6 @@ import (
 type OpentaskConfigCoreSchema struct {
 	Workflow  *WorkflowConfig `toml:"workflow"`
 	Templates *TemplateConfig `toml:"templates"`
-	Graph     *GraphConfig    `toml:"graph"`
 }
 
 // OpentaskConfigGlobalSchema defines user-level global configuration.
@@ -48,7 +47,6 @@ type OpentaskConfigProjectSchema struct {
 	Storage       *StorageConfig  `toml:"storage"`
 	Workflow      *WorkflowConfig `toml:"workflow"`
 	Templates     *TemplateConfig `toml:"templates"`
-	Graph         *GraphConfig    `toml:"graph"`
 	ActiveProject string          `toml:"active_project"` // May be auto-populated if not specified
 }
 
@@ -59,7 +57,6 @@ type OpentaskGlobalConfigFile struct {
 	Projects  []GlobalProjectConfig `toml:"projects"`
 	Workflow  *WorkflowConfig       `toml:"workflow"`
 	Templates *TemplateConfig       `toml:"templates"`
-	Graph     *GraphConfig          `toml:"graph"`
 }
 
 // OpentaskProjectConfigFile represents the complete structure of a project config file (.opentask.toml).
@@ -77,7 +74,6 @@ type OpentaskProjectConfigFile struct {
 	Storage   *StorageConfig            `toml:"storage"`
 	Workflow  *WorkflowConfig           `toml:"workflow"`
 	Templates *TemplateConfig           `toml:"templates"`
-	Graph     *GraphConfig              `toml:"graph"`
 	Core      *OpentaskConfigCoreSchema `toml:"core"` // Optional project-specific workflow/templates
 }
 
@@ -89,7 +85,6 @@ type OpentaskResolvedConfig struct {
 	Project       *ProjectSection `toml:"-"`
 	Workflow      *WorkflowConfig `toml:"-"`
 	Templates     *TemplateConfig `toml:"-"`
-	Graph         *GraphConfig    `toml:"-"`
 	Storage       *StorageConfig  `toml:"-"`
 	ActiveProject string          `toml:"-"` // Derived at runtime (never read from file)
 	// IsResolved indicates whether ActiveProject was successfully resolved from config + cwd.
@@ -145,11 +140,6 @@ type StorageConfig struct {
 	Options map[string]string `toml:"options"`
 }
 
-// GraphConfig holds graph visualization configuration
-type GraphConfig struct {
-	DefaultDepth int `toml:"default_depth"`
-}
-
 // DefaultWorkflow returns the default workflow configuration
 func DefaultWorkflow() WorkflowConfig {
 	return WorkflowConfig{
@@ -198,7 +188,6 @@ func NewResolvedConfig() *OpentaskResolvedConfig {
 			},
 		},
 		Templates:       &TemplateConfig{},
-		Graph:           &GraphConfig{DefaultDepth: 4},
 		Storage:         &StorageConfig{Backend: "markdown-fs"},
 		ActiveProject:   "",
 		DiscoveredFiles: []string{},
