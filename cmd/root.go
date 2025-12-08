@@ -110,6 +110,24 @@ func initializeStorage(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to initialize storage: %w", err)
 	}
 
+	// Optionally wrap storage with SQLite query acceleration for better performance
+	// This loads tasks into an in-memory SQLite database and normalizes relationships
+	// into join tables, enabling efficient DAG queries while maintaining sync with
+	// the markdown file storage backend.
+	if Resolved.Storage.Options != nil && Resolved.Storage.Options["query_engine"] == "sqlite" {
+		ctx := context.Background()
+		sqliteStore, err := query.NewSQLiteService(ctx, Store)
+		if err != nil {
+			_ = Store.Close()
+			return fmt.Errorf("failed to initialize SQLite query engine: %w", err)
+		}
+		Store = sqliteStore // Use SQLite-backed storage
+
+		if verbose {
+			fmt.Fprintf(os.Stderr, "SQLite query engine enabled\n")
+		}
+	}
+
 	// Initialize query engine
 	Engine = query.NewQueryEngine(Store)
 
