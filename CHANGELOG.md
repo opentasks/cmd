@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.0](https://github.com/opentasks/cmd/compare/v0.1.0...v0.2.0) (2025-12-09)
+
+
+### Features
+
+* **graph:** implement graph builder and visualization for task relationships ([2363d9f](https://github.com/opentasks/cmd/commit/2363d9f1561849fe14402d6f25d04731c6fb88cc))
+* **query:** implement in-memory SQLite query acceleration with relationship normalization ([e193768](https://github.com/opentasks/cmd/commit/e193768a3fb61066e9272d3006969b3bdfd46e03))
+* remove graph feature entirely ([0815fd9](https://github.com/opentasks/cmd/commit/0815fd9ad80f7892ab7d2cc632ba691c5dfca7c7))
+
 ## [0.1.0](https://github.com/opentasks/cmd/compare/v0.0.2-alpha.1...v0.1.0) (2025-12-07)
 
 
